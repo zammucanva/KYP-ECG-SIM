@@ -73,10 +73,7 @@ h2 span { color: var(--primary); }
 .calibration-card { min-width: 200px; border-left: 1px solid var(--border-strong); padding: 8px 0 8px 28px; color: var(--muted); font-size: 10px; letter-spacing: .13em; }
 .calibration-card strong { display: block; margin: 10px 0; color: var(--text); font: 500 28px Georgia, serif; letter-spacing: -.03em; }
 .calibration-card small { color: var(--muted); font-size: 10px; letter-spacing: 0; }
-.pulse { position: relative; height: 36px; border-bottom: 1px solid var(--border-strong); }
-.pulse::before, .pulse i { position: absolute; bottom: 0; left: 0; width: 35px; border: 2px solid var(--primary); border-bottom: 0; }
-.pulse::before { height: 20px; content: ""; }
-.pulse i { display: block; }
+.calibration-pulse { display: block; max-width: none; margin: 10px 0 4px; }
 .lab-grid { display: grid; grid-template-columns: 240px 1fr; gap: 18px; }
 .controls, .monitor { border: 1px solid var(--border); background: var(--surface); box-shadow: var(--shadow); }
 .controls { padding: 24px 20px; }
@@ -104,10 +101,10 @@ h2 span { color: var(--primary); }
 .view-toggle button { border: 1px solid var(--border-strong); border-radius: 4px; padding: 8px 10px; background: transparent; color: var(--muted); font-size: 11px; cursor: pointer; }
 .view-toggle button.active { border-color: var(--primary); background: var(--primary); color: var(--primary-foreground); }
 .trace-wrap, .multi-trace, .mini-trace { border: 1px solid var(--border); background: var(--surface-soft); }
-.trace-wrap svg { display: block; width: 100%; height: auto; min-height: 230px; }
+.trace-scroll { max-width: 100%; overflow-x: auto; }
+.trace-scroll svg, .mini-trace svg { display: block; max-width: none; }
 .trace-meta { border-top: 1px solid var(--border); padding: 10px 12px; font-weight: 500; letter-spacing: .05em; }
 .mini-trace { position: relative; border-width: 0 0 1px; }
-.mini-trace svg { display: block; width: 100%; height: auto; min-height: 58px; }
 .mini-label { position: absolute; top: 7px; left: 8px; padding: 2px 4px; background: color-mix(in oklch, var(--surface-soft), transparent 12%); color: var(--primary-ink); font: 600 11px Inter, sans-serif; }
 .multi-trace { overflow-x: auto; }
 .measure-panel { border-top: 1px solid var(--border); margin-top: 18px; padding-top: 16px; }
@@ -145,5 +142,4 @@ footer span:last-child { color: var(--subtle); }
   .status { font-size: 0; }
   .status small { font-size: 9px; }
   footer { display: block; line-height: 2; }
-  .trace-wrap svg { min-height: 180px; }
 }
