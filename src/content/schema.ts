@@ -24,9 +24,25 @@ const reviewerSchema = z.strictObject({
   qualifications: shortText.optional(),
 });
 
+export const reviewScopeSchema = z.strictObject({
+  /** Reviewer confirms every item in the stated review domain was considered. */
+  completeRecord: z.boolean(),
+  claimIds: z.array(contentIdSchema).max(200),
+  referenceIds: z.array(contentIdSchema).max(100),
+}).superRefine((scope, context) => {
+  if (new Set(scope.claimIds).size !== scope.claimIds.length) {
+    context.addIssue({ code: 'custom', path: ['claimIds'], message: 'Review claim IDs must be unique.' });
+  }
+  if (new Set(scope.referenceIds).size !== scope.referenceIds.length) {
+    context.addIssue({ code: 'custom', path: ['referenceIds'], message: 'Review reference IDs must be unique.' });
+  }
+});
+
 const reviewFields = {
+  contentId: contentIdSchema,
   reviewType: z.enum(['educational-content', 'source-and-licensing', 'medical-content', 'publication-approval']),
   versionReviewed: contentVersionSchema,
+  scope: reviewScopeSchema,
   notes: text.optional(),
   requiredFollowUp: z.array(shortText).max(50),
 };
@@ -44,7 +60,16 @@ export const reviewRecordSchema = z.discriminatedUnion('status', [
     reviewer: reviewerSchema.optional(),
     reviewedAt: z.iso.date().optional(),
   }),
-]);
+]).superRefine((review, context) => {
+  if (review.status === 'approved') {
+    if (!review.scope.completeRecord) {
+      context.addIssue({ code: 'custom', path: ['scope', 'completeRecord'], message: 'An approval must cover the complete declared review scope.' });
+    }
+    if (review.requiredFollowUp.length > 0) {
+      context.addIssue({ code: 'custom', path: ['requiredFollowUp'], message: 'An approved review cannot have unresolved required follow-up.' });
+    }
+  }
+});
 
 const usageRightsSchema = z.strictObject({
   licenceName: shortText.optional(),
@@ -143,6 +168,13 @@ export const provenanceSchema = z.discriminatedUnion('kind', [
 ]);
 
 const objectiveSchema = z.strictObject({ id: contentIdSchema, statement: shortText });
+export const claimSchema = z.strictObject({
+  id: contentIdSchema,
+  statement: shortText,
+  /** A reviewer-facing location, e.g. section, question choice, answer key, or explanation. */
+  locations: z.array(shortText).min(1).max(30),
+  basis: z.enum(['external-source', 'project-behavior']),
+});
 const lessonSectionSchema = z.strictObject({
   id: contentIdSchema,
   title: shortText,
@@ -223,6 +255,8 @@ const commonFields = {
   publicationStatus: z.enum(publicationStatuses),
   provenance: provenanceSchema,
   sourceReferences: z.array(sourceReferenceSchema).max(100),
+  /** Drafts may be incomplete; claim coverage is mandatory at clinical release. */
+  claims: z.array(claimSchema).max(200).optional(),
   reviewRecords: z.array(reviewRecordSchema).max(100),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
@@ -246,12 +280,16 @@ const questionChoiceSchema = z.strictObject({ id: contentIdSchema, text: shortTe
 const questionContentSchema = z.strictObject({
   ...commonFields,
   type: z.literal('question'),
+  parentLessonId: contentIdSchema.optional(),
   questionType: z.enum(['single-best-answer', 'multiple-select']),
   prompt: text,
   choices: z.array(questionChoiceSchema).min(2).max(12),
   correctAnswerIds: z.array(contentIdSchema).min(1).max(12),
   explanation: text,
 }).superRefine((question, context) => {
+  if (question.contentDomain === 'clinical-education' && !question.parentLessonId) {
+    context.addIssue({ code: 'custom', path: ['parentLessonId'], message: 'A clinical formative question must identify its parent lesson.' });
+  }
   const choiceIds = question.choices.map(choice => choice.id);
   if (new Set(choiceIds).size !== choiceIds.length) {
     context.addIssue({ code: 'custom', path: ['choices'], message: 'Question choice IDs must be unique.' });
@@ -304,6 +342,9 @@ export const contentRecordSchema = z.discriminatedUnion('type', [
     context.addIssue({ code: 'custom', path: ['lastReviewedAt'], message: 'lastReviewedAt must not be later than updatedAt.' });
   }
   record.reviewRecords.forEach((review, reviewIndex) => {
+    if (review.contentId !== record.id) {
+      context.addIssue({ code: 'custom', path: ['reviewRecords', reviewIndex, 'contentId'], message: 'A review record must identify the exact content record it reviews.' });
+    }
     if (review.reviewedAt && Date.parse(`${review.reviewedAt}T00:00:00Z`) > updated) {
       context.addIssue({ code: 'custom', path: ['reviewRecords', reviewIndex, 'reviewedAt'], message: 'A review date must not be later than updatedAt.' });
     }
@@ -332,7 +373,40 @@ export const contentRecordSchema = z.discriminatedUnion('type', [
           message: `Source support points to unknown learning objective "${link.objectiveId}".`,
         });
       }
+      if (link.kind === 'claim' && !(record.claims ?? []).some(claim => claim.id === link.claimId)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['sourceReferences', referenceIndex, 'supports', linkIndex],
+          message: `Source support points to unknown claim "${link.claimId}".`,
+        });
+      }
     });
+  });
+  const claimIds = (record.claims ?? []).map(claim => claim.id);
+  if (new Set(claimIds).size !== claimIds.length) {
+    context.addIssue({ code: 'custom', path: ['claims'], message: 'Claim IDs must be unique within a record.' });
+  }
+  record.reviewRecords.forEach((review, reviewIndex) => {
+    const unknownClaim = review.scope.claimIds.find(id => !claimIds.includes(id));
+    const unknownReference = review.scope.referenceIds.find(id => !referenceIds.includes(id));
+    if (unknownClaim) {
+      context.addIssue({ code: 'custom', path: ['reviewRecords', reviewIndex, 'scope', 'claimIds'], message: `Review scope points to unknown claim "${unknownClaim}".` });
+    }
+    if (unknownReference) {
+      context.addIssue({ code: 'custom', path: ['reviewRecords', reviewIndex, 'scope', 'referenceIds'], message: `Review scope points to unknown source reference "${unknownReference}".` });
+    }
+  });
+  const reviewSlots = new Map<string, z.infer<typeof reviewRecordSchema>[]>();
+  record.reviewRecords.forEach(review => {
+    const slot = `${review.reviewType}:${review.versionReviewed}`;
+    reviewSlots.set(slot, [...(reviewSlots.get(slot) ?? []), review]);
+  });
+  reviewSlots.forEach((reviews, slot) => {
+    const statuses = reviews.map(review => review.status);
+    if (reviews.length > 1 || statuses.filter(status => status === 'approved').length > 1 ||
+      (statuses.includes('approved') && statuses.some(status => status === 'rejected' || status === 'changes-requested'))) {
+      context.addIssue({ code: 'custom', path: ['reviewRecords'], message: `More than one or conflicting review outcome exists for ${slot}; replace the slot with the current outcome or review a new content version.` });
+    }
   });
   if (record.publicationStatus === 'reviewed-for-educational-use' && !record.reviewRecords.some(review =>
     review.reviewType === 'educational-content' && review.status === 'approved' && review.versionReviewed === record.version,
@@ -352,3 +426,6 @@ export const contentRecordSchema = z.discriminatedUnion('type', [
 export type ContentRecord = z.infer<typeof contentRecordSchema>;
 export type LessonContent = z.infer<typeof lessonContentSchema>;
 export type VisualDemonstration = z.infer<typeof visualDemonstrationSchema>;
+export type ClaimRecord = z.infer<typeof claimSchema>;
+export type ReviewScope = z.infer<typeof reviewScopeSchema>;
+

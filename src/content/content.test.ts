@@ -50,7 +50,7 @@ describe('educational content schema and governance', () => {
   it('requires actual reviewer identity and a date for an approved review', () => {
     const withUnsubstantiatedApproval: unknown = {
       ...validEducationalFixture,
-      reviewRecords: [{ reviewType: 'medical-content', status: 'approved', versionReviewed: '0.1.0', requiredFollowUp: [] }],
+      reviewRecords: [{ contentId: validEducationalFixture.id, reviewType: 'medical-content', status: 'approved', versionReviewed: '0.1.0', scope: { completeRecord: true, claimIds: [], referenceIds: [] }, requiredFollowUp: [] }],
     };
     expect(validateContentRecord(withUnsubstantiatedApproval).success).toBe(false);
   });
@@ -154,7 +154,7 @@ describe('educational content schema and governance', () => {
     const pending: ContentRecord = {
       ...validEducationalFixture,
       publicationStatus: 'awaiting-review',
-      reviewRecords: [{ reviewType: 'educational-content', status: 'pending', versionReviewed: '0.1.0', requiredFollowUp: [] }],
+      reviewRecords: [{ contentId: validEducationalFixture.id, reviewType: 'educational-content', status: 'pending', versionReviewed: '0.1.0', scope: { completeRecord: false, claimIds: [], referenceIds: [] }, requiredFollowUp: [] }],
     };
     expect(validateContentRecord(pending, [validKnowledgeCheckFixture]).success).toBe(true);
     const draftWithPendingRecord: ContentRecord = { ...validEducationalFixture, reviewRecords: pending.reviewRecords };
@@ -188,3 +188,4 @@ describe('educational content schema and governance', () => {
     expect(registry.issues.some(issue => issue.message.includes('Referenced waveform'))).toBe(true);
   });
 });
+

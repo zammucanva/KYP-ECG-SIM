@@ -1,4 +1,40 @@
-# Session checkpoint — ECG-CP4 Learn framework
+# Current session checkpoint — ECG-CP5 content review readiness
+
+Date: 2026-10-20 (Asia/Kolkata)
+
+## Repository baseline
+
+- Repository: `zammucanva/KYP-ECG-SIM`.
+- Existing feature branch: `codex/accessibility-content-governance`.
+- Verified branch base: `1ffcfd553fd1caa18bd156417c9c6f1e67370db3`; GitHub Actions run `39317284992` passed for this base.
+- `main`: `9544b96d87a44fce4334691145f5c53870871fa5`; no main-branch or KYP-production changes.
+- Local source export: `C:\Users\TSHAM\Documents\Codex\2026-10-19\hel\work\ecg-lab`; `.git` is absent. The remote branch was inspected through GitHub. Local test results are not remote CI evidence.
+- Checkpoint source and documentation have been locally verified and are ready for a non-forced expected-head update to the existing feature branch; remote commit/CI for this checkpoint must be recorded after that update.
+
+## Completed in ECG-CP5
+
+- Prepared packets for all three lesson drafts and all three linked formative questions; current record version is `0.3.0` for each.
+- Corrected Becker page-range metadata; classified Becker as a review article and Kligfield as an AHA/ACCF/HRS professional-society statement. Both sources remain `unverified` in the registry. Rights and semantic claim support remain unresolved.
+- Added a per-record claim inventory with exact content locations, claim-specific candidate references, and separate project-behavior claims. The two blood-flow assertions are explicitly unmapped blockers.
+- Added current-content review scope and intake validation: exact ID/version, claim/reference coverage, actual update time, reviewer requirements for clinical approval, and replacement of the same review slot. Conflicting review-slot metadata is rejected.
+- Tightened publication readiness: external clinical claims need claim-linked source verification; a clinical question needs an eligible reviewed parent lesson; a lesson needs every linked question and prerequisite published and eligible.
+- No genuine review data or approvals were created. All six content items remain drafts and Learn catalog remains empty. No Practice/Exam mode, merge, deploy, or KYP production edits.
+
+## Actual local verification
+
+- Final `PLAYWRIGHT_BROWSERS_PATH=<project>/.playwright-browsers pnpm test:all`: exit 0.
+- Vitest: 4 files, 42/42 tests passed; app and Playwright type checks passed; production build passed (Vite 8.3.4, 122 modules); Playwright 9/9 Chromium scenarios passed.
+- Learn E2E confirms the catalog remains empty and drafts/check answers are not exposed. Existing axe scans in tested themes/viewports reported no violations with no exclusions.
+- An initial run without `PLAYWRIGHT_BROWSERS_PATH` could not launch Chromium because the default browser cache was missing; rerun with the already installed project-local browser cache passed. See `QA_REPORT.md` for exact details.
+
+## Limitations and next action
+
+- No source-claim verification, source/licensing review, educational review, qualified medical review, publication approval, or rights permission has been supplied. No lessons/questions are published.
+- Bibliographic existence/details were checked against PubMed. Becker is an older dental/anesthesia continuing-education review; Kligfield is a 2007 statement. Currentness, exact page-level support, suitability, and reuse rights still need human verification. Indian NMC/CBME mapping is not established.
+- Test-only reviewer metadata is explicitly synthetic and exists only to exercise validators; it does not establish medical truth or appear in registered content.
+- Next: publish this checkpoint only to `codex/accessibility-content-governance` using expected-head CAS, verify Actions for the resulting commit, and record the remote result. Then obtain actual reviewer dispositions and exact source locations; correct/remove unsupported assertions before any release-gate transition.
+
+# Historical checkpoint — ECG-CP4 Learn framework
 
 Date: 2026-10-20 (Asia/Kolkata)
 
@@ -38,3 +74,4 @@ Date: 2026-10-20 (Asia/Kolkata)
 ## Exact next action
 
 On resume, refresh `codex/accessibility-content-governance` and its current Actions run before making changes. Source implementation and checkpoint-documentation CI runs both passed. After actual review records are supplied, verify references and versions, update draft metadata without fabricating missing details, and confirm the published registry then exposes only eligible published lessons.
+

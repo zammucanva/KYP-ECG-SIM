@@ -56,3 +56,34 @@ No actual screen-reader session, true browser zoom, text-only enlargement, OS hi
 ## ECG-CP4 remote verification
 
 The local export has no Git metadata. The implementation was committed only to the existing feature branch `codex/accessibility-content-governance` using a non-forced compare-and-swap from the verified starting SHA `6b0d7ef01cd218c62d9376bb816cb5d95299d7a8` to `eb09784cca1fe2b122bbb9e21f8ec1792c30a5f9`. GitHub Actions run [39316691334](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39316691334) completed successfully on that implementation commit. The checkpoint documentation follow-up commit `4d7771e25c2f4f0e4cb7b86666c690d5e48af909` also passed [Actions run 39316996682](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39316996682). These commits were pushed with non-forced expected-head checks. `main` remained at `9544b96d87a44fce4334691145f5c53870871fa5`. The latest update to this report is documentation-only; refresh the live branch head and Actions status on resume. No merge or deployment was performed.
+
+## ECG-CP5 content review readiness — local verification
+
+### Starting repository state
+
+- Remote feature branch: `codex/accessibility-content-governance` at `1ffcfd553fd1caa18bd156417c9c6f1e67370db3`.
+- Remote `main`: `9544b96d87a44fce4334691145f5c53870871fa5`.
+- Baseline GitHub Actions run [39317284992](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39317284992) completed successfully for the starting feature-branch head.
+- Local path has no `.git` directory. The local export therefore cannot independently show branch/status or be used for a normal local commit. Remote facts were obtained through the GitHub connector; local command results below are from the local source tree.
+
+### Source audit outcomes
+
+- Becker PubMed metadata was checked. Corrected the article pages to 53–63 and separated quiz page 64; kept the seasonal date as such rather than inventing an exact date. The entry is now categorized as a review article.
+- Kligfield PubMed metadata was checked and the entry categorized as a professional-society statement. Exact claim locations, whether the older statement remains current for each lesson claim, and publisher reuse rights remain unresolved.
+- Both references remain `verificationStatus: unverified`. Candidate mappings do not imply semantic claim support; rights remain unknown. `CLAIM_SOURCE_MATRIX.md` records specific source sections/pages where found and every unresolved location.
+- No Indian NMC/CBME competency is asserted. The official CBME 2024 lead could not be retrieved during this audit; no source mapping was added.
+- Lesson/check content version advanced to `0.3.0` to bind future review intake to the new claim inventory and source links. No approval metadata or publication status was added.
+
+### Actual commands and results
+
+- First `pnpm test:all`: unit tests (42/42), application and E2E type checks, and production build passed; browser runner did not launch because the default Playwright Chromium cache lacked its executable. This was an environment setup issue; no browser scenario ran in that attempt.
+- `PLAYWRIGHT_BROWSERS_PATH=<project>/.playwright-browsers pnpm test:e2e`: passed 9/9 Chromium scenarios using the existing task-local browser cache.
+- Final `PLAYWRIGHT_BROWSERS_PATH=<project>/.playwright-browsers pnpm test:all`: exit 0. Vitest: 4 files, 42/42 tests; application and Playwright TypeScript checks passed; Vite 8.3.4 production build passed (122 modules; CSS 17.84 kB, JS 388.67 kB); Playwright: 9/9 Chromium scenarios passed.
+- Browser scenario `Learn navigation keeps draft content private...` verified the learner catalog still says no lessons are published, hides the three draft titles and answers, and preserves simulator/theme state. Axe scans in existing theme/responsive states had no violations and no suppressed rules.
+
+### Limits and pending remote verification
+
+Unit tests include clearly labelled test-only synthetic reviewer strings and a fixed fixture date solely to validate schema behavior. They are not real review records and are never placed in the registry or fixtures. They do not establish the truth of any medical claim. No real reviewer details, clinical approval, source-and-licensing approval, rights clearance, or publication approval were added. No manual screen-reader session or standalone manual visual review was performed in this checkpoint; Playwright and Axe are supporting evidence only.
+
+All six Learn records remain drafts, all candidate sources remain `unverified`, and the published Learn catalog remains empty. Local verification is complete. After the non-forced feature-branch update, record the new commit and actual GitHub Actions result here; no merge, deployment, or KYP production change is permitted.
+

@@ -1,10 +1,12 @@
 import { z } from 'zod';
 
 const recordId = z.string().trim().min(1).max(100).regex(/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/);
-const label = z.string().trim().min(1).max(300);
+const label = z.string().trim().min(1).max(1000);
 
 export const sourceKinds = [
   'primary-guideline',
+  'professional-society-statement',
+  'review-article',
   'textbook',
   'peer-reviewed-study',
   'licensed-dataset',
@@ -67,3 +69,4 @@ export const sourceReferenceSchema = z.strictObject({
 
 export type ClaimLink = z.infer<typeof claimLinkSchema>;
 export type SourceReference = z.infer<typeof sourceReferenceSchema>;
+

@@ -10,6 +10,7 @@ Status: curriculum plan plus three authored draft lessons. Nothing is currently 
 - The first three records use text plus an explicitly synthetic simulator illustration. The authored explanation, source mapping, and formative answer keys still require human review. The signal is an educational template, not a validated patient tracing.
 - Indian MBBS/CBME alignment is an authoring requirement, not an established mapping in this release. No NMC competency code or Indian clinical recommendation is asserted here. NMC source mapping must use a current, verified curriculum source and be reviewed before inclusion.
 - References listed as **candidate** require claim-by-claim source verification before content can be published. “Source research required” is intentionally not a citation.
+- Reviewer-ready claim locations and blockers for the three existing records are listed in `LESSON_REVIEW_PACKETS.md` and `CLAIM_SOURCE_MATRIX.md`.
 
 ## Sequence
 
@@ -20,7 +21,7 @@ Status: curriculum plan plus three authored draft lessons. Nothing is currently 
 - Ordered sections: A signal plotted over time; Read the representation, not more than it shows.
 - Key terms: potential difference; electrode; lead.
 - Visual/check: annotated synthetic template strip and one formative single-best-answer check.
-- References: Becker and Kligfield candidate records are attached to specific objectives but remain `unverified` pending human source-claim review.
+- References: Becker (`review-article`) and Kligfield (`professional-society-statement`) candidate records are attached to objectives and candidate claim IDs but remain `unverified` pending claim-level source review and rights review. Current content version: `0.3.0`.
 - Provenance/review: clinical-education explanation plus synthetic ECG from the simulator generator; draft; no review records.
 - Limitations: simplified, unvalidated template; no direct patient data; source support and educational/medical/publication approvals remain outstanding.
 
@@ -42,7 +43,7 @@ Status: curriculum plan plus three authored draft lessons. Nothing is currently 
 - Ordered sections: physical electrodes; several views share one recording.
 - Key terms: electrode; lead view; time alignment.
 - Visual/check: six limb-lead views from one aligned synthetic recording; one formative single-best-answer check.
-- References: Becker and Kligfield candidate records are linked to objectives and remain unverified.
+- References: Becker (`review-article`) and Kligfield (`professional-society-statement`) candidates are linked to objectives/claims and remain `unverified`. Current content version: `0.3.0`.
 - Provenance/review: sourced-draft text plus synthetic educational ECG; draft; no review records.
 - Limitations: the software demonstration does not teach patient electrode placement, validate morphology, or establish clinical interpretation.
 
@@ -64,7 +65,7 @@ Status: curriculum plan plus three authored draft lessons. Nothing is currently 
 - Ordered sections: paper speed sets horizontal scale; gain sets vertical scale; use the grid as a ruler.
 - Key terms: paper speed; gain; calibration pulse.
 - Visual/check: interactive 12.5/25/50 mm/s and 5/10/20 mm/mV demonstration using engine transforms; one formative calculation check.
-- References: Kligfield candidate reference attached to the objective and still unverified for this precise lesson mapping.
+- References: Becker and Kligfield candidate references are linked to objectives/claims and remain `unverified`, especially for the gain calibration claim. Current content version: `0.3.0`.
 - Provenance/review: explanatory text and simulator-generated synthetic trace; draft; no review records.
 - Limitations: logical millimetres are not a physical screen-size guarantee; print/export is not implemented; no clinical validation.
 
@@ -191,7 +192,8 @@ Status: curriculum plan plus three authored draft lessons. Nothing is currently 
 
 ## References presently attached to draft records
 
-- Becker DE. “Fundamentals of electrocardiography interpretation.” *Anesthesia Progress*. 2006;53(2):53–64. DOI: `10.2344/0003-3006(2006)53[53:FOEI]2.0.CO;2`. [PubMed record](https://pubmed.ncbi.nlm.nih.gov/16863387/). Candidate only; claim/objective mapping is unverified.
-- Kligfield P, et al. “Recommendations for the standardization and interpretation of the electrocardiogram: part I: The electrocardiogram and its technology.” *Circulation*. 2007. DOI: `10.1161/CIRCULATIONAHA.106.180200`. [PubMed record](https://pubmed.ncbi.nlm.nih.gov/17322457/). Candidate only; claim/objective mapping and suitability must be confirmed by a reviewer.
+- Becker DE. “Fundamentals of electrocardiography interpretation.” *Anesthesia Progress*. 2006 Summer;53(2):53–63; quiz 64. DOI: `10.2344/0003-3006(2006)53[53:FOEI]2.0.CO;2`. [PubMed record](https://pubmed.ncbi.nlm.nih.gov/16863387/). Bibliographic details checked; candidate only, exact claim support/context and rights unresolved.
+- Kligfield P, et al. “Recommendations for the standardization and interpretation of the electrocardiogram. Part I: The electrocardiogram and its technology.” *Circulation*. 2007;115(10):1306–1324. DOI: `10.1161/CIRCULATIONAHA.106.180200`. [PubMed record](https://pubmed.ncbi.nlm.nih.gov/17322457/). Professional-society statement; bibliographic details checked; candidate only, currentness, exact claim support, and reuse rights unresolved.
 
-No sources are represented as supporting unlinked claims. The review workflow and source-refresh process are authoritative in `CONTENT_REVIEW_WORKFLOW.md` and `CONTENT_PROVENANCE.md`.
+The authored lesson/check records are now at version `0.3.0` with claim inventories and linked formative-question parent IDs. This is review preparation, not new curriculum publication. Both blood-flow assertions remain unmapped and must be sourced, narrowed, or removed before release. The review workflow and source-refresh process are authoritative in `CONTENT_REVIEW_WORKFLOW.md` and `CONTENT_PROVENANCE.md`.
+

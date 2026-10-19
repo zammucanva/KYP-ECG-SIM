@@ -2,6 +2,35 @@
 
 This is the canonical task record. Status and evidence below reflect the current local verification and the remote checkpoint branch inspected for this task; local files are an export without `.git` metadata. See `SESSION_CHECKPOINT.md` for the GitHub base and published branch.
 
+## Current checkpoint — ECG-CP5 content review readiness
+
+### ECG-CONTENT-05 — Claim inventory and reviewer packets
+
+- Acceptance: every existing lesson and linked formative question is inventoried by stable ID/version; factual claims point to exact record locations and candidate source locations or are explicitly marked unmapped; source metadata and rights are not overstated; reviewer packets are understandable without repository context.
+- Status: Complete locally; all six items remain drafts.
+- Files: `src/content/learn/records.ts`, `src/content/references.ts`, `src/content/schema.ts`, `src/content/types.ts`, `docs/LESSON_REVIEW_PACKETS.md`, `docs/CLAIM_SOURCE_MATRIX.md`, `docs/LEARN_CURRICULUM.md`, `docs/CONTENT_SCHEMA.md`, `docs/CONTENT_PROVENANCE.md`.
+- Tests/evidence: `pnpm test:all` exit 0; 42/42 Vitest, app and Playwright type-checks, production build, and 9/9 Chromium scenarios passed. The Learn browser scenario confirms no draft lesson is shown. See current `QA_REPORT.md` section ECG-CP5.
+- Dependencies: ECG-LEARN-04; shared source-reference and publication-gate model.
+- Limitations/next action: Becker/Kligfield bibliographic metadata was checked, but both runtime references remain `unverified` pending exact claim support, currentness, and rights review. Two blood-flow assertions are unmapped. Obtain genuine source-review dispositions; narrow/remove claims if unsupported.
+
+### ECG-REVIEW-05 — Versioned review intake and release gate
+
+- Acceptance: reviews bind to content ID, current semantic version, explicit claim/reference scope, and actual update timestamp; incomplete/stale/mismatched/unqualified/contradictory review entries cannot satisfy publication; clinical questions require eligible parent lessons; lessons require eligible published questions/prerequisites; drafts stay out of the Learn catalog.
+- Status: Implemented and locally verified; no real review records added and no content published.
+- Files: `src/content/review-intake.ts`, `src/content/validation.ts`, `src/content/schema.ts`, `src/content/content.test.ts`, `src/content/review-intake.test.ts`, `docs/CONTENT_REVIEW_WORKFLOW.md`, `docs/ARCHITECTURE.md`, `docs/CLINICAL_CONTENT_POLICY.md`.
+- Tests/evidence: 10 new review-intake/publication regression tests added; current `pnpm test:all` passes with 42 total unit tests and 9 browser scenarios. Test-only synthetic reviewer values are confined to unit-test scope and are explicitly labelled as not real; none are in fixtures or the content registry.
+- Dependencies: ECG-CONTENT-05; existing Zod registry and Learn parent/dependency IDs.
+- Limitations/next action: field validation cannot authenticate reviewer identity/credentials, prove source support, determine copyright permission, or prove clinical truth. Reviewers must provide genuine evidence externally; use the intake helper only after verification.
+
+### ECG-QA-05 — Source audit, QA and resumable checkpoint
+
+- Acceptance: correct verified bibliographic defects; report focused source research honestly; record actual local test outputs and current feature-branch/CI status; retain main and production unchanged.
+- Status: Locally complete; feature-branch publication and post-push CI refresh remain the final handoff step.
+- Files: `docs/IMPLEMENTATION_LEDGER.md`, `docs/QA_REPORT.md`, `docs/SESSION_CHECKPOINT.md`, `docs/LESSON_REVIEW_PACKETS.md`, `docs/CLAIM_SOURCE_MATRIX.md`.
+- Tests/evidence: source code, generated artifacts, and Learn catalog inspected; actual `pnpm test:all` result and browser-gate assertion recorded. Starting remote head and CI are recorded in `SESSION_CHECKPOINT.md`.
+- Dependencies: ECG-CONTENT-05, ECG-REVIEW-05.
+- Limitations/next action: local export has no `.git`; publish by non-forced expected-head update to `codex/accessibility-content-governance`, verify new GitHub Actions run, then record final remote evidence. Do not merge or deploy.
+
 ## Completed foundation
 
 ### ECG-BASE-01 — Standalone deterministic simulator and calibration
@@ -142,3 +171,4 @@ This is the canonical task record. Status and evidence below reflect the current
 ## Current checkpoint summary
 
 ECG-CP4 implements the Learn framework while preserving the simulator and strict publication gate. The 16-topic curriculum plan is documented and three lessons/checks are authored as drafts with unverified candidate references. The learner catalog is intentionally empty until genuine reviews arrive. No Practice/Exam mode, KYP integration, merge, or deployment has been performed. The exact branch/commit and next action are recorded in `SESSION_CHECKPOINT.md` and the task handoff.
+

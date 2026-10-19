@@ -1,5 +1,5 @@
 export type { ClaimLink, SourceReference } from './references';
-export type { ContentRecord, LessonContent, VisualDemonstration } from './schema';
+export type { ClaimRecord, ContentRecord, LessonContent, ReviewScope, VisualDemonstration } from './schema';
 
 import type { ContentRecord } from './schema';
 
@@ -9,3 +9,4 @@ export type ContentProvenance = ContentRecord['provenance'];
 export type ContentReviewRecord = ContentRecord['reviewRecords'][number];
 export type LessonRecord = Extract<ContentRecord, { type: 'lesson' }>;
 export type KnowledgeCheckRecord = Extract<ContentRecord, { type: 'question' }>;
+

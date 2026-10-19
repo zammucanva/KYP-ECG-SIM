@@ -1,7 +1,8 @@
 import type { ContentProvenance, ContentRecord, KnowledgeCheckRecord, LessonRecord, SourceReference } from '../types';
 
 const createdAt = '2026-10-19T19:44:52Z';
-const version = '0.2.0';
+const updatedAt = '2026-10-19T20:44:56Z';
+const version = '0.3.0';
 const signalProvenance: ContentProvenance = {
   kind: 'synthetic-ecg',
   generatorId: 'ecg-lab.signal.generateLeadSignals',
@@ -22,35 +23,45 @@ const textOnlyProvenance: ContentProvenance = {
   signalMetadataOmissionReason: 'This knowledge-check record contains text and answer options only; no signal is embedded.',
 };
 
-function beckerReference(objectiveId: string): SourceReference {
+function beckerReference(objectiveId: string, claimIds: string[]): SourceReference {
   return {
     id: 'ref.becker-fundamentals-ecg',
     title: 'Fundamentals of electrocardiography interpretation',
-    kind: 'peer-reviewed-study',
+    kind: 'review-article',
     authors: ['Daniel E Becker'],
-    editionOrVersion: 'Anesthesia Progress, 2006, 53(2), 53–64',
+    editionOrVersion: 'Anesthesia Progress. 2006 Summer;53(2):53–63; quiz 64.',
     doi: '10.2344/0003-3006(2006)53[53:FOEI]2.0.CO;2',
     url: 'https://pubmed.ncbi.nlm.nih.gov/16863387/',
     accessedDate: '2026-10-20',
-    supports: [{ kind: 'objective', objectiveId }],
+    supports: [{ kind: 'objective', objectiveId }, ...claimIds.map(claimId => ({ kind: 'claim' as const, claimId }))],
     verificationStatus: 'unverified',
-    metadataOmissions: [{ field: 'publicationDate', reason: 'The indexed record identifies a season and year, not a calendar publication date.' }],
+    metadataOmissions: [
+      { field: 'publicationDate', reason: 'PubMed identifies Summer 2006, not an exact calendar date.' },
+      { field: 'licence', reason: 'Reuse, redistribution, and modification terms were not verified; citation access is not permission.' },
+    ],
   };
 }
 
-function kligfieldReference(objectiveId: string): SourceReference {
+function kligfieldReference(objectiveId: string, claimIds: string[]): SourceReference {
   return {
     id: 'ref.kligfield-ecg-technology',
-    title: 'Recommendations for the standardization and interpretation of the electrocardiogram: part I: The electrocardiogram and its technology',
-    kind: 'peer-reviewed-study',
+    title: 'Recommendations for the standardization and interpretation of the electrocardiogram. Part I: The electrocardiogram and its technology: a scientific statement from the American Heart Association, American College of Cardiology Foundation, and the Heart Rhythm Society, endorsed by the International Society for Computerized Electrocardiology',
+    kind: 'professional-society-statement',
+    authors: [
+      'Paul Kligfield', 'Leonard S Gettes', 'James J Bailey', 'Rory Childers', 'Barbara J Deal', 'E William Hancock',
+      'Gerard van Herpen', 'Jan A Kors', 'Peter Macfarlane', 'David M Mirvis', 'Olle Pahlm', 'Pentti Rautaharju',
+      'Galen S Wagner', 'Mark Josephson', 'Jay W Mason', 'Peter Okin', 'Borys Surawicz', 'Hein Wellens',
+    ],
     issuingOrganization: 'American Heart Association; American College of Cardiology Foundation; Heart Rhythm Society',
     publicationDate: '2007-03-13',
-    editionOrVersion: 'Part I scientific statement',
+    jurisdiction: 'International; United States professional societies',
+    editionOrVersion: 'Circulation. 2007 Mar 13;115(10):1306–1324; e-published 2007 Feb 23.',
     doi: '10.1161/CIRCULATIONAHA.106.180200',
     url: 'https://pubmed.ncbi.nlm.nih.gov/17322457/',
     accessedDate: '2026-10-20',
-    supports: [{ kind: 'objective', objectiveId }],
+    supports: [{ kind: 'objective', objectiveId }, ...claimIds.map(claimId => ({ kind: 'claim' as const, claimId }))],
     verificationStatus: 'unverified',
+    metadataOmissions: [{ field: 'licence', reason: 'Publisher rights and permissions for reuse, redistribution, or modification were not verified.' }],
   };
 }
 
@@ -63,6 +74,8 @@ const makeCommon = <TType extends 'lesson' | 'question'>(input: {
   objective: string;
   tags: string[];
   sourceReferences: SourceReference[];
+  claims?: Array<{ id: string; statement: string; locations: string[]; basis: 'external-source' | 'project-behavior' }>;
+  parentLessonId?: string;
   provenance?: ContentProvenance;
 }) => ({
   id: input.id,
@@ -76,9 +89,11 @@ const makeCommon = <TType extends 'lesson' | 'question'>(input: {
   publicationStatus: 'draft' as const,
   provenance: input.provenance ?? signalProvenance,
   sourceReferences: input.sourceReferences,
+  ...(input.claims ? { claims: input.claims } : {}),
+  ...(input.parentLessonId ? { parentLessonId: input.parentLessonId } : {}),
   reviewRecords: [],
   createdAt,
-  updatedAt: createdAt,
+  updatedAt,
   version,
   knownLimitations: [
     'Draft content; source-claim mapping, educational review, qualified medical review, and publication approval are still required.',
@@ -96,7 +111,21 @@ export const introductoryLessons = [
       objectiveId: 'what-ecg-measures',
       objective: 'Describe the ECG as a time-varying recording of cardiac electrical potential differences.',
       tags: ['fundamentals', 'signal', 'introductory'],
-      sourceReferences: [beckerReference('what-ecg-measures'), kligfieldReference('what-ecg-measures')],
+      claims: [
+        { id: 'potential-difference-is-voltage-difference', statement: 'Potential difference describes a voltage difference between two points or between a point and a derived reference.', locations: ['keyTerms.Potential difference'], basis: 'external-source' },
+        { id: 'ecg-surface-potential-over-time', statement: 'An ECG displays changes in electrical potentials detected at the body surface over time.', locations: ['sections.signal-over-time.body', 'keyTakeaways[0]', 'learningObjectives.what-ecg-measures'], basis: 'external-source' },
+        { id: 'ecg-not-mechanical-measurement', statement: 'An ECG trace is not a direct measurement of cardiac mechanical contraction.', locations: ['sections.signal-over-time.body', 'keyTakeaways[1]'], basis: 'external-source' },
+        { id: 'ecg-not-blood-flow-measurement', statement: 'An ECG trace is not a direct measurement of blood flow.', locations: ['sections.signal-over-time.body'], basis: 'external-source' },
+        { id: 'ecg-not-palpable-pulse', statement: 'An ECG trace is not itself a palpable pulse.', locations: ['sections.signal-over-time.body'], basis: 'external-source' },
+        { id: 'lead-is-derived-view', statement: 'A lead is an electrical view derived from electrode measurements, not a synonym for an electrode.', locations: ['sections.read-the-representation.body', 'keyTerms.Lead', 'keyTakeaways[1]'], basis: 'external-source' },
+        { id: 'lead-view-changes-trace-appearance', statement: 'A change in lead view can change the appearance of recorded electrical activity.', locations: ['sections.read-the-representation.body'], basis: 'external-source' },
+        { id: 'template-is-synthetic', statement: 'The displayed trace is produced by the simulator synthetic template and is not validated patient physiology.', locations: ['sections.read-the-representation.body', 'visualDemonstrations.template-waveform.description', 'keyTakeaways[2]'], basis: 'project-behavior' },
+        { id: 'annotations-are-authored-regions', statement: 'P-like, QRS-like, and T-like annotations are authored regions and not automated boundary detections.', locations: ['visualDemonstrations.template-waveform.description', 'visualDemonstrations.template-waveform.annotations'], basis: 'project-behavior' },
+      ],
+      sourceReferences: [
+        beckerReference('what-ecg-measures', ['potential-difference-is-voltage-difference', 'ecg-surface-potential-over-time', 'ecg-not-mechanical-measurement', 'ecg-not-palpable-pulse', 'lead-is-derived-view', 'lead-view-changes-trace-appearance']),
+        kligfieldReference('what-ecg-measures', ['potential-difference-is-voltage-difference', 'ecg-surface-potential-over-time', 'lead-is-derived-view', 'lead-view-changes-trace-appearance']),
+      ],
     }),
     lessonContent: {
       sequence: 1,
@@ -148,7 +177,17 @@ export const introductoryLessons = [
       objectiveId: 'electrodes-versus-leads',
       objective: 'Differentiate physical electrodes from lead views derived from electrode measurements.',
       tags: ['fundamentals', 'leads', '12-lead'],
-      sourceReferences: [beckerReference('electrodes-versus-leads'), kligfieldReference('electrodes-versus-leads')],
+      claims: [
+        { id: 'electrode-is-physical-contact', statement: 'An electrode is a physical contact used to acquire surface electrical potentials.', locations: ['sections.physical-electrodes.body', 'keyTerms.Electrode'], basis: 'external-source' },
+        { id: 'lead-is-derived-view', statement: 'A lead is an electrical view formed or calculated from electrode measurements.', locations: ['sections.physical-electrodes.body', 'keyTerms.Lead view', 'keyTakeaways[0]'], basis: 'external-source' },
+        { id: 'views-can-exceed-electrodes', statement: 'An ECG can display more lead views than there are physical electrode contacts.', locations: ['sections.physical-electrodes.body'], basis: 'external-source' },
+        { id: 'limb-leads-share-timeline', statement: 'The simulator limb-lead traces use time-aligned source signals on one shared timeline.', locations: ['sections.derived-lead-views.body', 'keyTerms.Time alignment', 'visualDemonstrations.limb-lead-views.description'], basis: 'project-behavior' },
+        { id: 'limb-lead-demo-is-not-patient-placement', statement: 'The simulator limb-lead demonstration does not represent electrode placement on a patient or validate synthetic morphology.', locations: ['sections.derived-lead-views.body', 'keyTakeaways[2]'], basis: 'project-behavior' },
+      ],
+      sourceReferences: [
+        beckerReference('electrodes-versus-leads', ['electrode-is-physical-contact', 'lead-is-derived-view', 'views-can-exceed-electrodes']),
+        kligfieldReference('electrodes-versus-leads', ['electrode-is-physical-contact', 'lead-is-derived-view', 'views-can-exceed-electrodes']),
+      ],
     }),
     lessonContent: {
       sequence: 2,
@@ -195,7 +234,19 @@ export const introductoryLessons = [
       objectiveId: 'paper-speed-and-gain',
       objective: 'Explain how paper speed sets horizontal time scale and gain sets vertical voltage scale.',
       tags: ['fundamentals', 'calibration', 'grid'],
-      sourceReferences: [kligfieldReference('paper-speed-and-gain')],
+      claims: [
+        { id: 'paper-speed-time-scale', statement: 'Paper speed defines the horizontal distance corresponding to elapsed time; at 25 mm/s, 5 mm represents 200 ms.', locations: ['sections.horizontal-time-scale.body', 'keyTerms.Paper speed', 'keyTakeaways[0]', 'knowledge-check prompt and explanation'], basis: 'external-source' },
+        { id: 'gain-voltage-scale', statement: 'ECG display gain defines vertical distance per unit voltage.', locations: ['sections.vertical-voltage-scale.body', 'keyTerms.Gain', 'keyTakeaways[1]'], basis: 'external-source' },
+        { id: 'standard-grid-units', statement: 'Standard ECG paper uses 1 mm minor divisions and 5 mm major divisions.', locations: ['sections.read-the-grid.body'], basis: 'external-source' },
+        { id: 'simulator-time-voltage-transform', statement: 'Changing simulator speed or gain changes rendered coordinates but does not change stored timestamps or source voltages.', locations: ['sections.horizontal-time-scale.body', 'sections.vertical-voltage-scale.body', 'keyTakeaways[0..1]'], basis: 'project-behavior' },
+        { id: 'calibration-pulse-shares-transform', statement: 'The simulator calibration pulse uses the same voltage transformation as the waveform.', locations: ['sections.vertical-voltage-scale.body', 'visualDemonstrations.calibration-grid.description'], basis: 'project-behavior' },
+        { id: 'logical-grid-is-not-screen-mm', statement: 'Simulator logical millimetres and SVG units do not guarantee physical millimetres on a browser screen.', locations: ['sections.vertical-voltage-scale.body', 'keyTakeaways[2]'], basis: 'project-behavior' },
+        { id: 'simulator-grid-coordinate-units', statement: 'The simulator grid uses logical 1-unit minor spacing and 5-unit major spacing.', locations: ['sections.read-the-grid.body'], basis: 'project-behavior' },
+      ],
+      sourceReferences: [
+        beckerReference('paper-speed-and-gain', ['paper-speed-time-scale', 'gain-voltage-scale', 'standard-grid-units']),
+        kligfieldReference('paper-speed-and-gain', ['paper-speed-time-scale', 'gain-voltage-scale']),
+      ],
     }),
     lessonContent: {
       sequence: 3,
@@ -249,7 +300,16 @@ export const introductoryKnowledgeChecks = [
       objectiveId: 'what-ecg-measures',
       objective: 'Describe the ECG as a time-varying recording of cardiac electrical potential differences.',
       tags: ['formative-check', 'fundamentals'],
-      sourceReferences: [beckerReference('what-ecg-measures'), kligfieldReference('what-ecg-measures')],
+      parentLessonId: 'learn.what-an-ecg-measures',
+      claims: [
+        { id: 'ecg-surface-potential-over-time', statement: 'An ECG displays changes in electrical potentials detected at the body surface over time.', locations: ['prompt', 'choices.electrical-over-time', 'correctAnswerIds', 'explanation'], basis: 'external-source' },
+        { id: 'ecg-not-mechanical-measurement', statement: 'An ECG is not a direct measurement of mechanical contraction.', locations: ['choices.mechanical-contraction', 'explanation'], basis: 'external-source' },
+        { id: 'ecg-not-blood-flow-measurement', statement: 'An ECG is not a direct measurement of blood flow.', locations: ['choices.blood-flow', 'explanation'], basis: 'external-source' },
+      ],
+      sourceReferences: [
+        beckerReference('what-ecg-measures', ['ecg-surface-potential-over-time', 'ecg-not-mechanical-measurement']),
+        kligfieldReference('what-ecg-measures', ['ecg-surface-potential-over-time']),
+      ],
       provenance: textOnlyProvenance,
     }),
     questionType: 'single-best-answer',
@@ -271,7 +331,15 @@ export const introductoryKnowledgeChecks = [
       objectiveId: 'electrodes-versus-leads',
       objective: 'Differentiate physical electrodes from lead views derived from electrode measurements.',
       tags: ['formative-check', 'leads'],
-      sourceReferences: [beckerReference('electrodes-versus-leads'), kligfieldReference('electrodes-versus-leads')],
+      parentLessonId: 'learn.electrodes-versus-leads',
+      claims: [
+        { id: 'electrode-is-physical-contact', statement: 'An electrode is a physical recording contact; a lead is a view derived from electrode measurements.', locations: ['prompt', 'choices.contact-and-view', 'explanation'], basis: 'external-source' },
+        { id: 'views-can-exceed-electrodes', statement: 'Lead views are not in one-to-one correspondence with physical electrode contacts.', locations: ['choices.one-trace-per-electrode', 'explanation'], basis: 'external-source' },
+      ],
+      sourceReferences: [
+        beckerReference('electrodes-versus-leads', ['electrode-is-physical-contact', 'views-can-exceed-electrodes']),
+        kligfieldReference('electrodes-versus-leads', ['electrode-is-physical-contact', 'views-can-exceed-electrodes']),
+      ],
       provenance: textOnlyProvenance,
     }),
     questionType: 'single-best-answer',
@@ -293,7 +361,14 @@ export const introductoryKnowledgeChecks = [
       objectiveId: 'paper-speed-and-gain',
       objective: 'Explain how paper speed sets horizontal time scale and gain sets vertical voltage scale.',
       tags: ['formative-check', 'calibration'],
-      sourceReferences: [kligfieldReference('paper-speed-and-gain')],
+      parentLessonId: 'learn.paper-speed-and-gain',
+      claims: [
+        { id: 'paper-speed-time-scale', statement: 'At 25 mm/s, 5 mm of horizontal paper distance represents 200 ms.', locations: ['prompt', 'choices.200-ms', 'correctAnswerIds', 'explanation'], basis: 'external-source' },
+      ],
+      sourceReferences: [
+        beckerReference('paper-speed-and-gain', ['paper-speed-time-scale']),
+        kligfieldReference('paper-speed-and-gain', ['paper-speed-time-scale']),
+      ],
       provenance: textOnlyProvenance,
     }),
     questionType: 'single-best-answer',
@@ -312,3 +387,4 @@ export const introductoryLearnDrafts: ContentRecord[] = [
   ...introductoryLessons,
   ...introductoryKnowledgeChecks,
 ];
+
