@@ -1,39 +1,40 @@
-# Session checkpoint
+# Session checkpoint — ECG-CP4 Learn framework
 
-Date: 2026-10-19
+Date: 2026-10-20 (Asia/Kolkata)
 
 ## Repository and branch state
 
 - Repository: `zammucanva/KYP-ECG-SIM`.
-- Verified starting branch: `codex/playwright-browser-regression` at `6e04906d11c5ee6b304c291cec643db3ec430f5e`.
-- Verified `main`: `9544b96d87a44fce4334691145f5c53870871fa5`; it was not used as a write target.
-- Checkpoint branch: `codex/accessibility-content-governance`, created from the verified starting commit. The commit containing this file is the branch head; its exact SHA is returned in the task handoff. (A commit cannot contain its own SHA without changing itself.)
-- The local project directory has no `.git`. Before writing, local tracked file contents were compared against the remote branch tree. Differences were only Windows line endings/final-newline normalization; the existing source logic matched. Changes were overlaid on the verified remote tree, and generated `node_modules`, `dist`, Playwright results, and `tsconfig.tsbuildinfo` were not included.
-- No KYP production files, deployment targets, or main-branch refs were changed.
+- Verified starting feature branch: `codex/accessibility-content-governance` at `6b0d7ef01cd218c62d9376bb816cb5d95299d7a8`.
+- Verified `main`: `9544b96d87a44fce4334691145f5c53870871fa5`; no changes were made to it.
+- Baseline GitHub Actions run `39252642744` passed for the starting checkpoint.
+- Local project: `C:\Users\TSHAM\Documents\Codex\2026-10-19\hel\work\ecg-lab`; it has no `.git` metadata. The starting remote branch/tree was verified before edits. Generated `node_modules`, `dist`, `.playwright-browsers`, `test-results`, and TypeScript build state are not intended for commit.
+- This milestone is being published only to the existing feature branch using the connected GitHub workflow with an expected-head check. The final remote commit SHA and current CI result are reported in the task handoff; refresh this branch before continuing because this file cannot contain its own commit SHA.
+- No merge, deployment, KYP production edits, or Practice/Exam work.
 
-## Completed in this checkpoint
+## Verified in this checkpoint
 
-- Focused accessibility audit with keyboard, semantic, contrast, reduced-motion, responsive, manual visual, and automated axe coverage.
-- Corrected light-theme small-text contrast, the theme-toggle visible-name mismatch, explicit focus styling on waveform scroll regions, and mobile control/monitor visual order.
-- Added Zod-based lesson, question, case, waveform, provenance, reference, and review-record schemas; validation and publication readiness remain separate.
-- Added allowed lifecycle transitions, version-specific review gates, safe registry filtering, developer-readable validation issues, and clearly labelled draft/invalid fixtures without fabricated reviewer data.
-- Updated accessibility, schema, provenance, clinical policy, review workflow, architecture, QA, ledger, roadmap, README, and checkpoint documentation.
-- No Learn, Practice, or Exam UI was started.
+- Added the structured shared lesson schema and prerequisites/question dependency validation.
+- Added a 16-topic curriculum plan and three authored introductory lessons with linked checks. They remain drafts; their candidate references are marked unverified, and there are no fabricated review records.
+- Added a registry-filtered Learn catalog, reusable lesson reader, keyboard-accessible section navigation, manual section completion, deterministic formative checks with post-submit explanations/retry, shared calibration/lead/RR demonstrations, and versioned local progress/reset.
+- The learner-facing list intentionally remains empty until valid current-version source/licensing, educational, qualified medical, and publication review records are provided for the lesson/check dependencies.
+- Preserved the ECG simulator, 12-lead data, machine settings, calibration, measurements, themes, accessibility fixes, and content governance. Learn/Practice/Exam are not connected to KYP.
 
 ## Commands and actual results
 
-- Pre-change baseline: `pnpm test` 9/9; `pnpm typecheck` passed; `pnpm build` passed; `pnpm test:e2e` 5/5.
-- Final `pnpm test:all`: exit 0; 19/19 unit tests; app and E2E type checks passed; production build passed; 8/8 Chromium scenarios passed.
-- The axe scan found no violations across six tested light/dark, single/12-lead, desktop/mobile states after corrections. There were no rule exclusions.
-- See `QA_REPORT.md` and `ACCESSIBILITY_AUDIT.md` for scope and evidence details.
+- Baseline before Learn changes: 19/19 unit tests; app/E2E type checks passed; production build passed; browser tests passed 8/8 after using a task-local Chromium browser cache.
+- `pnpm install --frozen-lockfile`: passed.
+- Final `pnpm test:all`: exit 0; 32/32 unit tests, application and E2E type-checks, production build, and 9/9 Chromium scenarios passed. Axe scans reported no violations in the tested simulator and Learn catalog states, with no rule exclusions. Exact output and scope are recorded in `QA_REPORT.md`.
+- The desktop visual inspection helper could not initialize (missing kernel asset path). No manual screenshot review of the new Learn layout is claimed.
 
 ## Known limitations
 
-- No actual screen-reader session, true browser-zoom test, text-only zoom, OS high-contrast test, translated-label stress test, physical-size print test, or full WCAG audit was completed.
-- Synthetic morphology is unvalidated educational material. No real ECG dataset, clinical reference, clinical case, medical reviewer, licence approval, or publication approval was added.
-- Starter content is draft-only; the published learner registry is empty by design.
-- GitHub Actions is configured to run on branch updates. Its status must be checked against the current branch head; no result is inferred from configuration alone. The task handoff reports the verified run, if completed.
+- No lesson or linked check is published. User will provide real review records after review; source claim mappings must also be verified against those records.
+- Indian MBBS/CBME alignment is a planned requirement, not yet mapped or endorsed. No competency code is asserted.
+- Synthetic morphology remains educational and unvalidated; no patient recordings or clinical diagnosis examples were added.
+- No real screen-reader, 200% browser zoom, OS high-contrast, localization, or full WCAG evaluation was completed. Automated axe is supporting evidence, not certification.
+- Practice mode, Exam mode, clinical case library, KYP adapter implementation, physical-size export, automated boundary detection, and artifact simulation remain future work.
 
 ## Exact next action
 
-Design a concise ECG fundamentals curriculum and map each objective to substantiated sources. Author only draft content, validate it through `src/content/`, and obtain genuine educational/medical review before implementing the lesson renderer. Keep KYP integration and deployment as separate explicitly authorized tasks.
+Publish only to `codex/accessibility-content-governance` with a compare-and-swap against the freshly verified remote head (abort if it moved unexpectedly), then check GitHub Actions on the resulting commit. Refresh this checkpoint with the resulting branch SHA and workflow evidence. After actual review records are supplied, verify references and versions, update draft metadata without fabricating missing details, and confirm the published registry then exposes only eligible published lessons.

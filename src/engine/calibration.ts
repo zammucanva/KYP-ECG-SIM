@@ -2,6 +2,8 @@ import type { Gain, PaperSpeed } from './types';
 
 /** SVG user units per logical ECG paper millimetre. This is not a CSS-pixel size. */
 export const SVG_UNITS_PER_MM = 4;
+/** Browser preview scale only. It does not claim CSS pixels are physical millimetres. */
+export const PREVIEW_CSS_PIXELS_PER_SVG_UNIT = 0.8;
 
 export const timeToMm = (seconds: number, speed: PaperSpeed) => seconds * speed;
 export const voltageToMm = (mv: number, gain: Gain) => mv * gain;

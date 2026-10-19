@@ -29,4 +29,4 @@ Approved review records require an identity and review date. Clinical medical ap
 
 `loadContentRegistry()` keeps raw rejected values and useful path-specific errors for correction, but excludes them from its valid and published lists. Duplicate IDs and unresolved case-to-waveform references are withheld. It does not silently replace invalid content.
 
-The starter registry contains only non-clinical orientation, synthetic waveform metadata, and an unpublished clinical case shell. All are drafts, with no human review records; there are no published lessons, questions, waveforms, or clinical cases. This is intentional: no reviewer identity, qualification, or approval has been supplied for this project.
+The registry contains starter governance fixtures plus three authored introductory lesson drafts and their three linked formative-question drafts. Candidate references on those drafts remain unverified. The case shell and waveform example remain unpublished drafts. There are no published lessons, questions, waveforms, or clinical cases. This is intentional: no reviewer identity, qualification, source/licensing check, or approval has been supplied for this project.

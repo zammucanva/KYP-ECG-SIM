@@ -1,12 +1,12 @@
 # Educational content schema
 
-This is the standalone ECG Lab content contract. It is independent of React and signal rendering; no learning-mode screen consumes it yet. Runtime schemas are defined with [Zod 4](https://zod.dev/basics) and exported TypeScript types are inferred from those schemas so the runtime and static representations share one source of truth. Registry input uses `safeParse()` results so expected malformed records become validation issues instead of uncaught parse exceptions.
+This is the standalone ECG Lab content contract. It is independent of React and signal rendering. The Learn catalog consumes only records accepted by the shared runtime registry and publication-readiness gates. Runtime schemas are defined with [Zod 4](https://zod.dev/basics) and exported TypeScript types are inferred from those schemas so the runtime and static representations share one source of truth. Registry input uses `safeParse()` results so expected malformed records become validation issues instead of uncaught parse exceptions.
 
 ## Record types
 
 `ContentRecord` is a discriminated union on `type`:
 
-- `lesson`: requires `lessonContent`.
+- `lesson`: requires structured `lessonContent` containing a stable sequence, prerequisite lesson IDs, ordered plain-text sections, optional section-to-demonstration links, key terms, takeaways, visual demonstrations, and linked knowledge-check IDs. Demonstrations are a discriminated union for calibration, limb-lead relationships, authored waveform annotations, or RR/rate interaction. Section and demonstration IDs must resolve within the record.
 - `question`: requires question type, prompt, unique choices, answer IDs that exist in those choices, and an explanation. Single-best-answer records must contain exactly one correct answer.
 - `case`: always has `contentDomain: clinical-education`; requires context, findings, prompt, answer, rationale, explanation, and may link to a waveform content ID.
 - `waveform`: requires one of the ECG-signal provenance categories and its technical metadata.
@@ -33,6 +33,8 @@ Review readiness is version-specific. A new version cannot inherit approval from
 
 ## Registry and safe failure
 
-`loadContentRegistry(unknown)` returns validated records, an eligible published subset, rejected original values, and path-specific developer issues. Invalid and duplicate-ID entries are withheld; unresolved case-to-waveform links are reported. No substitute diagnosis, waveform, or default content is generated. The caller may pass an issue callback for development logging. Starter fixtures contain valid drafts only; no fictitious review or approval metadata is seeded, so the learner-facing published list is correctly empty.
+`loadContentRegistry(unknown)` returns validated records, an eligible published subset, rejected original values, and path-specific developer issues. Invalid and duplicate-ID entries are withheld; unresolved case-to-waveform and lesson-to-question/prerequisite links are reported. A published lesson requires every linked question and prerequisite lesson to be published and independently eligible; dependency cycles are rejected. No substitute diagnosis, waveform, or default content is generated. The caller may pass an issue callback for development logging. The initial Learn records are drafts and no fictitious review or approval metadata is seeded, so the learner-facing published list is correctly empty.
+
+Lesson sections are plain text, not HTML. The renderer never interprets them as markup. Knowledge checks use the existing shared `question` record; answer keys and explanations are held until learner submission in the interface. This is a formative lesson interaction, not Practice or Exam mode. See `LEARN_CURRICULUM.md` for topic state and `ARCHITECTURE.md` for rendering and progress boundaries.
 
 See `CONTENT_PROVENANCE.md`, `CLINICAL_CONTENT_POLICY.md`, and `CONTENT_REVIEW_WORKFLOW.md` for the source, clinical, and workflow rules.

@@ -22,8 +22,46 @@ export const validEducationalFixture = {
   updatedAt: fixtureTimestamp,
   version: '0.1.0',
   knownLimitations: ['Fixture content only; not reviewed or approved for learner publication.'],
-  lessonContent: 'The simulator stores time in milliseconds and voltage in millivolts. Its screen preview is not a physical-size ECG printout.',
+  lessonContent: {
+    sequence: 1,
+    prerequisiteIds: [],
+    sections: [{ id: 'coordinate-display', title: 'Logical display units', body: 'The simulator stores time in milliseconds and voltage in millivolts. Its screen preview is not a physical-size ECG printout.', demonstrationId: 'coordinate-demo' }],
+    keyTerms: [{ term: 'Logical millimetre', definition: 'A coordinate unit used by the simulator to represent ECG paper geometry; it is not a promise of physical screen size.' }],
+    keyTakeaways: ['The preview coordinate system is calibrated independently of CSS-pixel size.'],
+    visualDemonstrations: [{ id: 'coordinate-demo', kind: 'calibration-explorer', title: 'Calibration explorer', description: 'Change display settings and observe the shared calibration transforms.' }],
+    knowledgeCheckIds: ['fixture.coordinate-question'],
+  },
 } satisfies Extract<ContentRecord, { type: 'lesson' }>;
+
+export const validKnowledgeCheckFixture = {
+  id: 'fixture.coordinate-question',
+  type: 'question',
+  title: 'Coordinate basics check',
+  summary: 'A non-clinical check about the simulator display.',
+  learningObjectives: [{ id: 'coordinate-units', statement: 'Identify the logical units used by this simulator display.' }],
+  difficulty: 'introductory',
+  tags: ['simulator', 'non-clinical'],
+  contentDomain: 'non-clinical-education',
+  publicationStatus: 'draft',
+  provenance: {
+    kind: 'text-only-explanation',
+    signalMetadataOmissionReason: 'This fixture contains no ECG signal or clinical claim.',
+  },
+  sourceReferences: [],
+  reviewRecords: [],
+  createdAt: fixtureTimestamp,
+  updatedAt: fixtureTimestamp,
+  version: '0.1.0',
+  knownLimitations: ['Fixture only; not reviewed or approved for learner publication.'],
+  questionType: 'single-best-answer',
+  prompt: 'Which values are canonical in the simulator engine?',
+  choices: [
+    { id: 'milliseconds-millivolts', text: 'Milliseconds and millivolts' },
+    { id: 'css-pixels', text: 'CSS pixels and points' },
+  ],
+  correctAnswerIds: ['milliseconds-millivolts'],
+  explanation: 'Signal timestamps are stored in milliseconds and voltages in millivolts.',
+} satisfies Extract<ContentRecord, { type: 'question' }>;
 
 export const draftWaveformFixture = {
   id: 'fixture.synthetic-signal-metadata',
@@ -96,6 +134,7 @@ export const invalidContentFixture: unknown = {
 
 export const starterContentFixtures: ContentRecord[] = [
   validEducationalFixture,
+  validKnowledgeCheckFixture,
   draftWaveformFixture,
   draftClinicalCaseShell,
 ];

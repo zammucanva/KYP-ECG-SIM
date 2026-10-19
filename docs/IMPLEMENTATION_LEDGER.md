@@ -49,7 +49,7 @@ This is the canonical task record. Status and evidence below reflect the current
 - Dependencies: Playwright and installed Chromium runtime.
 - Limitations/next action: browser automation does not substitute for manual assistive-technology testing.
 
-## Current checkpoint — ECG-CP3
+## Previous checkpoint — ECG-CP3
 
 ### ECG-A11Y-03 — Focused accessibility audit
 
@@ -78,6 +78,38 @@ This is the canonical task record. Status and evidence below reflect the current
 - Dependencies: ECG-CONTENT-03.
 - Limitations/next action: human source/licence and clinical checks are represented as workflow data, not automated proof; no medical reviewer data has been supplied.
 
+### ECG-LEARN-04 — First Learn-mode milestone
+
+- Acceptance: validated-content-backed Learn catalog and reusable lesson renderer; structured beginner-to-intermediate ECG curriculum; interactive calibration/lead demonstrations using shared engine transforms; deterministic accessible checks; versioned local progress and reset; responsive light/dark UI; no Practice/Exam interface or KYP integration.
+- Status: Learn framework implemented; first content release is gated on genuine review records that the user will provide after review. No draft is exposed as published and the learner catalog is intentionally empty.
+- Files: `src/learn/`, `src/content/learn/`, shared lesson schema/registry validation, `tests/e2e/ecg-lab.spec.ts`, `docs/LEARN_CURRICULUM.md`, schema/architecture/accessibility/QA/roadmap/checkpoint documentation, `src/styles.css`, `src/main.tsx`, `vite.config.ts`, `package.json`, `pnpm-lock.yaml`.
+- Baseline evidence (2026-10-20): remote feature branch `codex/accessibility-content-governance` at `6b0d7ef01cd218c62d9376bb816cb5d95299d7a8`; `main` remains `9544b96d87a44fce4334691145f5c53870871fa5`; baseline CI run `39252642744` passed. Local folder has no `.git`. Before implementation, unit tests (19), app/E2E type checks, and build passed; browser tests passed 8/8 after installing Chromium in a task-local browser cache because the first attempt lacked the binary. The browser installation is generated local state and is not part of source changes.
+- Dependencies: ECG-CONTENT-03, ECG-REG-03, ECG-A11Y-03, ECG-CAL-02, ECG-LEAD-02.
+- Outstanding limitations: no reviewer/approval evidence, so no content can be honestly represented as published. Existing publication checks must remain authoritative. Synthetic signal templates are educational only and unvalidated.
+- Current evidence: `pnpm install --frozen-lockfile` passed; final `pnpm test:all` exit 0; 32/32 Vitest, application and E2E type checks, production build, and 9/9 Chromium scenarios passed. Axe reported no violations for six simulator and four Learn theme/responsive states with no rule exclusions. See `QA_REPORT.md` for exact details.
+- Outstanding limitations: no reviewer/approval evidence, so no lesson/question can be represented as published and the visible catalog is empty. Candidate references are explicitly unverified; India-specific MBBS/CBME mapping is not yet established. Synthetic morphology is educational only and unvalidated. Desktop visual inspection helper failed to initialize; automated browser coverage passed, but no manual visual screenshot review of the new Learn composition was completed.
+- Next action: receive actual source/educational/qualified medical/publication review records, verify that they match the exact record versions and claim mappings, then update only those drafts and confirm the published registry populates. Do not invent or fabricate approval metadata.
+
+## Current checkpoint — ECG-CP4
+
+### ECG-LEARN-04 — First Learn-mode framework
+
+- Acceptance: validated-content-backed catalog and reusable lesson renderer; 16-topic beginner-to-intermediate curriculum plan; sourced introductory draft subset; interactive demonstrations using shared calibration/signal functions; accessible deterministic checks; versioned local progress/reset; responsive theme-aware layout; no Practice/Exam or KYP integration.
+- Status: Framework implemented and tested. Content availability remains governance-gated; no lesson is published because the required genuine reviews have not yet been supplied.
+- Files: `src/learn/LearnMode.tsx`, `src/learn/Demonstrations.tsx`, `src/learn/progress.ts`, `src/learn/learn.test.tsx`, `src/content/learn/records.ts`, `src/content/learn/registry.ts`, `src/content/schema.ts`, `src/content/validation.ts`, `src/content/registry.ts`, `src/engine/calibration.ts`, `src/main.tsx`, `src/styles.css`, `tests/e2e/ecg-lab.spec.ts`, `docs/LEARN_CURRICULUM.md`.
+- Tests/evidence: Learn components are gated by `publishedLearnLessons`; drafts/questions do not appear in the rendered catalog. Unit and E2E test details are recorded in `QA_REPORT.md` after the final full-suite run.
+- Dependencies: ECG-CONTENT-03, ECG-REG-03, ECG-A11Y-03, ECG-CAL-02, ECG-LEAD-02.
+- Limitations/next action: the lesson reader, navigation, demonstrations, checks and progress mechanics are implemented, but learner-facing content remains unavailable until actual review records and verified source mappings are supplied. Finish publication review before treating Learn as content-complete.
+
+### ECG-QA-04 — Learn regression, docs and checkpoint
+
+- Acceptance: full tests, type-check, build, Playwright checks; docs and resumable checkpoint updated; current feature branch verified and updated without changing main; no KYP integration or deployment.
+- Status: Local implementation, documentation and full verification complete; remote commit/CI evidence pending.
+- Files: `docs/ACCESSIBILITY_AUDIT.md`, `docs/ARCHITECTURE.md`, `docs/CONTENT_SCHEMA.md`, `docs/LEARN_CURRICULUM.md`, `docs/IMPLEMENTATION_LEDGER.md`, `docs/QA_REPORT.md`, `docs/ROADMAP.md`, `docs/SESSION_CHECKPOINT.md`, `README.md`.
+- Tests/evidence: `pnpm test:all` exit 0; 32 unit tests, type-check, build, and 9 browser scenarios passed. Branch-head compare-and-swap and post-push GitHub Actions check remain.
+- Dependencies: ECG-LEARN-04.
+- Limitations/next action: local export has no `.git`; use the connected GitHub workflow with a compare-and-swap branch update, never force-push. Verify CI on the resulting head.
+
 ### ECG-QA-03 — Regression, documentation and checkpoint
 
 - Acceptance: full tests/type-check/build/browser checks; architecture, QA, roadmap, session and ledger updated; non-main branch; no KYP integration or deployment.
@@ -88,15 +120,6 @@ This is the canonical task record. Status and evidence below reflect the current
 - Limitations/next action: local folder has no `.git`; branch and commit are verified through GitHub. See final branch/commit in `SESSION_CHECKPOINT.md` and handoff.
 
 ## Not started / blocked by governance
-
-### ECG-LEARN-04 — Fundamentals curriculum and validated lesson renderer
-
-- Acceptance: concise sourced curriculum, draft-first content authored outside React, validated registry consumption, accessible lesson rendering.
-- Status: Not started.
-- Files: none yet; future work will use `src/content/`.
-- Tests/evidence: none.
-- Dependencies: ECG-CONTENT-03, ECG-REG-03, genuine content review.
-- Limitations/next action: propose learning objectives and source map first; do not invent Indian clinical guidance or publish unreviewed content.
 
 ### ECG-PRACTICE-05 / ECG-EXAM-06 — Questions and exam mode
 
@@ -118,4 +141,4 @@ This is the canonical task record. Status and evidence below reflect the current
 
 ## Current checkpoint summary
 
-ECG-CP3 is implemented and locally verified. It corrects the confirmed accessibility defects, adds content governance without embedding clinical claims or unfinished learning screens, and preserves existing simulator behavior. No clinical content is published. The exact remote branch/base and next action are in `SESSION_CHECKPOINT.md`.
+ECG-CP4 implements the Learn framework while preserving the simulator and strict publication gate. The 16-topic curriculum plan is documented and three lessons/checks are authored as drafts with unverified candidate references. The learner catalog is intentionally empty until genuine reviews arrive. No Practice/Exam mode, KYP integration, merge, or deployment has been performed. The exact branch/commit and next action are recorded in `SESSION_CHECKPOINT.md` and the task handoff.

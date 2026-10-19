@@ -1,4 +1,4 @@
-import type { ContentRecord } from './types';
+import type { ContentRecord, LessonRecord } from './types';
 import { contentRecordSchema } from './schema';
 import { validateContentRecord, type ContentIssue } from './validation';
 
@@ -69,4 +69,11 @@ export function loadContentRegistry(input: unknown, onIssue?: (issue: ContentIss
   const records = structurallyValid.filter(item => validIndexes.has(item.index)).map(item => item.record);
   issues.forEach(issue => onIssue?.(issue));
   return { records, published: records.filter(record => record.publicationStatus === 'published'), rejected, issues };
+}
+
+/** Learner catalogs use only records that survived the registry's validation and publication gates. */
+export function getPublishedLessons(registry: RegistryLoadResult): LessonRecord[] {
+  return registry.published
+    .filter((record): record is LessonRecord => record.type === 'lesson')
+    .sort((left, right) => left.lessonContent.sequence - right.lessonContent.sequence || left.id.localeCompare(right.id));
 }

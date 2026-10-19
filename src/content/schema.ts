@@ -143,6 +143,75 @@ export const provenanceSchema = z.discriminatedUnion('kind', [
 ]);
 
 const objectiveSchema = z.strictObject({ id: contentIdSchema, statement: shortText });
+const lessonSectionSchema = z.strictObject({
+  id: contentIdSchema,
+  title: shortText,
+  body: text,
+  demonstrationId: contentIdSchema.optional(),
+});
+const lessonKeyTermSchema = z.strictObject({ term: shortText, definition: text });
+const demonstrationBase = {
+  id: contentIdSchema,
+  title: shortText,
+  description: shortText,
+};
+const annotationSchema = z.strictObject({
+  label: shortText,
+  startMs: z.number().finite().min(0).max(10_000),
+  endMs: z.number().finite().min(0).max(10_000),
+}).refine(annotation => annotation.startMs < annotation.endMs, {
+  path: ['endMs'],
+  message: 'An annotation must end after it starts.',
+});
+
+export const visualDemonstrationSchema = z.discriminatedUnion('kind', [
+  z.strictObject({ ...demonstrationBase, kind: z.literal('calibration-explorer') }),
+  z.strictObject({
+    ...demonstrationBase,
+    kind: z.literal('limb-lead-relationships'),
+    leads: z.array(leadSchema).min(2).max(6),
+  }),
+  z.strictObject({
+    ...demonstrationBase,
+    kind: z.literal('waveform-components'),
+    lead: leadSchema,
+    annotations: z.array(annotationSchema).min(1).max(20),
+  }),
+  z.strictObject({
+    ...demonstrationBase,
+    kind: z.literal('rr-rate'),
+    initialRrMs: z.number().finite().int().min(300).max(3000),
+  }),
+]);
+
+export const lessonContentSchema = z.strictObject({
+  sequence: z.number().int().min(1).max(10_000),
+  prerequisiteIds: z.array(contentIdSchema).max(30),
+  sections: z.array(lessonSectionSchema).min(1).max(50),
+  keyTerms: z.array(lessonKeyTermSchema).max(50),
+  keyTakeaways: z.array(shortText).min(1).max(30),
+  visualDemonstrations: z.array(visualDemonstrationSchema).min(1).max(10),
+  knowledgeCheckIds: z.array(contentIdSchema).min(1).max(20),
+}).superRefine((lesson, context) => {
+  const sectionIds = lesson.sections.map(section => section.id);
+  if (new Set(sectionIds).size !== sectionIds.length) {
+    context.addIssue({ code: 'custom', path: ['sections'], message: 'Lesson section IDs must be unique.' });
+  }
+  const demonstrationIds = lesson.visualDemonstrations.map(demonstration => demonstration.id);
+  if (new Set(demonstrationIds).size !== demonstrationIds.length) {
+    context.addIssue({ code: 'custom', path: ['visualDemonstrations'], message: 'Demonstration IDs must be unique within a lesson.' });
+  }
+  if (lesson.sections.some(section => section.demonstrationId && !demonstrationIds.includes(section.demonstrationId))) {
+    context.addIssue({ code: 'custom', path: ['sections'], message: 'Every section demonstration link must resolve within this lesson.' });
+  }
+  if (new Set(lesson.prerequisiteIds).size !== lesson.prerequisiteIds.length) {
+    context.addIssue({ code: 'custom', path: ['prerequisiteIds'], message: 'Prerequisite lesson IDs must be unique.' });
+  }
+  if (new Set(lesson.knowledgeCheckIds).size !== lesson.knowledgeCheckIds.length) {
+    context.addIssue({ code: 'custom', path: ['knowledgeCheckIds'], message: 'Knowledge-check question IDs must be unique.' });
+  }
+});
+
 const commonFields = {
   id: contentIdSchema,
   title: shortText,
@@ -170,7 +239,7 @@ const commonFields = {
 const commonContentSchema = {
   ...commonFields,
   type: z.literal('lesson'),
-  lessonContent: text,
+  lessonContent: lessonContentSchema,
 };
 
 const questionChoiceSchema = z.strictObject({ id: contentIdSchema, text: shortText });
@@ -218,10 +287,10 @@ const waveformContentSchema = z.strictObject({
   message: 'Waveform examples require an explicit ECG signal provenance and technical metadata record.',
 });
 
-const lessonContentSchema = z.strictObject(commonContentSchema);
+const lessonRecordSchema = z.strictObject(commonContentSchema);
 
 export const contentRecordSchema = z.discriminatedUnion('type', [
-  lessonContentSchema,
+  lessonRecordSchema,
   questionContentSchema,
   caseContentSchema,
   waveformContentSchema,
@@ -281,3 +350,5 @@ export const contentRecordSchema = z.discriminatedUnion('type', [
 });
 
 export type ContentRecord = z.infer<typeof contentRecordSchema>;
+export type LessonContent = z.infer<typeof lessonContentSchema>;
+export type VisualDemonstration = z.infer<typeof visualDemonstrationSchema>;

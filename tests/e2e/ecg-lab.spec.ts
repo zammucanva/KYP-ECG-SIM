@@ -244,6 +244,52 @@ test('reduced-motion preference receives a static interface', async ({ page }) =
   expect(motion.every(style => style.animation === '0s' && style.transition === '0s')).toBe(true);
 });
 
+test('Learn navigation keeps draft content private and preserves simulator and theme state', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'V4', exact: true }).click();
+  await page.getByLabel('Paper speed').selectOption('12.5');
+  await page.getByLabel('Gain').selectOption('10');
+  await page.getByLabel('Start point (ms)').fill('100');
+  await page.getByLabel('End point (ms)').fill('900');
+  await page.getByRole('button', { name: 'Toggle theme' }).click();
+
+  const learnNav = page.getByRole('button', { name: 'Learn', exact: true });
+  await learnNav.focus();
+  await page.keyboard.press('Enter');
+  await expect(learnNav).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('heading', { name: 'Learn ECG fundamentals' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'No lessons are published yet' })).toBeVisible();
+  await expect(page.getByText('What an ECG measures', { exact: true })).toHaveCount(0);
+  await expect(page.getByText(/draft answers or unreviewed clinical statement/i)).toHaveCount(0);
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+
+  const learnAxeFindings: string[] = [];
+  const scanLearnState = async (state: string) => {
+    const axeResult = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+    learnAxeFindings.push(...axeResult.violations.map(violation => `${state}: ${violation.id}: ${violation.nodes.map(node => node.target.join(' ')).join(', ')}`));
+  };
+  await scanLearnState('dark desktop Learn');
+  const themeToggle = page.getByRole('button', { name: 'Toggle theme' });
+  await themeToggle.click();
+  await scanLearnState('light desktop Learn');
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+  await scanLearnState('light mobile Learn');
+  await themeToggle.click();
+  await scanLearnState('dark mobile Learn');
+  expect(learnAxeFindings).toEqual([]);
+  await page.getByRole('button', { name: 'ECG simulator', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'V4 rhythm strip' })).toBeVisible();
+  await expect(page.getByLabel('Paper speed')).toHaveValue('12.5');
+  await expect(page.getByLabel('Gain')).toHaveValue('10');
+  await expect(page.getByLabel('Start point (ms)')).toHaveValue('100');
+  await expect(page.getByRole('button', { name: 'V4', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+});
+
 test('axe scans the primary light, dark, 12-lead and mobile states without suppressing rules', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/');

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { contentRecordSchema } from './schema';
-import { loadContentRegistry } from './registry';
-import { draftClinicalCaseShell, draftWaveformFixture, invalidContentFixture, starterContentFixtures, validEducationalFixture } from './fixtures';
+import { getPublishedLessons, loadContentRegistry } from './registry';
+import { draftClinicalCaseShell, draftWaveformFixture, invalidContentFixture, starterContentFixtures, validEducationalFixture, validKnowledgeCheckFixture } from './fixtures';
 import { getPublicationReadiness, transitionPublicationStatus, validateContentRecord } from './validation';
 import type { ContentRecord } from './types';
 
@@ -14,6 +14,31 @@ describe('educational content schema and governance', () => {
     expect(draftClinicalCaseShell.reviewRecords).toEqual([]);
     expect(draftWaveformFixture.provenance.kind).toBe('synthetic-ecg');
     expect(draftWaveformFixture.knownLimitations[0]).toContain('not clinically validated');
+  });
+
+  it('validates structured lesson requirements and linked question records', () => {
+    const loaded = loadContentRegistry(starterContentFixtures);
+    expect(loaded.records).toHaveLength(4);
+    expect(loaded.published).toEqual([]);
+    expect(getPublishedLessons(loaded)).toEqual([]);
+
+    const missingDemonstration: unknown = {
+      ...validEducationalFixture,
+      lessonContent: {
+        ...validEducationalFixture.lessonContent,
+        sections: [{ ...validEducationalFixture.lessonContent.sections[0], demonstrationId: 'missing.demo' }],
+      },
+    };
+    expect(contentRecordSchema.safeParse(missingDemonstration).success).toBe(false);
+
+    const unresolvedQuestion = {
+      ...validEducationalFixture,
+      lessonContent: { ...validEducationalFixture.lessonContent, knowledgeCheckIds: ['missing.question'] },
+    };
+    const registry = loadContentRegistry([unresolvedQuestion, ...starterContentFixtures.slice(1)]);
+    expect(registry.published).toEqual([]);
+    expect(registry.rejected.some(item => item.id === validEducationalFixture.id)).toBe(true);
+    expect(registry.issues.some(issue => issue.message.includes('not a question record'))).toBe(true);
   });
 
   it('rejects missing IDs, unknown content kinds, and malformed provenance', () => {
@@ -131,13 +156,13 @@ describe('educational content schema and governance', () => {
       publicationStatus: 'awaiting-review',
       reviewRecords: [{ reviewType: 'educational-content', status: 'pending', versionReviewed: '0.1.0', requiredFollowUp: [] }],
     };
-    expect(validateContentRecord(pending).success).toBe(true);
+    expect(validateContentRecord(pending, [validKnowledgeCheckFixture]).success).toBe(true);
     const draftWithPendingRecord: ContentRecord = { ...validEducationalFixture, reviewRecords: pending.reviewRecords };
-    const transition = transitionPublicationStatus(draftWithPendingRecord, 'awaiting-review', '2026-10-19T13:00:00Z');
+    const transition = transitionPublicationStatus(draftWithPendingRecord, 'awaiting-review', '2026-10-19T13:00:00Z', [validKnowledgeCheckFixture]);
     expect(transition.success).toBe(true);
     expect(transition.success && transition.record.publicationStatus).toBe('awaiting-review');
-    expect(transitionPublicationStatus(pending, 'draft', '2026-10-19T13:00:00Z').success).toBe(true);
-    expect(transitionPublicationStatus(pending, 'retired', '2026-10-19T13:00:00Z').success).toBe(false);
+    expect(transitionPublicationStatus(pending, 'draft', '2026-10-19T13:00:00Z', [validKnowledgeCheckFixture]).success).toBe(true);
+    expect(transitionPublicationStatus(pending, 'retired', '2026-10-19T13:00:00Z', [validKnowledgeCheckFixture]).success).toBe(false);
   });
 
   it('withholds invalid, duplicate and unresolved cross-linked content while returning developer issues', () => {
@@ -157,7 +182,7 @@ describe('educational content schema and governance', () => {
       caseMaterial: { ...draftClinicalCaseShell.caseMaterial, waveformContentId: 'missing.waveform' },
     };
     const registry = loadContentRegistry([...starterContentFixtures, invalidContentFixture, unresolvedCase]);
-    expect(registry.records).toHaveLength(3);
+    expect(registry.records).toHaveLength(4);
     expect(registry.published).toEqual([]);
     expect(registry.rejected).toHaveLength(2);
     expect(registry.issues.some(issue => issue.message.includes('Referenced waveform'))).toBe(true);

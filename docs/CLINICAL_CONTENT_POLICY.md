@@ -6,7 +6,7 @@ This is the authoritative policy for clinical facts in the standalone ECG Lab. I
 
 Future clinical content must have an identified educational purpose, traceable support for its specific claims, and review appropriate to its risk. India is the primary context for Indian medical learners. Where applicable, content authors should identify relevant Indian medical education or clinical sources (including NMC/CBME and Indian professional guidance) and state their scope and version. Guideline references require an issuing organization and explicit jurisdiction. International guidance may be used as complementary material only when clearly labelled; it must not silently replace Indian context.
 
-Do not invent guidelines, competency codes, drug brands, doses, clinical recommendations, prior questions, evidence, reviewers, qualifications, or statistics. If authoritative evidence or an appropriate Indian source is unavailable, say so and do not present an unsupported recommendation as fact. No clinical source has been added by this checkpoint.
+Do not invent guidelines, competency codes, drug brands, doses, clinical recommendations, prior questions, evidence, reviewers, qualifications, or statistics. If authoritative evidence or an appropriate Indian source is unavailable, say so and do not present an unsupported recommendation as fact. Candidate source metadata is attached to three draft lessons, but it is marked unverified and is not treated as substantiation or approval.
 
 ## Synthetic signal boundary
 

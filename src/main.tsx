@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { calibrationPulseHeightUnits, calibrationPulseWidthUnits, recordingViewWidthUnits, SVG_UNITS_PER_MM, timeMsToSvgUnits, traceViewHeightUnits, voltageMvToSvgUnits } from './engine/calibration';
+import { calibrationPulseHeightUnits, calibrationPulseWidthUnits, PREVIEW_CSS_PIXELS_PER_SVG_UNIT, recordingViewWidthUnits, SVG_UNITS_PER_MM, timeMsToSvgUnits, traceViewHeightUnits, voltageMvToSvgUnits } from './engine/calibration';
 import { createMeasurement, type MeasurementKind } from './engine/measurements';
 import { allLeads, generateLeadSignals } from './engine/signal';
 import type { Gain, Lead, LeadSignals, MachineConfig, PaperSpeed, RhythmPreset, Sample } from './engine/types';
+import { LearnMode } from './learn/LearnMode';
 import './styles.css';
 
 const leads = allLeads();
 const presets: [RhythmPreset, string][] = [['sinus', 'Normal sinus'], ['brady', 'Sinus bradycardia'], ['tachy', 'Sinus tachycardia'], ['afib', 'Atrial fibrillation · simplified']];
 const measurementDefaults: Record<MeasurementKind, [number, number]> = { RR: [0, 800], PR: [120, 280], QRS: [280, 360], QT: [280, 580] };
-const DISPLAY_CSS_PIXELS_PER_SVG_UNIT = 0.8;
 const CALIBRATION_PULSE_DURATION_MS = 200;
 const CALIBRATION_PULSE_MARGIN_MM = 4;
 
@@ -28,7 +28,7 @@ function CalibrationPulse({ speed, gain }: { speed: PaperSpeed; gain: Gain }) {
   const pulseEnd = pulseStart + pulseWidthUnits;
   const pulseTop = baseline - pulseHeightUnits;
 
-  return <svg className="calibration-pulse" width={width * DISPLAY_CSS_PIXELS_PER_SVG_UNIT} height={height * DISPLAY_CSS_PIXELS_PER_SVG_UNIT} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`One millivolt, ${CALIBRATION_PULSE_DURATION_MS} millisecond calibration pulse at ${gain} millimetres per millivolt and ${speed} millimetres per second`}>
+  return <svg className="calibration-pulse" width={width * PREVIEW_CSS_PIXELS_PER_SVG_UNIT} height={height * PREVIEW_CSS_PIXELS_PER_SVG_UNIT} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`One millivolt, ${CALIBRATION_PULSE_DURATION_MS} millisecond calibration pulse at ${gain} millimetres per millivolt and ${speed} millimetres per second`}>
     <GridDefinitions id="calibration" />
     <rect width={width} height={height} fill="var(--surface-soft)" />
     <rect width={width} height={height} fill="url(#major-calibration)" />
@@ -42,7 +42,7 @@ function Trace({ samples, config, width, height, label, markers }: { samples: Sa
   const waveformLabel = `${label ?? config.lead} synthetic ECG waveform, 10 seconds, ${config.paperSpeed} mm/s, ${config.gain} mm/mV, ECG grid ${config.showGrid ? 'visible' : 'hidden'}`;
   const path = samples.filter((_, i) => i % 2 === 0).map((sample, i) => `${i ? 'L' : 'M'} ${timeMsToSvgUnits(sample.timeMs, config.paperSpeed).toFixed(2)} ${(baseline - voltageMvToSvgUnits(sample.voltageMv, config.gain)).toFixed(2)}`).join(' ');
   const markerX = markers?.map(timeMs => timeMsToSvgUnits(timeMs, config.paperSpeed));
-  const svg = <svg width={width * DISPLAY_CSS_PIXELS_PER_SVG_UNIT} height={height * DISPLAY_CSS_PIXELS_PER_SVG_UNIT} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={waveformLabel}>
+  const svg = <svg width={width * PREVIEW_CSS_PIXELS_PER_SVG_UNIT} height={height * PREVIEW_CSS_PIXELS_PER_SVG_UNIT} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={waveformLabel}>
     <GridDefinitions id={patternId} />
     {config.showGrid && <rect width={width} height={height} fill={`url(#major-${patternId})`} />}
     <line x1="0" x2={width} y1={baseline} y2={baseline} stroke="var(--trace-axis)" strokeDasharray="3 4" />
@@ -68,6 +68,7 @@ function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(readThemePreference);
   const [config, setConfig] = useState<MachineConfig>({ lead: 'V3', paperSpeed: 25, gain: 20, showGrid: true, preset: 'sinus' });
   const [view, setView] = useState<'single' | 'multi'>('single');
+  const [activeSection, setActiveSection] = useState<'simulator' | 'learn'>('simulator');
   const [kind, setKind] = useState<MeasurementKind>('RR');
   const [[startMs, endMs], setPoints] = useState<[number, number]>(measurementDefaults.RR);
   const patch = (next: Partial<MachineConfig>) => setConfig(current => ({ ...current, ...next }));
@@ -98,6 +99,12 @@ function App() {
         </div>
       </header>
 
+      <nav className="module-nav" aria-label="Main sections">
+        <button type="button" aria-current={activeSection === 'simulator' ? 'page' : undefined} onClick={() => setActiveSection('simulator')}>ECG simulator</button>
+        <button type="button" aria-current={activeSection === 'learn' ? 'page' : undefined} onClick={() => setActiveSection('learn')}>Learn</button>
+      </nav>
+
+      {activeSection === 'simulator' ? <>
       <section className="intro">
         <div>
           <p className="eyebrow">CALIBRATED EXPLORATION</p>
@@ -193,8 +200,9 @@ function App() {
           </div>
         </section>
       </section>
+      </> : <LearnMode />}
 
-      <footer><span>ECG LAB v0.2 · 12-LEAD CHECKPOINT</span><span>Educational simulation only.</span></footer>
+      <footer><span>ECG LAB v0.3 · LEARN CHECKPOINT</span><span>Educational simulation only.</span></footer>
     </main>
   );
 }

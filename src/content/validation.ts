@@ -15,6 +15,7 @@ export type PublicationReadiness = {
     medicalContentReview: boolean;
     publicationApproval: boolean;
     limitationsAndExplanation: boolean;
+    lessonDependencies: boolean;
   };
   issues: ContentIssue[];
 };
@@ -44,7 +45,7 @@ function provenanceRightsAreExplicitAndPermitted(record: ContentRecord): boolean
   return canRedistribute && (!(isTransformed || illustrationIsTransformed) || rights.modification === 'permitted');
 }
 
-export function getPublicationReadiness(input: unknown, relatedRecords: ContentRecord[] = []): PublicationReadiness {
+function getPublicationReadinessInternal(input: unknown, relatedRecords: ContentRecord[], ancestry: Set<string>): PublicationReadiness {
   const parsed = parseStructure(input);
   if (!parsed.success) {
     return {
@@ -56,6 +57,7 @@ export function getPublicationReadiness(input: unknown, relatedRecords: ContentR
         medicalContentReview: false,
         publicationApproval: false,
         limitationsAndExplanation: false,
+        lessonDependencies: false,
       },
       issues: parsed.error.issues.map(issue => ({ path: issue.path.join('.'), message: issue.message })),
     };
@@ -75,6 +77,26 @@ export function getPublicationReadiness(input: unknown, relatedRecords: ContentR
     (record.type !== 'case' || Boolean(record.caseMaterial.explanation.trim()))
   );
 
+  let lessonDependencies = true;
+  if (record.type === 'lesson') {
+    const dependencyIds = [...record.lessonContent.prerequisiteIds, ...record.lessonContent.knowledgeCheckIds];
+    for (const dependencyId of dependencyIds) {
+      const dependency = relatedRecords.find(item => item.id === dependencyId);
+      if (!dependency || dependency.publicationStatus !== 'published' || ancestry.has(dependency.id)) {
+        lessonDependencies = false;
+        continue;
+      }
+      const expectedType = record.lessonContent.prerequisiteIds.includes(dependencyId) ? 'lesson' : 'question';
+      if (dependency.type !== expectedType) {
+        lessonDependencies = false;
+        continue;
+      }
+      const nextAncestry = new Set(ancestry);
+      nextAncestry.add(record.id);
+      if (!getPublicationReadinessInternal(dependency, relatedRecords, nextAncestry).eligible) lessonDependencies = false;
+    }
+  }
+
   let waveformLinkIsReady = true;
   if (record.type === 'case' && record.caseMaterial.waveformContentId) {
     const waveform = relatedRecords.find(item => item.id === record.caseMaterial.waveformContentId);
@@ -89,6 +111,7 @@ export function getPublicationReadiness(input: unknown, relatedRecords: ContentR
     medicalContentReview,
     publicationApproval,
     limitationsAndExplanation,
+    lessonDependencies,
   };
   const issues: ContentIssue[] = [];
   const descriptions: Record<keyof typeof checks, string> = {
@@ -98,6 +121,7 @@ export function getPublicationReadiness(input: unknown, relatedRecords: ContentR
     medicalContentReview: 'Clinical education requires an identified, qualified reviewer for the current version.',
     publicationApproval: 'An identified reviewer must separately approve publication of the current version.',
     limitationsAndExplanation: 'Clinical content requires a clear explanation and stated limitations.',
+    lessonDependencies: 'Every prerequisite lesson and knowledge-check question must resolve to eligible published content; lesson dependency cycles are not allowed.',
   };
   for (const [check, passed] of Object.entries(checks) as [keyof typeof checks, boolean][]) {
     if (!passed) issues.push({ path: check, message: descriptions[check] });
@@ -105,10 +129,30 @@ export function getPublicationReadiness(input: unknown, relatedRecords: ContentR
   return { eligible: issues.length === 0, checks, issues };
 }
 
+export function getPublicationReadiness(input: unknown, relatedRecords: ContentRecord[] = []): PublicationReadiness {
+  return getPublicationReadinessInternal(input, relatedRecords, new Set());
+}
+
 export function validateContentRecord(input: unknown, relatedRecords: ContentRecord[] = []): ContentValidationResult {
   const parsed = parseStructure(input);
   if (!parsed.success) {
     return { success: false, issues: parsed.error.issues.map(issue => ({ path: issue.path.join('.'), message: issue.message })) };
+  }
+  if (parsed.data.type === 'lesson') {
+    const linkIssues: ContentIssue[] = [];
+    parsed.data.lessonContent.prerequisiteIds.forEach(id => {
+      const linked = relatedRecords.find(record => record.id === id);
+      if (!linked || linked.type !== 'lesson') {
+        linkIssues.push({ path: `lessonContent.prerequisiteIds`, message: `Prerequisite "${id}" is missing or is not a lesson record.` });
+      }
+    });
+    parsed.data.lessonContent.knowledgeCheckIds.forEach(id => {
+      const linked = relatedRecords.find(record => record.id === id);
+      if (!linked || linked.type !== 'question') {
+        linkIssues.push({ path: `lessonContent.knowledgeCheckIds`, message: `Knowledge check "${id}" is missing or is not a question record.` });
+      }
+    });
+    if (linkIssues.length) return { success: false, issues: linkIssues };
   }
   if (parsed.data.publicationStatus === 'published') {
     const readiness = getPublicationReadiness(parsed.data, relatedRecords);
