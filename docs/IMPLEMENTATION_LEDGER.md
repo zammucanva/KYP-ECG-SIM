@@ -104,11 +104,11 @@ This is the canonical task record. Status and evidence below reflect the current
 ### ECG-QA-04 — Learn regression, docs and checkpoint
 
 - Acceptance: full tests, type-check, build, Playwright checks; docs and resumable checkpoint updated; current feature branch verified and updated without changing main; no KYP integration or deployment.
-- Status: Local implementation, documentation and full verification complete; remote commit/CI evidence pending.
+- Status: Source implementation and full local/remote verification complete; a documentation-only follow-up records the evidence.
 - Files: `docs/ACCESSIBILITY_AUDIT.md`, `docs/ARCHITECTURE.md`, `docs/CONTENT_SCHEMA.md`, `docs/LEARN_CURRICULUM.md`, `docs/IMPLEMENTATION_LEDGER.md`, `docs/QA_REPORT.md`, `docs/ROADMAP.md`, `docs/SESSION_CHECKPOINT.md`, `README.md`.
-- Tests/evidence: `pnpm test:all` exit 0; 32 unit tests, type-check, build, and 9 browser scenarios passed. Branch-head compare-and-swap and post-push GitHub Actions check remain.
+- Tests/evidence: `pnpm test:all` exit 0; 32 unit tests, type-check, build, and 9 browser scenarios passed. Published on `codex/accessibility-content-governance` as implementation commit `eb09784cca1fe2b122bbb9e21f8ec1792c30a5f9` by a non-forced compare-and-swap from `6b0d7ef01cd218c62d9376bb816cb5d95299d7a8`; GitHub Actions run `39316691334` passed. `main` remained unchanged at `9544b96d87a44fce4334691145f5c53870871fa5`.
 - Dependencies: ECG-LEARN-04.
-- Limitations/next action: local export has no `.git`; use the connected GitHub workflow with a compare-and-swap branch update, never force-push. Verify CI on the resulting head.
+- Limitations/next action: local export has no `.git`; refresh the live feature-branch head and verify the documentation-only follow-up CI before further work. Never force-push. Content publication still awaits genuine review records.
 
 ### ECG-QA-03 — Regression, documentation and checkpoint
 

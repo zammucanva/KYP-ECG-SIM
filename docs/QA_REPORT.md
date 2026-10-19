@@ -55,4 +55,4 @@ No actual screen-reader session, true browser zoom, text-only enlargement, OS hi
 
 ## ECG-CP4 remote verification
 
-The local export has no Git metadata. The implementation is intended to be committed only to the verified existing branch `codex/accessibility-content-governance`, using a compare-and-swap against its starting SHA. Record the resulting branch head, commit SHA, and GitHub Actions result here after the remote update; do not infer success from workflow configuration.
+The local export has no Git metadata. The implementation was committed only to the existing feature branch `codex/accessibility-content-governance` using a non-forced compare-and-swap from the verified starting SHA `6b0d7ef01cd218c62d9376bb816cb5d95299d7a8` to `eb09784cca1fe2b122bbb9e21f8ec1792c30a5f9`. GitHub Actions run [39316691334](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39316691334) completed successfully on that implementation commit. `main` remained at `9544b96d87a44fce4334691145f5c53870871fa5`. A documentation-only follow-up records this result; refresh the live branch head when resuming. No merge or deployment was performed.
