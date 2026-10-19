@@ -81,9 +81,13 @@ The local export has no Git metadata. The implementation was committed only to t
 - Final `PLAYWRIGHT_BROWSERS_PATH=<project>/.playwright-browsers pnpm test:all`: exit 0. Vitest: 4 files, 42/42 tests; application and Playwright TypeScript checks passed; Vite 8.3.4 production build passed (122 modules; CSS 17.84 kB, JS 388.67 kB); Playwright: 9/9 Chromium scenarios passed.
 - Browser scenario `Learn navigation keeps draft content private...` verified the learner catalog still says no lessons are published, hides the three draft titles and answers, and preserves simulator/theme state. Axe scans in existing theme/responsive states had no violations and no suppressed rules.
 
-### Limits and pending remote verification
+### Limits
 
 Unit tests include clearly labelled test-only synthetic reviewer strings and a fixed fixture date solely to validate schema behavior. They are not real review records and are never placed in the registry or fixtures. They do not establish the truth of any medical claim. No real reviewer details, clinical approval, source-and-licensing approval, rights clearance, or publication approval were added. No manual screen-reader session or standalone manual visual review was performed in this checkpoint; Playwright and Axe are supporting evidence only.
 
-All six Learn records remain drafts, all candidate sources remain `unverified`, and the published Learn catalog remains empty. Local verification is complete. After the non-forced feature-branch update, record the new commit and actual GitHub Actions result here; no merge, deployment, or KYP production change is permitted.
+All six Learn records remain drafts, all candidate sources remain `unverified`, and the published Learn catalog remains empty. No merge, deployment, or KYP production change was made.
+
+### ECG-CP5 remote verification
+
+The local source export has no `.git` metadata. The 19-file checkpoint was committed to the existing `codex/accessibility-content-governance` branch as [`d3f49a33e352d0ab24599cebafdeb6c79c3cee65`](https://github.com/zammucanva/KYP-ECG-SIM/commit/d3f49a33e352d0ab24599cebafdeb6c79c3cee65), with parent `1ffcfd553fd1caa18bd156417c9c6f1e67370db3`, using a non-forced expected-head update. GitHub Actions run [39323889336](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39323889336) completed successfully for that exact commit. At verification, the feature branch pointed to that commit and `main` remained at `9544b96d87a44fce4334691145f5c53870871fa5`. No merge, deployment, or KYP production change was made.
 

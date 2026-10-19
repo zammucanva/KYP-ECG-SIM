@@ -1,6 +1,6 @@
 # Implementation ledger
 
-This is the canonical task record. Status and evidence below reflect the current local verification and the remote checkpoint branch inspected for this task; local files are an export without `.git` metadata. See `SESSION_CHECKPOINT.md` for the GitHub base and published branch.
+This is the canonical task record. Status and evidence below reflect local verification and remote GitHub evidence; the local source export has no `.git` metadata. See `SESSION_CHECKPOINT.md` for the verified branch head and CI run.
 
 ## Current checkpoint — ECG-CP5 content review readiness
 
@@ -25,11 +25,11 @@ This is the canonical task record. Status and evidence below reflect the current
 ### ECG-QA-05 — Source audit, QA and resumable checkpoint
 
 - Acceptance: correct verified bibliographic defects; report focused source research honestly; record actual local test outputs and current feature-branch/CI status; retain main and production unchanged.
-- Status: Locally complete; feature-branch publication and post-push CI refresh remain the final handoff step.
+- Status: Complete; committed to the existing feature branch and verified by GitHub Actions.
 - Files: `docs/IMPLEMENTATION_LEDGER.md`, `docs/QA_REPORT.md`, `docs/SESSION_CHECKPOINT.md`, `docs/LESSON_REVIEW_PACKETS.md`, `docs/CLAIM_SOURCE_MATRIX.md`.
-- Tests/evidence: source code, generated artifacts, and Learn catalog inspected; actual `pnpm test:all` result and browser-gate assertion recorded. Starting remote head and CI are recorded in `SESSION_CHECKPOINT.md`.
+- Tests/evidence: source code, generated artifacts, and Learn catalog inspected; actual `pnpm test:all` result and browser-gate assertion recorded. Commit `d3f49a33e352d0ab24599cebafdeb6c79c3cee65` was pushed via non-forced expected-head update; GitHub Actions run `39323889336` completed successfully. `main` remains unchanged at `9544b96d87a44fce4334691145f5c53870871fa5`.
 - Dependencies: ECG-CONTENT-05, ECG-REVIEW-05.
-- Limitations/next action: local export has no `.git`; publish by non-forced expected-head update to `codex/accessibility-content-governance`, verify new GitHub Actions run, then record final remote evidence. Do not merge or deploy.
+- Limitations/next action: local export has no `.git`; refresh the remote branch head and CI when resuming. Do not merge or deploy. Next content action requires genuine reviewer dispositions and exact source locations.
 
 ## Completed foundation
 

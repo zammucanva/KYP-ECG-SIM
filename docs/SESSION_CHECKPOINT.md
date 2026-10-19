@@ -6,10 +6,11 @@ Date: 2026-10-20 (Asia/Kolkata)
 
 - Repository: `zammucanva/KYP-ECG-SIM`.
 - Existing feature branch: `codex/accessibility-content-governance`.
-- Verified branch base: `1ffcfd553fd1caa18bd156417c9c6f1e67370db3`; GitHub Actions run `39317284992` passed for this base.
+- Verified starting branch base: `1ffcfd553fd1caa18bd156417c9c6f1e67370db3`; GitHub Actions run `39317284992` passed for this base.
+- Current feature-branch head: `d3f49a33e352d0ab24599cebafdeb6c79c3cee65`; GitHub Actions run `39323889336` completed successfully for this exact commit.
 - `main`: `9544b96d87a44fce4334691145f5c53870871fa5`; no main-branch or KYP-production changes.
 - Local source export: `C:\Users\TSHAM\Documents\Codex\2026-10-19\hel\work\ecg-lab`; `.git` is absent. The remote branch was inspected through GitHub. Local test results are not remote CI evidence.
-- Checkpoint source and documentation have been locally verified and are ready for a non-forced expected-head update to the existing feature branch; remote commit/CI for this checkpoint must be recorded after that update.
+- The 19-file checkpoint was committed to the existing feature branch with a non-forced expected-head update. The post-push Actions result is verified above. This workspace is a source export without Git metadata; local tests and remote CI are recorded separately.
 
 ## Completed in ECG-CP5
 
@@ -32,7 +33,7 @@ Date: 2026-10-20 (Asia/Kolkata)
 - No source-claim verification, source/licensing review, educational review, qualified medical review, publication approval, or rights permission has been supplied. No lessons/questions are published.
 - Bibliographic existence/details were checked against PubMed. Becker is an older dental/anesthesia continuing-education review; Kligfield is a 2007 statement. Currentness, exact page-level support, suitability, and reuse rights still need human verification. Indian NMC/CBME mapping is not established.
 - Test-only reviewer metadata is explicitly synthetic and exists only to exercise validators; it does not establish medical truth or appear in registered content.
-- Next: publish this checkpoint only to `codex/accessibility-content-governance` using expected-head CAS, verify Actions for the resulting commit, and record the remote result. Then obtain actual reviewer dispositions and exact source locations; correct/remove unsupported assertions before any release-gate transition.
+- Next: obtain genuine source, educational, qualified medical, and publication-review dispositions plus exact source locations. Correct or remove unsupported assertions before any release-gate transition. If documentation changes are made, refresh the feature-branch head and use a non-forced expected-head update; do not merge or deploy.
 
 # Historical checkpoint — ECG-CP4 Learn framework
 
