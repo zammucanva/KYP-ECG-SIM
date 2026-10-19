@@ -5,4 +5,5 @@ export type RhythmPreset = 'sinus' | 'brady' | 'tachy' | 'afib';
 export type Sample = { timeMs: number; voltageMv: number };
 export type Signal = { lead: Lead; samples: Sample[]; sampleRateHz: number; durationMs: number; provenance: 'synthetic'; preset: RhythmPreset };
 export type MachineConfig = { lead: Lead; paperSpeed: PaperSpeed; gain: Gain; showGrid: boolean; preset: RhythmPreset };
+export type LeadSignals = Record<Lead, Sample[]>;
 

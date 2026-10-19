@@ -8,13 +8,15 @@
 | Calibration | Speed/gain conversions and defaults | Complete | `calibration.ts`, unit tests |
 | Functional shell | Lead, speed, gain, grid controls update display | Complete | `src/main.tsx` |
 | Calibration pulse | Pulse reflects configured gain | Partial | UI labels configured gain; visual pulse is not yet plotted from the engine |
-| Limb equations | All equations implemented and tested | Partial | Helper present; tests and UI integration remain |
-| Measurements | Manual time/voltage calipers | Not started | Next milestone |
+| Limb equations | All equations implemented and tested | Complete | Shared I/II timeline derives III/aVR/aVL/aVF; array-wide tests pass |
+| Lead-specific morphology | Explicit V1–V6 educational templates | Complete | Shared event timing with documented projection profiles |
+| Measurements | Manual time calipers for RR/PR/QRS/QT | Complete | Accessible numeric points, visible overlay, shared measurement helpers |
+| Simultaneous view | Twelve aligned labelled traces | Complete | Shared `generateLeadSignals()` timeline and responsive horizontal overflow |
 | Learning modes | Learn/practice/exam | Not started | Requires content review metadata |
-| QA | Test/typecheck/build/browser evidence | Partial | `pnpm test`: 3/3 passed; `pnpm typecheck`: passed; `pnpm build`: passed; browser smoke check verified lead/gain/speed/grid controls |
+| QA | Test/typecheck/build/browser evidence | Complete for checkpoint | `pnpm test`: 5/5 passed; typecheck/build passed; browser verified 12 traces and editable 800 ms RR measurement |
 | KYP integration | Public API and guide | Not started | KYP architecture unavailable in preflight |
 
 ## Current checkpoint
 
-Files were created in `work/ecg-lab`. No unrelated project was changed. Verification is complete for this foundation checkpoint. Next action is manual calipers and expanded lead-system tests.
+Files were extended in `work/ecg-lab`. No unrelated project was changed. Next action is educational learning modes and a formal browser test suite.
 
