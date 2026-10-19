@@ -9,7 +9,7 @@ Date: 2026-10-20 (Asia/Kolkata)
 - Verified `main`: `9544b96d87a44fce4334691145f5c53870871fa5`; no changes were made to it.
 - Baseline GitHub Actions run `39252642744` passed for the starting checkpoint.
 - Local project: `C:\Users\TSHAM\Documents\Codex\2026-10-19\hel\work\ecg-lab`; it has no `.git` metadata. The starting remote branch/tree was verified before edits. Generated `node_modules`, `dist`, `.playwright-browsers`, `test-results`, and TypeScript build state are not intended for commit.
-- Implementation commit: `eb09784cca1fe2b122bbb9e21f8ec1792c30a5f9`, published to the existing feature branch with an expected-head compare-and-swap. GitHub Actions run `39316691334` completed successfully for that commit. A documentation-only follow-up records this evidence; refresh the live branch head before continuing because this file cannot contain its own final commit SHA.
+- Implementation commit: `eb09784cca1fe2b122bbb9e21f8ec1792c30a5f9`, published to the existing feature branch with an expected-head compare-and-swap. GitHub Actions run `39316691334` completed successfully for that commit. Documentation verification commit `4d7771e25c2f4f0e4cb7b86666c690d5e48af909` also passed Actions run `39316996682`. This record is amended in a later docs-only commit; refresh the live branch head before continuing because this file cannot contain its own final commit SHA.
 - No merge, deployment, KYP production edits, or Practice/Exam work.
 
 ## Verified in this checkpoint
@@ -37,4 +37,4 @@ Date: 2026-10-20 (Asia/Kolkata)
 
 ## Exact next action
 
-On resume, refresh `codex/accessibility-content-governance` and its current Actions run before making changes. The source implementation and its CI are verified; this documentation-only follow-up must also pass CI. After actual review records are supplied, verify references and versions, update draft metadata without fabricating missing details, and confirm the published registry then exposes only eligible published lessons.
+On resume, refresh `codex/accessibility-content-governance` and its current Actions run before making changes. Source implementation and checkpoint-documentation CI runs both passed. After actual review records are supplied, verify references and versions, update draft metadata without fabricating missing details, and confirm the published registry then exposes only eligible published lessons.
