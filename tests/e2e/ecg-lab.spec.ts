@@ -414,6 +414,7 @@ test('markers report viewport entry and exit; pause freezes them and playback re
   const visibleStart = Number(await viewport.locator('svg').getAttribute('data-visible-start-ms'));
   expect(visibleStart).toBeGreaterThan(0);
   const justInside = Math.ceil(visibleStart + 60);
+  await end.fill(String(justInside + 200));
   await start.fill(String(justInside));
   await expect(viewport).toHaveAttribute('data-marker-start-state', 'visible');
   await page.getByRole('button', { name: '12 leads' }).click();
@@ -573,3 +574,4 @@ test('axe scans the primary light, dark, 12-lead and mobile states without suppr
 
   expect(findings, findings.join('\n')).toEqual([]);
 });
+

@@ -5,7 +5,7 @@ Date: 2026-10-20 (Asia/Kolkata)
 ## Repository state at preflight
 
 - Repository: `zammucanva/KYP-ECG-SIM`; working source export: `C:\Users\TSHAM\Documents\Codex\2026-10-19\hel\work\ecg-lab`.
-- GitHub reported feature branch `codex/accessibility-content-governance` at `7bbdae6faed1a0be09e78cb481833b3c34ea8f9d`, with successful Actions run `39340528339`. `main` remained at `9544b96d87a44fce4334691145f5c53870871fa5`.
+- At resume, GitHub reported feature branch `codex/accessibility-content-governance` at `bb0ff3b61679293db28da1eca97236c4d30b7054`. Actions run `39344393711` failed one narrow-viewport marker-label assertion; the other 12 Chromium scenarios and CI unit/type/build jobs passed. `main` remained at `9544b96d87a44fce4334691145f5c53870871fa5`.
 - Local export has no `.git`; do not infer local branch, commit, or clean status. Git facts above are remote observations.
 
 ## Completed locally in ECG-CP7
@@ -21,14 +21,15 @@ Date: 2026-10-20 (Asia/Kolkata)
 - `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all`: exit 0; 59/59 Vitest, application and E2E TypeScript checks, Vite production build (125 modules), and 13/13 Chromium scenarios passed.
 - Axe test passed for its selected light/dark, single/multi-lead and mobile states with no suppressed rules; this is not full WCAG conformance.
 - Manual visual inspection of localhost found and helped correct the left-edge marker badge collision in 12-lead view. The marker E2E now checks the near-edge label inset and verifies both Start/End text.
+- The initial remote failure exposed a test-fixture race: the default End timestamp could leave the narrow mobile viewport before the assertion. The test now places both points inside the visible time window. The post-fix full local `pnpm test:all` rerun passed again: 59/59 Vitest, app/E2E type checks, build and 13/13 Chromium. Follow-up remote Actions verification is pending.
 - Source research: Becker bibliographic metadata was checked, but accessible full text was not obtained in the available browser tool; indexed snippets were not accepted as claim evidence. The AHA-hosted Kligfield PDF front matter/abstract and permissions text were inspected, but no exact paper-speed or gain passage was verified. Currentness, reuse rights and Indian-context suitability remain unresolved.
 
 ## Limitations and next action
 
 - This remains an educational synthetic simulator, not a hospital ECG machine, patient monitor, or diagnostic tool; its morphologies are not clinically validated. Do not use it for patient care.
 - No external clinical/medical content claims were approved in the revised lesson. Human educational, medical, source/licensing and publication decisions remain necessary before publishing any content or adding real patient ECGs.
-- At the time this note was prepared, the local source export had not yet been committed. Refresh remote branch head and Actions after the scoped feature-branch commit; keep `main` unchanged. No merge, deploy or KYP production edit is authorized.
-- Next: record the resulting feature-branch commit and Actions outcome, then collect genuine current-version review intake for the draft lessons/questions. Do not start Practice or Exam mode.
+- The measurement/review implementation is remotely committed as `bb0ff3b61679293db28da1eca97236c4d30b7054`; its first Actions run exposed the E2E fixture race above. The local source export has no `.git`, so it cannot prove branch or working-tree state. Push only the deterministic test correction and accurate checkpoint records with an expected-head update, then verify Actions; keep `main` unchanged.
+- Next product milestone from the supplied long-horizon build program: start Phase 3 with named manual measurement sets, multiple-set selection/deletion, and an accessible measurement list. Continue to reproducible experiment state and guided calibration/lead/grid exercises. Keep Learn content draft-gated; no Practice/Exam, case, medication, or gamification feature is in scope yet. No merge, deploy, or KYP production edit is authorized.
 
 ---
 
@@ -145,3 +146,4 @@ Date: 2026-10-20 (Asia/Kolkata)
 ## Exact next action
 
 On resume, refresh `codex/accessibility-content-governance` and its current Actions run before making changes. Source implementation and checkpoint-documentation CI runs both passed. After actual review records are supplied, verify references and versions, update draft metadata without fabricating missing details, and confirm the published registry then exposes only eligible published lessons.
+

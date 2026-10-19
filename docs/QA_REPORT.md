@@ -14,10 +14,11 @@ Date: 2026-10-20. This report records checks actually run against the local sour
 - The integrated axe scenario passed across its tested light/dark, single/multi-lead and mobile states without suppressed rules. This is supporting evidence, not a full WCAG evaluation.
 - Manual visual inspection at `http://localhost:5173/` covered the dark single-lead and 12-lead views. It found a start-badge collision with the lead label near the left edge; a label-safe inset was implemented and the browser regression asserts both text labels remain visible.
 - Focused marker Playwright scenarios also passed 2/2 before the final full run.
+- Remote Actions for implementation commit `bb0ff3b61679293db28da1eca97236c4d30b7054` (run [39344393711](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39344393711)) failed only the marker viewport-entry/exit E2E: the narrow viewport assertion raced with the default End timestamp leaving the window. CI unit tests, both type checks, build, and the other 12 browser scenarios passed. The E2E now explicitly puts both timestamps inside the visible window before asserting both labels. The post-fix full local suite passed again (59/59 Vitest, application/E2E type checks, build and 13/13 Chromium); remote follow-up is pending.
 
 ### Remote baseline before this checkpoint
 
-- GitHub API reported `codex/accessibility-content-governance` at `7bbdae6faed1a0be09e78cb481833b3c34ea8f9d`; Actions run `39340528339` completed successfully for that commit. `main` was `9544b96d87a44fce4334691145f5c53870871fa5`.
+- GitHub API at resume reported `codex/accessibility-content-governance` at `bb0ff3b61679293db28da1eca97236c4d30b7054`; run `39344393711` failed the single browser assertion described above. Remote `main` remains `9544b96d87a44fce4334691145f5c53870871fa5`. The local source export has no `.git` directory. The deterministic test fix passed locally; refresh the feature branch before a non-forced follow-up update and verify its Actions run.
 - The local source export has no `.git` directory. The local working-tree branch/status cannot be asserted; these remote facts are separate from local tests.
 - Changes in this checkpoint do not establish clinical validation, patient-monitor performance, hospital deployment readiness, source/licence approval, lesson review, or publication approval.
 
@@ -136,4 +137,5 @@ The synthetic traces are simplified educational illustrations. They are not pati
 ## Remote state
 
 Before implementation, GitHub showed feature branch `codex/accessibility-content-governance` at `2cd31e1a864f7ead8286f07aa6587f9cd4f46e6d` with successful Actions run `39324432585`; `main` was `9544b96d87a44fce4334691145f5c53870871fa5`. The implementation was committed as [`0dce61202093d5f0c08d9186fe027f31ec13494e`](https://github.com/zammucanva/KYP-ECG-SIM/commit/0dce61202093d5f0c08d9186fe027f31ec13494e) on the existing feature branch using a non-forced expected-head update. GitHub Actions run [39340233374](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39340233374) completed successfully for that commit. `main` remains unchanged at `9544b96d87a44fce4334691145f5c53870871fa5`. The local source export has no Git metadata.
+
 

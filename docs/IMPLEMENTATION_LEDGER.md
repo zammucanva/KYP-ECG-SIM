@@ -5,11 +5,11 @@
 ### ECG-MEASURE-07 — Absolute-time marker placement and rolling-window status
 
 - Acceptance: extend existing timestamp-based measurement points; place a selected start/end point from the visible trace and through keyboard-operable controls; show labeled/selected markers and explicit before/in/after-window state; preserve duration through speed, gain, lead, pause/resume and viewport movement; test inclusive bounds, exit transitions, reset policy, 12-lead consistency, themes and responsive behavior.
-- Status: Implemented and locally verified; scoped remote commit/Actions verification pending. Remote feature branch at preflight: `codex/accessibility-content-governance` `7bbdae6faed1a0be09e78cb481833b3c34ea8f9d`; latest existing Actions run `39340528339` passed; `main` `9544b96d87a44fce4334691145f5c53870871fa5`. Local export has no `.git` metadata. Baseline `pnpm test:all` passed with 53/53 Vitest and 11/11 Chromium scenarios.
+- Status: Implemented and locally verified; remote feature commit `bb0ff3b61679293db28da1eca97236c4d30b7054`. Its first Actions run `39344393711` exposed one flaky narrow-viewport label assertion; deterministic fixture correction is locally verified and follow-up CI is pending. `main` remains `9544b96d87a44fce4334691145f5c53870871fa5`. Local export has no `.git` metadata.
 - Files: `src/engine/measurements.ts`, `src/engine/measurements.test.ts`, `src/components/LiveEcgMonitor.tsx`, `src/main.tsx`, `src/styles.css`, `tests/e2e/ecg-lab.spec.ts` and documentation.
 - Dependencies: shared `calibration.ts`, existing `createMeasurement()`, `SimulationClock` and rolling trace.
 - Tests/evidence: final local `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all` passed: 59/59 unit tests, app and E2E type checks, build (125 modules) and 13/13 Chromium scenarios. The targeted marker scenarios passed 2/2. Manual UI check found and fixed a 12-lead left-edge label collision; E2E verifies the safe inset. Full details are in `docs/QA_REPORT.md`.
-- Limitations/next action: timestamp authority and reset-to-example-points policy are verified; no automated boundary detection or drag marker. Commit to the intended branch with a non-forced expected-head update and verify the Actions run.
+- Limitations/next action: timestamp authority and reset-to-example-points policy are verified; no automated boundary detection or drag marker. Commit the deterministic test correction with a non-forced expected-head update and verify its Actions run.
 
 ### ECG-REVIEW-07 — Paper-speed-and-gain lesson claim review
 
@@ -22,10 +22,17 @@
 ### ECG-QA-07 — Regression, checkpoint and branch verification
 
 - Acceptance: all local unit/type/build/Chromium/axe checks pass; update actual evidence; inspect changed files; push only on the intended feature branch by expected-head check; verify resulting Actions; leave `main` untouched.
-- Status: Local tests/docs complete; pending safe feature-branch update and GitHub Actions result.
+- Status: Local `pnpm test:all` rerun passes after the E2E fixture correction; remote branch update and follow-up Actions result pending.
 - Files: tests and current architecture/roadmap/ledger/QA/session records.
 - Dependencies: ECG-MEASURE-07 and ECG-REVIEW-07.
 - Limitations/next action: no merge/deploy, clinical-use representation, patient data, or KYP production edits.
+
+## Next milestone — ECG-WORKSPACE-08 measurement workspace foundations
+
+- Acceptance: multiple named manual measurement sets can be selected and deleted; an accessible list reports absolute timestamps, computed durations and units; state remains deterministic and does not mutate ECG source samples or calibration. This is the first scoped slice of long-horizon tasks 021–023, not the complete experiments roadmap.
+- Status: Not started. Begin after the CP7 local test correction has a successful remote Actions run.
+- Dependencies: existing timestamp-based measurement model, rolling viewport state, calibration transforms, accessible controls and current test harness.
+- Limitations: no automated boundary detection, diagnostic interpretation, or clinical thresholding. Keep Learn content and clinical cases behind their existing review gates.
 
 This is the canonical task record. Status and evidence below reflect local verification and remote GitHub evidence; the local source export has no `.git` metadata. See `SESSION_CHECKPOINT.md` for the verified branch head and CI run.
 
@@ -227,3 +234,4 @@ This is the canonical task record. Status and evidence below reflect local verif
 ## Current checkpoint summary
 
 ECG-CP4 implements the Learn framework while preserving the simulator and strict publication gate. The 16-topic curriculum plan is documented and three lessons/checks are authored as drafts with unverified candidate references. The learner catalog is intentionally empty until genuine reviews arrive. No Practice/Exam mode, KYP integration, merge, or deployment has been performed. The exact branch/commit and next action are recorded in `SESSION_CHECKPOINT.md` and the task handoff.
+
