@@ -58,16 +58,16 @@ Status: curriculum plan plus three authored draft lessons. Nothing is currently 
 - Provenance/review: text plus sourced schematic; draft/not authored; no review records.
 - Limitations: no placement advice or regional interpretation until verified and reviewed.
 
-### 5. ECG paper, speed and gain — `learn.paper-speed-and-gain` — draft record
+### 5. Simulator scale: time and voltage — `learn.paper-speed-and-gain` — draft record, revised v0.4.0
 
-- Objective: explain horizontal time and vertical voltage calibration and use the simulator’s shared calibration model to read logical grid distances.
+- Objective: describe the simulator’s horizontal time and vertical voltage coordinate mappings, and distinguish logical preview units from physical paper.
 - Prerequisites/difficulty: lesson 1; introductory.
 - Ordered sections: paper speed sets horizontal scale; gain sets vertical scale; use the grid as a ruler.
 - Key terms: paper speed; gain; calibration pulse.
-- Visual/check: interactive 12.5/25/50 mm/s and 5/10/20 mm/mV demonstration using engine transforms; one formative calculation check.
-- References: Becker and Kligfield candidate references are linked to objectives/claims and remain `unverified`, especially for the gain calibration claim. Current content version: `0.3.0`.
-- Provenance/review: explanatory text and simulator-generated synthetic trace; draft; no review records.
-- Limitations: logical millimetres are not a physical screen-size guarantee; print/export is not implemented; no clinical validation.
+- Visual/check: interactive speed and gain demonstration using shared engine transforms; the linked question tests a simulator-specific time-coordinate mapping.
+- References: none attached in v0.4.0 because the remaining claims are explicitly project-behavior claims. Becker/Kligfield candidate sources did not provide verified exact support during this pass; their reference records elsewhere remain unverified.
+- Provenance/review: explanatory text and simulator-generated synthetic trace; draft; no review records; `lastReviewedAt` absent.
+- Limitations: logical SVG units are not physical screen millimetres; print/export is not implemented; the text does not teach general ECG device standards; synthetic morphology is unvalidated.
 
 ### 6. P waves — `learn.p-waves` — curriculum plan
 
@@ -195,5 +195,4 @@ Status: curriculum plan plus three authored draft lessons. Nothing is currently 
 - Becker DE. “Fundamentals of electrocardiography interpretation.” *Anesthesia Progress*. 2006 Summer;53(2):53–63; quiz 64. DOI: `10.2344/0003-3006(2006)53[53:FOEI]2.0.CO;2`. [PubMed record](https://pubmed.ncbi.nlm.nih.gov/16863387/). Bibliographic details checked; candidate only, exact claim support/context and rights unresolved.
 - Kligfield P, et al. “Recommendations for the standardization and interpretation of the electrocardiogram. Part I: The electrocardiogram and its technology.” *Circulation*. 2007;115(10):1306–1324. DOI: `10.1161/CIRCULATIONAHA.106.180200`. [PubMed record](https://pubmed.ncbi.nlm.nih.gov/17322457/). Professional-society statement; bibliographic details checked; candidate only, currentness, exact claim support, and reuse rights unresolved.
 
-The authored lesson/check records are now at version `0.3.0` with claim inventories and linked formative-question parent IDs. This is review preparation, not new curriculum publication. Both blood-flow assertions remain unmapped and must be sourced, narrowed, or removed before release. The review workflow and source-refresh process are authoritative in `CONTENT_REVIEW_WORKFLOW.md` and `CONTENT_PROVENANCE.md`.
-
+Lessons/checks 1–2 remain at version `0.3.0`; lesson/check 3 were revised together to version `0.4.0` with claim inventories and linked formative-question parent IDs. This is review preparation, not new curriculum publication. The Learn catalog remains empty. Two blood-flow assertions in the first draft remain unmapped and must be sourced, narrowed, or removed before release. The review workflow and source-refresh process are authoritative in `CONTENT_REVIEW_WORKFLOW.md` and `CONTENT_PROVENANCE.md`.

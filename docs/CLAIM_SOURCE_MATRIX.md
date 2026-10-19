@@ -8,7 +8,7 @@ This matrix is a reviewer worklist, not a statement that a source supports every
 
 - **Citation checked:** Daniel E. Becker. “Fundamentals of electrocardiography interpretation.” *Anesthesia Progress*. 2006 Summer;53(2):53–63; quiz 64. DOI `10.2344/0003-3006(2006)53[53:FOEI]2.0.CO;2`. PMID 16863387; PMCID PMC1614214.
 - **Verified bibliographic details:** title, author, journal/date season, volume/issue/page range, DOI, PMID/PMCID match the indexed record. The earlier record’s page range incorrectly included quiz page 64; metadata has been corrected.
-- **Candidate source locations:** article sections “The ECG Tracing,” “Technical Considerations,” and “ECG Paper”; Figures 4 and 5. Searchable full text identifies body-surface electrical recording, lead arrangements, the voltage/time axes, 25 mm/s, and 1 mm/5 mm timing divisions. Exact print page/paragraph for each mapped claim was not recorded during this focused pass; reviewer must locate it in the full text.
+- **Source inspection in this pass (2026-10-20):** PubMed bibliographic metadata was checked. The available browser tool did not provide reviewable PMC full text (the prior direct attempt was blocked by its access challenge). Search snippets and indexed excerpts are not accepted as direct claim evidence here. Exact page/paragraph for all clinical claims remains unresolved.
 - **Limitations:** a 2006 continuing-education article situated in dental/anesthesia monitoring, not an Indian MBBS curriculum source. Applicability and currentness require reviewer judgment. The source itself or its figures must not be reproduced based solely on PubMed/PMC access.
 - **Rights:** reuse, redistribution, modification, and figure permissions unresolved. Reference metadata has no licence grant. Runtime `verificationStatus` remains `unverified`.
 
@@ -16,9 +16,9 @@ This matrix is a reviewer worklist, not a statement that a source supports every
 
 - **Citation checked:** Paul Kligfield et al. “Recommendations for the standardization and interpretation of the electrocardiogram. Part I: The electrocardiogram and its technology: a scientific statement from the American Heart Association Electrocardiography and Arrhythmias Committee, Council on Clinical Cardiology; the American College of Cardiology Foundation; and the Heart Rhythm Society: endorsed by the International Society for Computerized Electrocardiology.” *Circulation*. 2007 Mar 13;115(10):1306–1324; published online Feb 23. DOI `10.1161/CIRCULATIONAHA.106.180200`. PMID 17322457.
 - **Verified bibliographic details:** title, author group, issuing bodies, date, journal, volume/issue/pages, DOI, and PMID match PubMed. It is a professional-society scientific statement, not classified as an ordinary peer-reviewed research study.
-- **Candidate source locations:** PubMed abstract describes derivation/display, lead placement, recording methods, waveform presentation, and global measurements. An indexed full-text excerpt identifies “Simultaneous Lead Presentation” and derived/redundant limb leads at page 1315. Exact locations for the introductory definitions and paper/gain values remain unresolved and must be checked in the full article.
-- **Limitations/currentness:** this is a 2007 statement. A focused search found later Part II–V statements and subsequent technical literature, but did not establish that Part I remains current or identify a superseding Part I. Reviewer must check for current standards before approval. It is international/US-society context, not Indian guidance.
-- **Rights:** publisher permissions for reuse, redistribution, modification, and figures are unresolved. Runtime `verificationStatus` remains `unverified`.
+- **Source inspection in this pass (2026-10-20):** PubMed metadata and the AHA-hosted PDF front matter/abstract were accessible. The source states that multiple copying, modification, alteration, enhancement, and distribution require express permission. No exact paper-speed or gain passage was located in the inspected excerpt. An indexed excerpt elsewhere had identified a page-1315 section, but it was not directly checked in this pass and is not treated as exact claim evidence.
+- **Limitations/currentness:** this is a 2007 international/US professional-society statement, not Indian guidance. Currentness against later standards was not established. Reviewer must check for current standards before any sourced clinical claim is approved.
+- **Rights:** source access is not reuse permission; reuse conditions for any proposed source material remain unresolved. Runtime `verificationStatus` remains `unverified`.
 
 No source reference currently establishes Indian NMC/CBME alignment. An official NMC CBME 2024 listing appeared in the source search, but the discovered PDF endpoint returned an error during retrieval; no competency code or India-specific claim has been mapped. If such alignment is later added, record the accessible official source and precise competency/page after direct verification.
 
@@ -65,27 +65,26 @@ Parent: `learn.electrodes-versus-leads`.
 | `electrode-is-physical-contact` | Prompt; correct “contact-and-view” choice; explanation | Becker, “Technical Considerations”; Kligfield lead-placement/derived-lead discussion. Exact page unresolved. | Candidate only. Review wording and key. |
 | `views-can-exceed-electrodes` | “one-trace-per-electrode” distractor; explanation | Becker, “Technical Considerations”; Kligfield, “Simultaneous Lead Presentation” (p. 1315 indexed excerpt). | Candidate only. Check that the distractor is unambiguous and not confused by acquisition/display format. |
 
-## Lesson 3 — `learn.paper-speed-and-gain` — version `0.3.0`
+## Lesson 3 — `learn.paper-speed-and-gain` — version `0.4.0` (title: “Simulator scale: time and voltage”)
 
 | Claim ID | Exact record location | Candidate source and source location to inspect | Status / reviewer action |
 |---|---|---|---|
-| `paper-speed-time-scale` | `horizontal-time-scale` body; “Paper speed” term; takeaway 1; linked question prompt/explanation | Becker, “ECG Paper” (25 mm/s and 5 mm = 0.2 s); Kligfield technology/recording standard section. Becker page and Kligfield exact passage to verify. | Candidate only. Confirm the 25 mm/s example and arithmetic; do not generalize it to other speeds. |
-| `gain-voltage-scale` | `vertical-voltage-scale` body; “Gain” term; takeaway 2 | Becker, “ECG Paper” (vertical axis denotes voltage); Kligfield technology/calibration section. Exact location for gain/voltage scale not established. | **Support location unresolved.** Find an authoritative exact statement for calibration/gain or narrow the claim to simulator-specific behavior. |
-| `standard-grid-units` | `read-the-grid` body | Becker, “ECG Paper” and Figure 5; paper page for this section not recorded. | Candidate only. Verify 1 mm and 5 mm physical paper descriptions and distinguish them from the browser preview. |
-| `simulator-time-voltage-transform` | Time and voltage sections; takeaways 1–2 | Project behavior: `src/engine/calibration.ts`, `src/engine/signal.ts`, `src/main.tsx`, regression tests. | Code/test check. Confirm settings alter rendering transforms only, not source samples/timestamps. |
-| `calibration-pulse-shares-transform` | Voltage section; calibration explorer description | `src/engine/calibration.ts`, `src/main.tsx`, calibration tests. | Code/test check. Confirm one-millivolt height uses the waveform’s shared transform. |
-| `logical-grid-is-not-screen-mm` | Voltage section; takeaway 3 | `src/engine/calibration.ts`, `src/main.tsx`; CSS/SVG preview scale. | Code check. Confirm no statement implies physical-size browser rendering or print calibration. |
-| `simulator-grid-coordinate-units` | `read-the-grid` body | SVG/grid renderer and `src/engine/calibration.ts`; unit tests. | Code/test check. Confirm logical minor/major spacing is 1/5 units and not a CSS-pixel assertion. |
+| `simulator-paper-speed-time-scale` | `horizontal-time-scale` body; “Paper speed” term; takeaway 1; linked question prompt/explanation | Project behavior: `timeMsToSvgUnits` and `svgUnitsToTimeMs` in `src/engine/calibration.ts`; tests in `src/engine/calibration.test.ts`. No external source attached. | Verify current implementation/tests; wording is limited to simulator logical coordinates and does not establish physical ECG-paper size. |
+| `simulator-gain-voltage-scale` | `vertical-voltage-scale` body; “Gain” term; takeaway 2 | Project behavior: `voltageMvToSvgUnits` / `svgUnitsToVoltageMv` in `src/engine/calibration.ts`; calibration tests. No external source attached. | Verify current implementation/tests; not a claim about universal medical-device gain. |
+| `simulator-time-voltage-transform` | Time and voltage sections; takeaways 1–2 | `src/engine/calibration.ts` and `src/engine/calibration.test.ts`. | Verify settings change display transforms but not source samples/timestamps. |
+| `calibration-pulse-shares-transform` | Voltage section; calibration explorer description | `calibrationPulseHeightUnits` in `src/engine/calibration.ts`; `CalibrationPulse` in `src/main.tsx`; calibration tests. | Verify one-millivolt height uses the same transformation as the trace. |
+| `logical-grid-is-not-screen-mm` | Voltage/grid sections; takeaway 3 | `SVG_UNITS_PER_MM`, `PREVIEW_CSS_PIXELS_PER_SVG_UNIT` in `src/engine/calibration.ts`; SVG viewBox/rendering. | Verify that the text distinguishes logical units, preview CSS pixels, and physical output; no physical-size export exists. |
+| `simulator-grid-coordinate-units` | `read-the-grid` body | `src/components/EcgGrid.tsx` and `src/engine/calibration.test.ts`. | Verify logical 1-unit minor and 5-unit major spacing only; do not describe them as verified physical paper divisions. |
+| `synthetic-example-is-not-patient-data` | Provenance; known limitation; demonstration description | `signalProvenance` in `src/content/learn/records.ts`; generator in `src/engine/signal.ts`; synthetic label in the simulator UI. | Verify provenance and learner-facing disclosure; no patient recording or clinical validation is implied. |
 
-## Linked question — `learn.check.paper-speed-and-gain` — version `0.3.0`
+## Linked question — `learn.check.paper-speed-and-gain` — version `0.4.0`
 
 Parent: `learn.paper-speed-and-gain`.
 
 | Claim ID | Exact record location | Candidate source and source location to inspect | Status / reviewer action |
 |---|---|---|---|
-| `paper-speed-time-scale` | Prompt; “200 ms” choice/key; explanation | Becker, “ECG Paper” (5 mm corresponds to 0.20 seconds at the stated standard speed); Kligfield exact paper-speed location unresolved. | Candidate only. Confirm units and arithmetic; question remains formative and draft. |
+| `simulator-paper-speed-time-scale` | Prompt; “200 ms” choice/key; explanation | Project behavior: shared calibration conversion functions and `src/engine/calibration.test.ts`. No external reference attached. | Confirm against code/tests and preserve the phrase “in this simulator”; lesson/question remain draft pending genuine educational and required content review. |
 
 ## Required reviewer disposition for each row
 
 For every external-source row, record the source edition/version actually inspected and exact page/section/recommendation or mark it unavailable. Decide whether the passage supports the wording, whether a newer authoritative source supersedes it, and whether the claim should be narrowed or removed. For project-behavior rows, link an implementation/test result. An unresolved row remains a publication blocker. Do not change a reference to `source-verified` solely because its citation metadata was found.
-

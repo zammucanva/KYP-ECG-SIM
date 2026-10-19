@@ -1,5 +1,32 @@
 # Implementation ledger
 
+## In progress — ECG-CP7 moving-strip measurement UX and review readiness (2026-10-20)
+
+### ECG-MEASURE-07 — Absolute-time marker placement and rolling-window status
+
+- Acceptance: extend existing timestamp-based measurement points; place a selected start/end point from the visible trace and through keyboard-operable controls; show labeled/selected markers and explicit before/in/after-window state; preserve duration through speed, gain, lead, pause/resume and viewport movement; test inclusive bounds, exit transitions, reset policy, 12-lead consistency, themes and responsive behavior.
+- Status: Implemented and locally verified; scoped remote commit/Actions verification pending. Remote feature branch at preflight: `codex/accessibility-content-governance` `7bbdae6faed1a0be09e78cb481833b3c34ea8f9d`; latest existing Actions run `39340528339` passed; `main` `9544b96d87a44fce4334691145f5c53870871fa5`. Local export has no `.git` metadata. Baseline `pnpm test:all` passed with 53/53 Vitest and 11/11 Chromium scenarios.
+- Files: `src/engine/measurements.ts`, `src/engine/measurements.test.ts`, `src/components/LiveEcgMonitor.tsx`, `src/main.tsx`, `src/styles.css`, `tests/e2e/ecg-lab.spec.ts` and documentation.
+- Dependencies: shared `calibration.ts`, existing `createMeasurement()`, `SimulationClock` and rolling trace.
+- Tests/evidence: final local `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all` passed: 59/59 unit tests, app and E2E type checks, build (125 modules) and 13/13 Chromium scenarios. The targeted marker scenarios passed 2/2. Manual UI check found and fixed a 12-lead left-edge label collision; E2E verifies the safe inset. Full details are in `docs/QA_REPORT.md`.
+- Limitations/next action: timestamp authority and reset-to-example-points policy are verified; no automated boundary detection or drag marker. Commit to the intended branch with a non-forced expected-head update and verify the Actions run.
+
+### ECG-REVIEW-07 — Paper-speed-and-gain lesson claim review
+
+- Acceptance: inspect every claim, simulator assertion and linked question; verify candidate passages where accessible; narrow unsupported medical-device statements to code-supported simulator behavior; keep source, rights, education, qualified medical and publication review distinct; preserve current-version release gates.
+- Status: Content scope correction completed locally. `learn.paper-speed-and-gain` and `learn.check.paper-speed-and-gain` were revised together to `0.4.0`; title now identifies simulator-scale content, general gain/physical-paper claims were removed, and no external references remain attached because exact source support was not established. Becker/Kligfield reference statuses remain `unverified`; all six records remain drafts with no review records or `lastReviewedAt`; the published Learn catalog remains empty. Bibliographic details and a limited AHA PDF excerpt were inspected; exact claim support, currentness, reuse rights and Indian-context suitability remain unresolved.
+- Files: `src/content/learn/records.ts`, `src/content/content.test.ts`, `docs/LESSON_REVIEW_PACKETS.md`, `docs/CLAIM_SOURCE_MATRIX.md`, `docs/LEARN_CURRICULUM.md`.
+- Evidence: regression asserts both current records are v0.4.0 drafts with no reviews/external refs and are absent from the published catalog; included in the final 59/59 passing unit tests.
+- Limitations/next action: this is not a medical or educational approval. Do not alter `lastReviewedAt` or invent review records. A human must supply exact-version education/medical/source/licensing decisions before publication.
+
+### ECG-QA-07 — Regression, checkpoint and branch verification
+
+- Acceptance: all local unit/type/build/Chromium/axe checks pass; update actual evidence; inspect changed files; push only on the intended feature branch by expected-head check; verify resulting Actions; leave `main` untouched.
+- Status: Local tests/docs complete; pending safe feature-branch update and GitHub Actions result.
+- Files: tests and current architecture/roadmap/ledger/QA/session records.
+- Dependencies: ECG-MEASURE-07 and ECG-REVIEW-07.
+- Limitations/next action: no merge/deploy, clinical-use representation, patient data, or KYP production edits.
+
 This is the canonical task record. Status and evidence below reflect local verification and remote GitHub evidence; the local source export has no `.git` metadata. See `SESSION_CHECKPOINT.md` for the verified branch head and CI run.
 
 ## Current checkpoint — ECG-CP6 live moving paper sweep
@@ -200,4 +227,3 @@ This is the canonical task record. Status and evidence below reflect local verif
 ## Current checkpoint summary
 
 ECG-CP4 implements the Learn framework while preserving the simulator and strict publication gate. The 16-topic curriculum plan is documented and three lessons/checks are authored as drafts with unverified candidate references. The learner catalog is intentionally empty until genuine reviews arrive. No Practice/Exam mode, KYP integration, merge, or deployment has been performed. The exact branch/commit and next action are recorded in `SESSION_CHECKPOINT.md` and the task handoff.
-

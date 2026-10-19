@@ -2,7 +2,7 @@
 
 **Purpose:** reviewer intake for the three current draft lessons and their linked formative checks. These packets expose answer keys to reviewers and are not learner-facing content. They do not assert that any medical, source, licensing, or publication review has occurred.
 
-**Current release state:** all three lessons and all three questions are version `0.3.0`, remain `draft`, have zero review records, and are excluded from the Learn catalog. `lastReviewedAt` is absent. All candidate reference records still have `verificationStatus: unverified`. No clinical-content approval, reviewer identity/qualification, source-and-licensing approval, or publication approval exists.
+**Current release state (2026-10-20):** lessons/questions 1 and 2 remain at version `0.3.0`; lesson 3 and its linked question are version `0.4.0` after a scope correction. All six records remain `draft`, have zero review records, and are excluded from the Learn catalog. `lastReviewedAt` is absent. Candidate Becker and Kligfield reference records remain `verificationStatus: unverified`; the revised lesson 3 and question have no attached external references because their remaining claims describe simulator behavior only. No genuine educational review, qualified medical review, source/licensing approval, or publication approval exists.
 
 **Claim-level crosswalk:** see [CLAIM_SOURCE_MATRIX.md](CLAIM_SOURCE_MATRIX.md). It specifies every claim location, candidate source location, unresolved evidence, and reviewer action. A reference attached here is a candidate only, not blanket support for the lesson.
 
@@ -14,7 +14,7 @@ After review, provide genuine structured records matching the fields in [CONTENT
 
 ## Candidate reference register
 
-Both source records are associated with the lessons and checks below. Bibliographic metadata was checked against PubMed, but neither source record is currently marked verified. Exact support for each mapped claim, source currentness, and reuse rights remain outstanding.
+These candidate sources remain associated with the first two lesson/check pairs. Bibliographic metadata was checked against PubMed, but neither source record is currently marked verified. For this pass, the Becker PMC full-text page did not yield reviewable full text in the available browser tool; search snippets were not accepted as exact claim evidence. The Kligfield AHA-hosted PDF exposed bibliographic front matter, abstract and permissions language, but no exact paper-speed or gain passage was located. Neither source's currentness for Indian MBBS teaching was established. Access does not grant reuse rights.
 
 ### Becker — `ref.becker-fundamentals-ecg`
 
@@ -26,7 +26,7 @@ The record now carries the article page range separately from the quiz page. Pub
 
 Paul Kligfield et al. “Recommendations for the standardization and interpretation of the electrocardiogram. Part I: The electrocardiogram and its technology: a scientific statement from the American Heart Association, American College of Cardiology Foundation, and the Heart Rhythm Society, endorsed by the International Society for Computerized Electrocardiology.” *Circulation*. 2007 Mar 13;115(10):1306–1324; e-published Feb 23. DOI: `10.1161/CIRCULATIONAHA.106.180200`. PMID 17322457. [PubMed](https://pubmed.ncbi.nlm.nih.gov/17322457/) · [AHA full-text PDF](https://www.ahajournals.org/doi/pdf/10.1161/CIRCULATIONAHA.106.180200?download=true).
 
-This is a professional-society scientific statement, not an ordinary research study. The indexed abstract covers ECG derivation/display, lead placement, recording methods, waveform presentation, and global measurements. An indexed full-text excerpt identifies “Simultaneous Lead Presentation” at p. 1315, but other exact locations are unresolved. It is international/US-society material, not Indian guidance. Its 2007 currentness and publisher reuse terms require review.
+This is a professional-society scientific statement, not an ordinary research study. The accessible PDF front matter and abstract identify the scope as ECG technology, including derivation/display, lead placement and recording methods. No exact paper-speed or gain passage was verified in this source pass. The PDF states that multiple copies, modification, alteration, enhancement and distribution require express permission. This is international/US-society material, not Indian guidance. Its 2007 currentness and any intended reuse still require review.
 
 ## Packet 1 — What an ECG measures
 
@@ -122,35 +122,35 @@ The correct answer and explanation require educational and qualified medical rev
 
 Check the key, both distractors, and explanation against the sources. Specifically verify that “always exactly one” is a defensible distractor across the display/acquisition arrangements being taught.
 
-## Packet 3 — ECG paper, speed and gain
+## Packet 3 — Simulator scale: time and voltage (revised v0.4.0)
 
 ### Lesson record
 
 | Field | Current record |
 |---|---|
-| ID / version | `learn.paper-speed-and-gain` / `0.3.0` |
+| ID / version | `learn.paper-speed-and-gain` / `0.4.0` |
 | Status | Draft; no reviews; not published |
-| Title | ECG paper, speed and gain |
-| Summary | Use the grid and calibration pulse to understand the shared time and voltage scales. |
-| Objective | `paper-speed-and-gain`: Explain how paper speed sets horizontal time scale and gain sets vertical voltage scale. |
+| Title | Simulator scale: time and voltage |
+| Summary | Explore how this simulator maps elapsed time and source voltage onto logical display coordinates. |
+| Objective | `paper-speed-and-gain`: Describe the simulator’s horizontal time and vertical voltage coordinate mappings, and distinguish logical preview units from physical paper. |
 | Difficulty / prerequisites | Introductory / `learn.what-an-ecg-measures` |
 | Ordered sections | `horizontal-time-scale`; `vertical-voltage-scale`; `read-the-grid` |
 | Visual | Interactive calibration explorer using existing simulator transforms |
 | Linked question | `learn.check.paper-speed-and-gain` |
 | Provenance / limitations | Synthetic simulator signal (same metadata as Packet 1); SVG/logical millimetres are not physical browser millimetres; no print/export; signal rights unknown. |
-| References | Becker and Kligfield; runtime status unverified. |
+| References | None attached in v0.4.0. Becker and Kligfield were considered, but no exact support was verified for this narrowed software-behavior lesson. Their source records remain unverified for other drafts. |
 
 **Factual/project claim inventory:**
 
-1. `paper-speed-time-scale` — Paper speed defines horizontal distance per elapsed time; at 25 mm/s, 5 mm represents 200 ms. Locations: `horizontal-time-scale` body, “Paper speed” term, takeaway 1, question prompt/explanation. Candidate Becker “ECG Paper” and Kligfield recording standards; exact page for Becker and exact Kligfield passage need confirmation.
-2. `gain-voltage-scale` — ECG display gain defines vertical distance per voltage unit. Locations: `vertical-voltage-scale` body, “Gain” term, takeaway 2. Becker’s “ECG Paper” supports that vertical axis denotes voltage, but exact gain calibration support was not located. Kligfield is a candidate; exact section/page unresolved. Find a precise source or narrow the claim.
-3. `standard-grid-units` — Standard ECG paper has 1 mm minor and 5 mm major divisions. Location: `read-the-grid` body. Candidate Becker “ECG Paper”/Figure 5; exact print page unresolved.
-4. `simulator-time-voltage-transform` — Simulator speed/gain changes rendered coordinates without modifying stored timestamps/source voltages. Locations: horizontal/vertical sections and takeaways. Project behavior; verify calibration engine and regression tests.
-5. `calibration-pulse-shares-transform` — Simulator calibration pulse uses the waveform’s shared voltage transform. Locations: vertical section and explorer description. Project behavior; verify `src/engine/calibration.ts`, `src/main.tsx`, and calibration tests.
-6. `logical-grid-is-not-screen-mm` — Logical millimetres/SVG units do not guarantee physical screen millimetres. Locations: vertical section and takeaway 3. Project behavior; verify preview scale and absence of a physical-size claim.
-7. `simulator-grid-coordinate-units` — Simulator grid uses logical 1-unit minor and 5-unit major spacing. Location: `read-the-grid` body. Project behavior; verify renderer/tests.
+1. `simulator-paper-speed-time-scale` — The simulator maps time to horizontal logical SVG coordinates; at its setting labelled 25 mm/s, 200 ms maps to 5 logical units. Locations: `horizontal-time-scale` body, “Paper speed” term, takeaway 1, linked question. Project evidence: `timeMsToSvgUnits` / `svgUnitsToTimeMs` in `src/engine/calibration.ts`; conversion and display-invariance tests in `src/engine/calibration.test.ts`. This does not claim that the browser physically renders 5 mm.
+2. `simulator-gain-voltage-scale` — The simulator maps source millivolts to vertical logical SVG coordinates; this describes software behavior, not a universal ECG-device standard. Locations: vertical section, “Gain” term, takeaway 2. Project evidence: `voltageMvToSvgUnits` / `svgUnitsToVoltageMv` in `src/engine/calibration.ts` and gain tests in `src/engine/calibration.test.ts`.
+3. `simulator-time-voltage-transform` — Changing speed or gain changes rendered coordinates but not stored timestamps/source voltages. Locations: horizontal/vertical sections and takeaways. Project evidence: shared conversion functions and calibration invariance tests.
+4. `calibration-pulse-shares-transform` — The calibration pulse uses the waveform’s voltage transform. Locations: vertical section and demonstration description. Project evidence: `calibrationPulseHeightUnits` in `src/engine/calibration.ts`, `CalibrationPulse` in `src/main.tsx`, and calibration tests.
+5. `logical-grid-is-not-screen-mm` — Logical SVG units do not guarantee physical screen/print millimetres. Locations: vertical and grid sections; takeaway 3. Project evidence: `SVG_UNITS_PER_MM` and `PREVIEW_CSS_PIXELS_PER_SVG_UNIT` comments in `src/engine/calibration.ts`; no physical-size export is implemented.
+6. `simulator-grid-coordinate-units` — The simulator grid uses logical 1-unit minor and 5-unit major spacing. Location: `read-the-grid` body. Project evidence: `EcgGrid` in `src/components/EcgGrid.tsx` and grid/calibration tests.
+7. `synthetic-example-is-not-patient-data` — The calibration demonstration uses a generated synthetic educational trace, not a patient recording or validated morphology. Locations: provenance, known limitation, demonstration description. Project evidence: `signalProvenance` and `generateLeadSignals` in `src/content/learn/records.ts` / `src/engine/signal.ts`; the rendered waveform is explicitly labelled synthetic.
 
-**Required corrections/questions:** obtain an exact source location for the gain-to-voltage calibration statement; verify the 25 mm/s example and physical grid dimensions; distinguish standard ECG paper from the browser’s logical SVG grid; retain explicit screen-versus-print limitations.
+**Version 0.4.0 correction:** removed unsupported claims about general medical-device gain and physical ECG paper divisions. The remaining lesson is explicitly about simulator behavior and logical SVG coordinates; it has no external medical references. Do not extend it to real ECG equipment standards without a suitable current source, exact claim location and human review.
 
 **Known limitations:** browser preview is not physical-size output. No print/export guarantee, no source rights for the synthetic waveform beyond what its current provenance records say, and no clinical interpretation is taught.
 
@@ -158,16 +158,16 @@ Check the key, both distractors, and explanation against the sources. Specifical
 
 | Field | Current record |
 |---|---|
-| ID / version | `learn.check.paper-speed-and-gain` / `0.3.0` |
+| ID / version | `learn.check.paper-speed-and-gain` / `0.4.0` |
 | Parent | `learn.paper-speed-and-gain` |
 | Status | Draft; no reviews; not published |
-| Prompt | At a paper speed of 25 mm/s, what elapsed time is represented by 5 logical millimetres horizontally? |
+| Prompt | In this simulator, at the setting labelled 25 mm/s, how much time maps to 5 logical horizontal units? |
 | Choices | **Correct:** 200 ms; 40 ms; 1 second |
 | Correct answer | `200-ms` |
-| Explanation | “At 25 mm/s, 5 mm corresponds to 5 ÷ 25 seconds, or 0.2 seconds (200 ms). This lesson’s question is draft and must be reviewed before learner publication.” |
-| Provenance / references | Text-only formative item; Becker and Kligfield candidates remain unverified. |
+| Explanation | The simulator’s shared calibration transform maps 200 ms to 5 logical units at this setting. Logical SVG units are not a physical screen measurement. This formative question remains draft until the content and explanation receive required review. |
+| Provenance / references | Text-only formative item; no external sources attached because the question is scoped to simulator behavior. |
 
-Reviewer should confirm the standard-paper interpretation and arithmetic; the use of “logical millimetres” in the prompt describes the simulator UI and must not imply the browser screen is physically scaled.
+Reviewer should confirm the answer against current code/tests and ensure the prompt cannot be mistaken for a physical paper/device standard. A future lesson making claims about clinical ECG paper must supply exact source locations independently.
 
 ## Shared publication blockers
 
@@ -177,5 +177,4 @@ Reviewer should confirm the standard-paper interpretation and arithmetic; the us
 - Kligfield is 2007 and Becker is 2006; currentness and suitability require human judgment. Indian NMC/CBME mapping is absent.
 - Lesson waveforms are synthetic educational templates; morphology is not validated and usage rights remain unknown.
 - Each clinical question is gated by a current approved parent lesson; each lesson is gated by published eligible prerequisites and linked questions.
-
 

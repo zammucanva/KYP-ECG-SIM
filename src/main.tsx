@@ -49,11 +49,13 @@ function App() {
   const [activeSection, setActiveSection] = useState<'simulator' | 'learn'>('simulator');
   const [kind, setKind] = useState<MeasurementKind>('RR');
   const [[startMs, endMs], setPoints] = useState<[number, number]>(measurementDefaults.RR);
+  const [activeMarker, setActiveMarker] = useState<'start' | 'end'>('start');
   const patch = (next: Partial<MachineConfig>) => setConfig(current => ({ ...current, ...next }));
   const signals = useMemo(() => generateLeadSignals(config.preset), [config.preset]);
   const maxAbsVoltageMv = useMemo(() => Math.max(...Object.values(signals).flatMap(leadSamples => leadSamples.map(sample => Math.abs(sample.voltageMv))), 0), [signals]);
   const measurement = createMeasurement(kind, startMs, endMs);
-  const setKindAndDefaults = (next: MeasurementKind) => { setKind(next); setPoints(measurementDefaults[next]); };
+  const setKindAndDefaults = (next: MeasurementKind) => { setKind(next); setPoints(measurementDefaults[next]); setActiveMarker('start'); };
+  const placeActiveMarker = (timeMs: number) => setPoints(current => activeMarker === 'start' ? [timeMs, current[1]] : [current[0], timeMs]);
   const rate = config.preset === 'brady' ? 50 : config.preset === 'tachy' ? 100 : 75;
   useEffect(() => {
     if (typeof document !== 'undefined') document.documentElement.dataset.theme = theme;
@@ -135,32 +137,40 @@ function App() {
             config={config}
             view={view}
             onViewChange={setView}
-            onPlaybackReset={() => setPoints(measurementDefaults[kind])}
+            onPlaybackReset={() => { setPoints(measurementDefaults[kind]); setActiveMarker('start'); }}
+            onPlaceMarker={placeActiveMarker}
+            activeMarker={activeMarker}
             maxAbsVoltageMv={maxAbsVoltageMv}
             markers={[startMs, endMs]}
           />
 
           <div className="measure-panel">
             <div className="section-label">03 / MANUAL CALIPERS</div>
+            <p className="measurement-guidance" id="measurement-guidance">Choose Start or End, then click the visible waveform to place that point. The millisecond fields are the keyboard alternative. Points are manually selected—not automatically detected ECG boundaries or diagnoses. Reset playback restores the selected measurement’s example points.</p>
             <div className="measure-controls">
+              <fieldset className="measurement-point-choice" aria-describedby="measurement-guidance">
+                <legend>Point to place on waveform</legend>
+                <label><input type="radio" name="active-measurement-point" value="start" checked={activeMarker === 'start'} onChange={() => setActiveMarker('start')} />Start</label>
+                <label><input type="radio" name="active-measurement-point" value="end" checked={activeMarker === 'end'} onChange={() => setActiveMarker('end')} />End</label>
+              </fieldset>
               <label>Measurement
                 <select value={kind} onChange={event => setKindAndDefaults(event.target.value as MeasurementKind)}>
                   <option value="RR">R–R interval</option><option value="PR">PR interval</option><option value="QRS">QRS duration</option><option value="QT">QT interval</option>
                 </select>
               </label>
               <label>Start point (ms)
-                <input type="number" step="4" value={startMs} onChange={event => setPoints([Number(event.target.value), endMs])} />
+                <input type="number" min="0" step="4" value={startMs} aria-describedby="measurement-guidance" onFocus={() => setActiveMarker('start')} onChange={event => setPoints([Number(event.target.value), endMs])} />
               </label>
               <label>End point (ms)
-                <input type="number" step="4" value={endMs} onChange={event => setPoints([startMs, Number(event.target.value)])} />
+                <input type="number" min="0" step="4" value={endMs} aria-describedby="measurement-guidance" onFocus={() => setActiveMarker('end')} onChange={event => setPoints([startMs, Number(event.target.value)])} />
               </label>
-              <button className="reset" onClick={() => setPoints(measurementDefaults[kind])}>Reset points</button>
+              <button className="reset" onClick={() => { setPoints(measurementDefaults[kind]); setActiveMarker('start'); }}>Reset points</button>
             </div>
             <div className="measurement-result" role="status" aria-live="polite">
               <strong>{measurement.durationMs.toFixed(0)} <small>ms</small></strong>
               {measurement.heartRateBpm && <strong>{measurement.heartRateBpm.toFixed(0)} <small>bpm</small></strong>}
-              <span>Manual points are absolute milliseconds from reset. Markers outside the rolling viewport are not shown; measured time is unaffected by speed, gain or zoom.</span>
             </div>
+            <p className="measurement-result-note">Duration is calculated from the two stored timestamps and is unchanged by paper speed, gain, lead, or viewport position.</p>
           </div>
 
           <div className="measure-row">
@@ -177,4 +187,3 @@ function App() {
   );
 }
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);
-

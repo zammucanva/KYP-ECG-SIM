@@ -77,6 +77,8 @@ const makeCommon = <TType extends 'lesson' | 'question'>(input: {
   claims?: Array<{ id: string; statement: string; locations: string[]; basis: 'external-source' | 'project-behavior' }>;
   parentLessonId?: string;
   provenance?: ContentProvenance;
+  version?: string;
+  updatedAt?: string;
 }) => ({
   id: input.id,
   type: input.type,
@@ -93,8 +95,8 @@ const makeCommon = <TType extends 'lesson' | 'question'>(input: {
   ...(input.parentLessonId ? { parentLessonId: input.parentLessonId } : {}),
   reviewRecords: [],
   createdAt,
-  updatedAt,
-  version,
+  updatedAt: input.updatedAt ?? updatedAt,
+  version: input.version ?? version,
   knownLimitations: [
     'Draft content; source-claim mapping, educational review, qualified medical review, and publication approval are still required.',
     'Any displayed trace is a synthetic educational template, not a patient recording or validated physiology.',
@@ -229,24 +231,23 @@ export const introductoryLessons = [
     ...makeCommon({
       id: 'learn.paper-speed-and-gain',
       type: 'lesson',
-      title: 'ECG paper, speed and gain',
-      summary: 'Use the grid and calibration pulse to understand the shared time and voltage scales.',
+      title: 'Simulator scale: time and voltage',
+      summary: 'Explore how this simulator maps elapsed time and source voltage onto logical display coordinates.',
       objectiveId: 'paper-speed-and-gain',
-      objective: 'Explain how paper speed sets horizontal time scale and gain sets vertical voltage scale.',
+      objective: 'Describe the simulator’s horizontal time and vertical voltage coordinate mappings, and distinguish logical preview units from physical paper.',
       tags: ['fundamentals', 'calibration', 'grid'],
+      version: '0.4.0',
+      updatedAt: '2026-10-19T23:47:34Z',
       claims: [
-        { id: 'paper-speed-time-scale', statement: 'Paper speed defines the horizontal distance corresponding to elapsed time; at 25 mm/s, 5 mm represents 200 ms.', locations: ['sections.horizontal-time-scale.body', 'keyTerms.Paper speed', 'keyTakeaways[0]', 'knowledge-check prompt and explanation'], basis: 'external-source' },
-        { id: 'gain-voltage-scale', statement: 'ECG display gain defines vertical distance per unit voltage.', locations: ['sections.vertical-voltage-scale.body', 'keyTerms.Gain', 'keyTakeaways[1]'], basis: 'external-source' },
-        { id: 'standard-grid-units', statement: 'Standard ECG paper uses 1 mm minor divisions and 5 mm major divisions.', locations: ['sections.read-the-grid.body'], basis: 'external-source' },
+        { id: 'simulator-paper-speed-time-scale', statement: 'The simulator paper-speed control maps time to horizontal logical SVG coordinates; at the 25 mm/s setting, 200 ms maps to 5 logical units.', locations: ['sections.horizontal-time-scale.body', 'keyTerms.Paper speed', 'keyTakeaways[0]', 'knowledge-check prompt and explanation'], basis: 'project-behavior' },
+        { id: 'simulator-gain-voltage-scale', statement: 'The simulator gain control maps source millivolts to vertical logical SVG coordinates; this describes software behavior, not a universal ECG-device standard.', locations: ['sections.vertical-voltage-scale.body', 'keyTerms.Gain', 'keyTakeaways[1]'], basis: 'project-behavior' },
         { id: 'simulator-time-voltage-transform', statement: 'Changing simulator speed or gain changes rendered coordinates but does not change stored timestamps or source voltages.', locations: ['sections.horizontal-time-scale.body', 'sections.vertical-voltage-scale.body', 'keyTakeaways[0..1]'], basis: 'project-behavior' },
         { id: 'calibration-pulse-shares-transform', statement: 'The simulator calibration pulse uses the same voltage transformation as the waveform.', locations: ['sections.vertical-voltage-scale.body', 'visualDemonstrations.calibration-grid.description'], basis: 'project-behavior' },
         { id: 'logical-grid-is-not-screen-mm', statement: 'Simulator logical millimetres and SVG units do not guarantee physical millimetres on a browser screen.', locations: ['sections.vertical-voltage-scale.body', 'keyTakeaways[2]'], basis: 'project-behavior' },
         { id: 'simulator-grid-coordinate-units', statement: 'The simulator grid uses logical 1-unit minor spacing and 5-unit major spacing.', locations: ['sections.read-the-grid.body'], basis: 'project-behavior' },
+        { id: 'synthetic-example-is-not-patient-data', statement: 'The demonstrated trace is generated synthetic educational content, not a patient recording or validated patient morphology.', locations: ['provenance', 'knownLimitations[1]', 'visualDemonstrations.calibration-grid.description'], basis: 'project-behavior' },
       ],
-      sourceReferences: [
-        beckerReference('paper-speed-and-gain', ['paper-speed-time-scale', 'gain-voltage-scale', 'standard-grid-units']),
-        kligfieldReference('paper-speed-and-gain', ['paper-speed-time-scale', 'gain-voltage-scale']),
-      ],
+      sourceReferences: [],
     }),
     lessonContent: {
       sequence: 3,
@@ -255,28 +256,28 @@ export const introductoryLessons = [
         {
           id: 'horizontal-time-scale',
           title: 'Paper speed sets horizontal scale',
-          body: 'Paper speed determines how much horizontal distance corresponds to a given time interval. When the speed changes, the signal’s timestamps stay the same while its rendered horizontal coordinates change through the shared calibration engine.',
+          body: 'In this simulator, the paper-speed control maps elapsed time to horizontal logical SVG coordinates. At the setting labelled 25 mm/s, the shared calibration transform maps 200 ms to 5 logical units. Changing the setting moves the rendered trace but does not edit its timestamps. This is a description of the simulator, not an independent statement about ECG device standards.',
           demonstrationId: 'calibration-grid',
         },
         {
           id: 'vertical-voltage-scale',
           title: 'Gain sets vertical scale',
-          body: 'Gain determines how much vertical distance corresponds to one millivolt. The calibration pulse is drawn through the same voltage transform as the waveform. The browser preview uses logical millimetres and SVG units; CSS pixels are not physical paper millimetres.',
+          body: 'The simulator’s gain control maps source millivolts to vertical logical SVG coordinates. Its calibration pulse uses the waveform’s voltage transform. The browser preview uses logical units; CSS pixels are not physical paper millimetres, and this control does not establish a standard gain for medical ECG devices.',
         },
         {
           id: 'read-the-grid',
           title: 'Use the grid as a ruler',
-          body: 'The minor grid represents 1 logical millimetre and the heavier grid represents 5 logical millimetres. The interactive controls let you compare speed, gain, pulse size, and a shared synthetic trace without changing the source samples.',
+          body: 'The simulator draws its minor grid at 1 logical unit and its heavier grid at 5 logical units. These SVG coordinates are not a guarantee of physical screen or print size. The interactive controls compare speed, gain, pulse size, and one shared synthetic trace without changing source samples.',
         },
       ],
       keyTerms: [
-        { term: 'Paper speed', definition: 'The horizontal calibration in millimetres per second.' },
-        { term: 'Gain', definition: 'The vertical calibration in millimetres per millivolt.' },
+        { term: 'Paper speed', definition: 'The simulator setting used to map elapsed time to horizontal logical coordinates.' },
+        { term: 'Gain', definition: 'The simulator setting used to map source millivolts to vertical logical coordinates.' },
         { term: 'Calibration pulse', definition: 'A known voltage and duration rendered as a scale reference.' },
       ],
       keyTakeaways: [
-        'Paper speed changes horizontal display distance, not the stored timestamps.',
-        'Gain changes vertical display distance, not the stored voltages.',
+        'The simulator paper-speed setting changes horizontal logical coordinates, not stored timestamps.',
+        'The simulator gain setting changes vertical logical coordinates, not source voltages.',
         'Screen pixels are not physical print dimensions.',
       ],
       visualDemonstrations: [{
@@ -359,27 +360,26 @@ export const introductoryKnowledgeChecks = [
       title: 'Read the ECG scale',
       summary: 'A formative lesson check about horizontal paper speed.',
       objectiveId: 'paper-speed-and-gain',
-      objective: 'Explain how paper speed sets horizontal time scale and gain sets vertical voltage scale.',
+      objective: 'Describe the simulator’s horizontal time and vertical voltage coordinate mappings, and distinguish logical preview units from physical paper.',
       tags: ['formative-check', 'calibration'],
       parentLessonId: 'learn.paper-speed-and-gain',
+      version: '0.4.0',
+      updatedAt: '2026-10-19T23:47:34Z',
       claims: [
-        { id: 'paper-speed-time-scale', statement: 'At 25 mm/s, 5 mm of horizontal paper distance represents 200 ms.', locations: ['prompt', 'choices.200-ms', 'correctAnswerIds', 'explanation'], basis: 'external-source' },
+        { id: 'simulator-paper-speed-time-scale', statement: 'At the simulator’s 25 mm/s setting, 5 logical horizontal units correspond to 200 ms.', locations: ['prompt', 'choices.200-ms', 'correctAnswerIds', 'explanation'], basis: 'project-behavior' },
       ],
-      sourceReferences: [
-        beckerReference('paper-speed-and-gain', ['paper-speed-time-scale']),
-        kligfieldReference('paper-speed-and-gain', ['paper-speed-time-scale']),
-      ],
+      sourceReferences: [],
       provenance: textOnlyProvenance,
     }),
     questionType: 'single-best-answer',
-    prompt: 'At a paper speed of 25 mm/s, what elapsed time is represented by 5 logical millimetres horizontally?',
+    prompt: 'In this simulator, at the setting labelled 25 mm/s, how much time maps to 5 logical horizontal units?',
     choices: [
       { id: '200-ms', text: '200 ms' },
       { id: '40-ms', text: '40 ms' },
       { id: '1-second', text: '1 second' },
     ],
     correctAnswerIds: ['200-ms'],
-    explanation: 'At 25 mm/s, 5 mm corresponds to 5 ÷ 25 seconds, or 0.2 seconds (200 ms). This lesson’s question is draft and must be reviewed before learner publication.',
+    explanation: 'The simulator’s shared calibration transform maps 200 ms to 5 logical units at this setting. Logical SVG units are not a physical screen measurement. This formative question remains draft until its content and explanation receive the required review.',
   },
 ] satisfies KnowledgeCheckRecord[];
 
@@ -387,4 +387,3 @@ export const introductoryLearnDrafts: ContentRecord[] = [
   ...introductoryLessons,
   ...introductoryKnowledgeChecks,
 ];
-

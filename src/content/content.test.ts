@@ -4,8 +4,22 @@ import { getPublishedLessons, loadContentRegistry } from './registry';
 import { draftClinicalCaseShell, draftWaveformFixture, invalidContentFixture, starterContentFixtures, validEducationalFixture, validKnowledgeCheckFixture } from './fixtures';
 import { getPublicationReadiness, transitionPublicationStatus, validateContentRecord } from './validation';
 import type { ContentRecord } from './types';
+import { introductoryKnowledgeChecks, introductoryLessons } from './learn/records';
+import { publishedLearnLessons } from './learn/registry';
 
 describe('educational content schema and governance', () => {
+  it('keeps the revised simulator-scale lesson and check at v0.4.0 unpublished pending real review', () => {
+    const lesson = introductoryLessons.find(item => item.id === 'learn.paper-speed-and-gain');
+    const question = introductoryKnowledgeChecks.find(item => item.id === 'learn.check.paper-speed-and-gain');
+    expect(lesson).toMatchObject({ version: '0.4.0', publicationStatus: 'draft', reviewRecords: [], sourceReferences: [] });
+    expect(lesson && 'lastReviewedAt' in lesson).toBe(false);
+    expect(lesson?.claims?.every(claim => claim.basis === 'project-behavior')).toBe(true);
+    expect(question).toMatchObject({ version: '0.4.0', publicationStatus: 'draft', reviewRecords: [], sourceReferences: [], parentLessonId: lesson?.id });
+    expect(question && 'lastReviewedAt' in question).toBe(false);
+    expect(question?.claims?.every(claim => claim.basis === 'project-behavior')).toBe(true);
+    expect(publishedLearnLessons).toEqual([]);
+  });
+
   it('accepts the clearly labelled non-clinical lesson, waveform metadata and unpublished case shell', () => {
     for (const fixture of starterContentFixtures) {
       expect(contentRecordSchema.safeParse(fixture).success).toBe(true);
@@ -188,4 +202,3 @@ describe('educational content schema and governance', () => {
     expect(registry.issues.some(issue => issue.message.includes('Referenced waveform'))).toBe(true);
   });
 });
-

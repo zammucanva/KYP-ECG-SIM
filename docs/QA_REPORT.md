@@ -2,6 +2,25 @@
 
 Date: 2026-10-20. This report records checks actually run against the local source. It is not a clinical-validation report.
 
+## ECG-CP7 — moving-strip measurements and review readiness
+
+### Local verification (2026-10-20)
+
+- Final `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all`: exit 0.
+- Vitest: 7 files, 59/59 tests passed. This includes absolute-time marker mapping/boundary tests and a regression that the v0.4.0 lesson and linked question remain drafts, have no fabricated review dates/records, and are absent from the published catalog.
+- Application and Playwright TypeScript checks passed.
+- Production build passed using Vite 8.3.4: 125 modules transformed.
+- Playwright Chromium: 13/13 scenarios passed. New cases place and edit markers, verify timestamp/duration invariance across speed, gain, lead, layout and sweep motion, check window boundaries/exit states, pause/resume/reset, and check keyboard focus and marker-label visibility at the left edge of 12-lead rows.
+- The integrated axe scenario passed across its tested light/dark, single/multi-lead and mobile states without suppressed rules. This is supporting evidence, not a full WCAG evaluation.
+- Manual visual inspection at `http://localhost:5173/` covered the dark single-lead and 12-lead views. It found a start-badge collision with the lead label near the left edge; a label-safe inset was implemented and the browser regression asserts both text labels remain visible.
+- Focused marker Playwright scenarios also passed 2/2 before the final full run.
+
+### Remote baseline before this checkpoint
+
+- GitHub API reported `codex/accessibility-content-governance` at `7bbdae6faed1a0be09e78cb481833b3c34ea8f9d`; Actions run `39340528339` completed successfully for that commit. `main` was `9544b96d87a44fce4334691145f5c53870871fa5`.
+- The local source export has no `.git` directory. The local working-tree branch/status cannot be asserted; these remote facts are separate from local tests.
+- Changes in this checkpoint do not establish clinical validation, patient-monitor performance, hospital deployment readiness, source/licence approval, lesson review, or publication approval.
+
 ## ECG-CP4 pre-change baseline
 
 The actual starting feature branch was `codex/accessibility-content-governance` at `6b0d7ef01cd218c62d9376bb816cb5d95299d7a8`. GitHub Actions baseline run `39252642744` completed successfully. `main` remained at `9544b96d87a44fce4334691145f5c53870871fa5`. The local exported project directory has no `.git`; no local branch or dirty-tree assertion is possible.
@@ -117,5 +136,4 @@ The synthetic traces are simplified educational illustrations. They are not pati
 ## Remote state
 
 Before implementation, GitHub showed feature branch `codex/accessibility-content-governance` at `2cd31e1a864f7ead8286f07aa6587f9cd4f46e6d` with successful Actions run `39324432585`; `main` was `9544b96d87a44fce4334691145f5c53870871fa5`. The implementation was committed as [`0dce61202093d5f0c08d9186fe027f31ec13494e`](https://github.com/zammucanva/KYP-ECG-SIM/commit/0dce61202093d5f0c08d9186fe027f31ec13494e) on the existing feature branch using a non-forced expected-head update. GitHub Actions run [39340233374](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39340233374) completed successfully for that commit. `main` remains unchanged at `9544b96d87a44fce4334691145f5c53870871fa5`. The local source export has no Git metadata.
-
 

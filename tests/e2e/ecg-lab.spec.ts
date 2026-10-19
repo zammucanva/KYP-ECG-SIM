@@ -319,6 +319,139 @@ test('live sweep moves, pauses, resumes continuously, resets, and keeps one boun
   await expect(viewport).toHaveAttribute('data-playing', 'false');
 });
 
+test('manual start and end markers can be placed on the sweep and retain absolute times across display changes', async ({ page }) => {
+  await page.goto('/');
+  const viewport = page.getByRole('region', { name: /ECG waveform viewport for V3/ });
+  await expect.poll(async () => Number(await viewport.getAttribute('data-simulation-time-ms'))).toBeGreaterThan(3_000);
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+
+  const startRadio = page.getByRole('radio', { name: 'Start', exact: true });
+  const endRadio = page.getByRole('radio', { name: 'End', exact: true });
+  await page.locator('body').click({ position: { x: 1, y: 1 } });
+  for (let tab = 0; tab < 40 && !(await startRadio.evaluate(element => element.matches(':focus-visible'))); tab += 1) {
+    await page.keyboard.press('Tab');
+  }
+  await expect(startRadio).toBeFocused();
+  await expect.poll(() => startRadio.evaluate(element => element.matches(':focus-visible'))).toBe(true);
+  expect(await startRadio.evaluate(element => getComputedStyle(element).outlineStyle)).not.toBe('none');
+  await page.keyboard.press('ArrowRight');
+  await expect(endRadio).toBeChecked();
+  await page.keyboard.press('ArrowLeft');
+  await expect(startRadio).toBeChecked();
+
+  const svg = page.locator('.live-trace-svg').first();
+  const box = await svg.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) throw new Error('Live waveform viewport did not have a measurable box');
+  const elapsed = Number(await svg.getAttribute('data-simulation-time-ms'));
+  const visibleStart = Number(await svg.getAttribute('data-visible-start-ms'));
+  const visibleDuration = elapsed - visibleStart;
+  const startRatio = 0.85;
+  const endRatio = 0.95;
+  const expectedStart = visibleStart + visibleDuration * startRatio;
+  const expectedEnd = visibleStart + visibleDuration * endRatio;
+
+  await startRadio.click();
+  await svg.click({ position: { x: box.width * startRatio, y: box.height * 0.6 } });
+  await endRadio.click();
+  await svg.click({ position: { x: box.width * endRatio, y: box.height * 0.6 } });
+  const start = page.getByLabel('Start point (ms)');
+  const end = page.getByLabel('End point (ms)');
+  expect(Math.abs(Number(await start.evaluate(element => (element as HTMLInputElement).value)) - expectedStart)).toBeLessThan(0.5);
+  expect(Math.abs(Number(await end.evaluate(element => (element as HTMLInputElement).value)) - expectedEnd)).toBeLessThan(0.5);
+  const expectedDuration = Math.abs(expectedEnd - expectedStart);
+  await expect(page.getByRole('status')).toContainText(`${Math.round(expectedDuration)} ms`);
+  await expect(page.getByTestId('measurement-window-status')).toContainText('Start point');
+  await expect(page.getByTestId('measurement-window-status')).toContainText('End point');
+  await expect(page.getByTestId('measurement-marker-start').first()).toBeVisible();
+  await expect(page.getByTestId('measurement-marker-end').first()).toBeVisible();
+  await expect(page.getByTestId('measurement-marker-end').first()).toHaveAttribute('data-selected', 'true');
+  await expect(page.getByTestId('measurement-marker-end').first()).toContainText('End · active');
+
+  const startTime = await start.evaluate(element => (element as HTMLInputElement).value);
+  const endTime = await end.evaluate(element => (element as HTMLInputElement).value);
+  const resultBeforeSettings = await page.getByRole('status').locator('strong').allInnerTexts();
+  const xAt25 = Number(await page.getByTestId('measurement-marker-start').first().getAttribute('data-x-units'));
+  await page.getByLabel('Paper speed').selectOption('50');
+  const xAt50 = Number(await page.getByTestId('measurement-marker-start').first().getAttribute('data-x-units'));
+  expect(xAt50).not.toBe(xAt25);
+  expect(await start.evaluate(element => (element as HTMLInputElement).value)).toBe(startTime);
+  expect(await end.evaluate(element => (element as HTMLInputElement).value)).toBe(endTime);
+  expect(await page.getByRole('status').locator('strong').allInnerTexts()).toEqual(resultBeforeSettings);
+
+  const xBeforeGain = await page.getByTestId('measurement-marker-start').first().getAttribute('data-x-units');
+  const lightMarkerColour = await page.getByTestId('measurement-marker-start').first().locator('line').evaluate(element => getComputedStyle(element).stroke);
+  await page.getByLabel('Gain').selectOption('5');
+  await expect(page.getByTestId('measurement-marker-start').first()).toHaveAttribute('data-x-units', xBeforeGain!);
+  await page.getByRole('button', { name: 'V4', exact: true }).click();
+  await expect(page.getByRole('region', { name: /ECG waveform viewport for V4/ })).toHaveAttribute('data-marker-start-ms', Number(startTime).toFixed(3));
+  await page.getByRole('button', { name: '12 leads' }).click();
+  const starts = page.getByTestId('measurement-marker-start');
+  await expect(starts).toHaveCount(12);
+  await expect(page.locator('.measurement-marker-text')).toHaveCount(2);
+  await expect(page.locator('.measurement-marker-text').nth(0)).toContainText('Start');
+  await expect(page.locator('.measurement-marker-text').nth(1)).toContainText('End');
+  const alignedStartXs = await starts.evaluateAll(elements => elements.map(element => element.getAttribute('data-x-units')));
+  expect(new Set(alignedStartXs).size).toBe(1);
+  await page.getByRole('button', { name: 'Toggle theme' }).click();
+  const darkMarkerColour = await starts.first().locator('line').evaluate(element => getComputedStyle(element).stroke);
+  expect(darkMarkerColour).not.toBe(lightMarkerColour);
+  expect(await start.evaluate(element => (element as HTMLInputElement).value)).toBe(startTime);
+  expect(await end.evaluate(element => (element as HTMLInputElement).value)).toBe(endTime);
+  expect(await page.getByRole('status').locator('strong').allInnerTexts()).toEqual(resultBeforeSettings);
+});
+
+test('markers report viewport entry and exit; pause freezes them and playback reset restores example points', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await page.getByLabel('Paper speed').selectOption('50');
+  const viewport = page.getByRole('region', { name: /ECG waveform viewport for V3/ });
+  await expect.poll(async () => Number(await viewport.getAttribute('data-simulation-time-ms'))).toBeGreaterThan(2_300);
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+
+  const start = page.getByLabel('Start point (ms)');
+  const end = page.getByLabel('End point (ms)');
+  const visibleStart = Number(await viewport.locator('svg').getAttribute('data-visible-start-ms'));
+  expect(visibleStart).toBeGreaterThan(0);
+  const justInside = Math.ceil(visibleStart + 60);
+  await start.fill(String(justInside));
+  await expect(viewport).toHaveAttribute('data-marker-start-state', 'visible');
+  await page.getByRole('button', { name: '12 leads' }).click();
+  await expect(page.locator('.measurement-marker-text')).toHaveCount(2);
+  await expect(page.locator('.measurement-marker-text').first()).toContainText('Start');
+  expect(Number(await page.locator('[data-testid="measurement-marker-start"] .measurement-marker-label').first().getAttribute('x'))).toBeGreaterThanOrEqual(44);
+  await page.getByRole('button', { name: 'Single lead' }).click();
+  const frozenX = await page.getByTestId('measurement-marker-start').getAttribute('data-x-units');
+  const frozenTime = await viewport.getAttribute('data-simulation-time-ms');
+  await page.waitForTimeout(120);
+  await expect(viewport).toHaveAttribute('data-simulation-time-ms', frozenTime!);
+  await expect(page.getByTestId('measurement-marker-start')).toHaveAttribute('data-x-units', frozenX!);
+
+  await page.getByRole('button', { name: 'Start / resume' }).click();
+  await expect.poll(async () => viewport.getAttribute('data-marker-start-state')).toBe('before');
+  await expect(start).toHaveValue(String(justInside));
+  await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeEnabled();
+  const durationAfterExit = await page.getByRole('status').innerText();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await expect(page.getByRole('status')).toHaveText(durationAfterExit);
+
+  await page.getByRole('button', { name: 'Reset playback' }).click();
+  await expect(viewport).toHaveAttribute('data-simulation-time-ms', '0.000');
+  await expect(start).toHaveValue('0');
+  await expect(end).toHaveValue('800');
+  await expect(page.getByRole('radio', { name: 'Start', exact: true })).toBeChecked();
+  await expect(viewport).toHaveAttribute('data-marker-start-state', 'visible');
+  await expect(viewport).toHaveAttribute('data-marker-end-state', 'after');
+
+  await page.getByRole('button', { name: 'Start / resume' }).click();
+  await expect(viewport).toHaveAttribute('data-playing', 'true');
+  await expect.poll(async () => Number(await viewport.getAttribute('data-simulation-time-ms'))).toBeGreaterThan(50);
+  await page.getByRole('button', { name: 'Reset playback' }).click();
+  await expect(viewport).toHaveAttribute('data-playing', 'true');
+  await expect(start).toHaveValue('0');
+  await expect(end).toHaveValue('800');
+});
+
 test('paper speed changes sweep rate while gain and lead changes preserve the shared clock', async ({ page }) => {
   await page.goto('/');
   const viewport = page.getByRole('region', { name: /ECG waveform viewport for V3/ });
@@ -440,4 +573,3 @@ test('axe scans the primary light, dark, 12-lead and mobile states without suppr
 
   expect(findings, findings.join('\n')).toEqual([]);
 });
-
