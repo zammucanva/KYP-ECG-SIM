@@ -7,10 +7,10 @@ Date: 2026-10-20 (Asia/Kolkata)
 - Repository: `zammucanva/KYP-ECG-SIM`.
 - Existing feature branch: `codex/accessibility-content-governance`.
 - Verified starting branch base: `1ffcfd553fd1caa18bd156417c9c6f1e67370db3`; GitHub Actions run `39317284992` passed for this base.
-- Current feature-branch head: `d3f49a33e352d0ab24599cebafdeb6c79c3cee65`; GitHub Actions run `39323889336` completed successfully for this exact commit.
+- Verified content/review implementation commit: `d3f49a33e352d0ab24599cebafdeb6c79c3cee65`; GitHub Actions run `39323889336` passed for this exact commit. The three-file documentation follow-up `18d53d0d8e214d0a3af02286fc6528f0e501a60a` also passed Actions run `39324210042`.
 - `main`: `9544b96d87a44fce4334691145f5c53870871fa5`; no main-branch or KYP-production changes.
 - Local source export: `C:\Users\TSHAM\Documents\Codex\2026-10-19\hel\work\ecg-lab`; `.git` is absent. The remote branch was inspected through GitHub. Local test results are not remote CI evidence.
-- The 19-file checkpoint was committed to the existing feature branch with a non-forced expected-head update. The post-push Actions result is verified above. This workspace is a source export without Git metadata; local tests and remote CI are recorded separately.
+- The 19-file checkpoint and documentation follow-up were committed to the existing feature branch with non-forced expected-head updates. Their post-push Actions results are verified above. This workspace is a source export without Git metadata; local tests and remote CI are recorded separately. Refresh the live branch head on resume.
 
 ## Completed in ECG-CP5
 
