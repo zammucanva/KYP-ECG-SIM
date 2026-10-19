@@ -28,3 +28,7 @@ The browser preview maps one SVG user unit to 0.8 CSS pixels as a deliberate dis
 Manual time points are stored in milliseconds. SVG marker positions are derived from the shared paper-speed transform, while the measurement result is calculated from timestamps; changing speed, gain, layout, or preview scale does not mutate those timestamps. `previewPixelsToTimeMs` and `previewPixelsToVoltageMv` invert the display transform for calibrated coordinate conversion. The current interface uses accessible numeric time points, not pointer-drag calipers or automated boundary detection.
 
 The signal is deterministic synthetic educational material, not validated physiology or a patient recording. Calibration correctness does not establish clinical validity. Physical export, pointer-based calipers, and automated wave-boundary detection remain outstanding.
+
+## Regression coverage
+
+`src/engine/calibration.test.ts` checks all supported paper speeds and gains, pulse dimensions, viewport bounds, and measurement invariance across display transforms. `tests/e2e/ecg-lab.spec.ts` additionally inspects the rendered SVG pulse and verifies that long recordings scroll instead of being clipped in both layouts. Run `pnpm test` and `pnpm test:e2e`; the latter requires the Playwright Chromium runtime (`pnpm exec playwright install chromium`). These are software calibration checks, not clinical validation or a guarantee of physical-size printing.

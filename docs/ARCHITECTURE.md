@@ -7,3 +7,5 @@ Renderer coordinates share `src/engine/calibration.ts`: 4 SVG user units represe
 The public integration boundary is planned as an `EcgLab` component accepting typed initial machine settings. It is not exported yet; the current app is a standalone checkpoint.
 
 The UI theme uses CSS custom properties mapped to the live KYP light and dark palette: neutral blue-gray surfaces and text, cyan-teal primary controls, and low-contrast teal ECG grid lines. The standalone theme toggle persists its choice in `localStorage` under `ecg-lab-theme`; it does not access host application state.
+
+Unit tests remain under `src/engine/` and run with Vitest. User-visible browser regressions live in `tests/e2e/` and run in Chromium with Playwright against an isolated Vite development server on port 4173. `scripts/test-e2e.mjs` owns startup/readiness/cleanup so the local runner exits cleanly on Windows as well as CI. Tests observe controls through accessible roles and labels; scroll-region roles make intentionally overflowing calibrated recordings keyboard reachable.

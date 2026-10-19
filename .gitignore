@@ -3,3 +3,5 @@ dist/
 *.tsbuildinfo
 .vite/
 .vitest-cache/
+playwright-report/
+test-results/

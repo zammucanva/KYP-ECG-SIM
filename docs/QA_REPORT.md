@@ -1,15 +1,26 @@
 # QA report
 
-Status: calibration-correctness checkpoint verified on 2026-10-19.
+Status: calibration and formal browser-regression checkpoint verified on 2026-10-19.
 
-Pre-change baseline: `pnpm test` passed (1 file, 5 tests), `pnpm typecheck` passed, and `pnpm build` passed.
+## Commands and actual results
 
-Final calibration checkpoint results: `pnpm test` passed (1 file, 9 tests); `pnpm typecheck` passed; `pnpm build` passed (Vite 8.3.4, 18 modules transformed; 8.62 kB CSS and 231.34 kB JS before gzip).
+- Pre-change baseline: `pnpm test` 9/9 passed; `pnpm typecheck` passed; `pnpm build` passed.
+- Dependency reproducibility: `pnpm install --frozen-lockfile` passed after adding Playwright.
+- Final `pnpm test`: 1 test file, 9/9 passed.
+- Final `pnpm typecheck`: passed for both the application and Playwright config/spec types.
+- Final `pnpm build`: passed with Vite 8.3.4 (18 modules; 8.74 kB CSS and 231.68 kB JS before gzip).
+- Final `pnpm test:all`: exit 0; unit, type-check, build, and all five Chromium tests passed (Playwright 1.64.1; 21.9 seconds reported browser test time).
 
-Automated checks cover all paper speeds (12.5, 25, 50 mm/s), gains (5, 10, 20 mm/mV), ten-second logical widths, pulse dimensions, screen-coordinate inverse conversion across preview zoom values, and vertical sample bounds for all 12 leads and all four synthetic presets.
+## Browser coverage
 
-Browser regression: verified the default V3 / 25 mm/s / 20 mm/mV / grid-on controls; the 1 mV, 200 ms SVG pulse is 80 SVG units high at 20 mm/mV; the 50 mm/s single trace uses a 2000-unit viewBox, ends at x=1998.4, and horizontally scrolls rather than clipping; the 12-lead view shows all twelve labels with identical x-coordinate timelines, shared viewBox dimensions, and sample paths in bounds. The theme switch operated with Enter, dark SVG trace/grid colors resolved to dark tokens, and dark selection survived reload. The CSS-pixel preview remains explicitly separate from physical millimetres. The browser automation environment did not expose localStorage directly for inspection; reload persistence was confirmed through the rendered theme state.
+The Playwright tests verify startup without uncaught page/console errors; V3, 25 mm/s, 20 mm/mV and visible-grid defaults; the actual SVG pulse path height of 80 logical units (20 mm) at 20 mm/mV; all twelve selectable leads; lead-specific signal change; 50 mm/s horizontal scrolling rather than clipping; grid and single/multi-view controls; equal 12-lead viewBoxes and identical x-coordinate arrays; RR/PR/QRS/QT values and reset; the known 800 ms RR result of 75 bpm; measurement stability through speed and gain changes; keyboard theme operation and focus indication; distinct light/dark SVG trace colors and saved theme after reload; and usable desktop, tablet and mobile layouts without page-level horizontal overflow.
 
-There is no local `.git` directory in the project folder, so local branch and dirty-tree state cannot be reported or used for a local branch commit. The remote theme commit was verified on GitHub `main`; no correction was pushed to `main`.
+The first browser attempt found an ambiguous accessible name for the I/II/III buttons because they were nested in a `label`. The control was corrected to a labelled `fieldset`; selectors now identify each lead exactly. Vitest also initially discovered the browser spec; `vite.config.ts` now scopes Vitest to `src/**/*.test.ts`, keeping the unit and browser suites separate.
 
-Not performed: formal Playwright suite (not configured), physical-size print/export, full accessibility audit, automated wave-boundary detection, or clinical validation. The synthetic morphologies remain educational templates, not validated patient physiology.
+The local sandbox could not create Playwright's default user cache, so Chromium was installed to a temporary path through `PLAYWRIGHT_BROWSERS_PATH`; the package test script and CI use the normal Playwright runtime discovery when installed conventionally. A GitHub Actions workflow was added, but its remote run has not yet been observed in this report.
+
+No local `.git` directory exists in the project folder, so local branch/dirty-tree status is unavailable. Changes are intended for a focused non-main GitHub branch; `main` is not to be modified directly.
+
+## Not verified or implemented
+
+No full accessibility audit, physical-size print/export, automated wave-boundary detection, KYP integration, educational content review, or clinical validation was performed. Synthetic morphologies remain educational templates, not validated physiology or patient recordings.

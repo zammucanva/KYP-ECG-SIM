@@ -10,6 +10,15 @@ pnpm dev
 pnpm test
 pnpm typecheck
 pnpm build
+pnpm test:e2e
 ```
 
-Synthetic traces are educational illustrations, not patient recordings and not a diagnostic device. Automated wave-boundary detection, artifact pipeline, learning modes, a formal Playwright suite, and clinical review remain incomplete.
+Install the Playwright Chromium runtime once before the first browser run:
+
+```bash
+pnpm exec playwright install chromium
+```
+
+`pnpm test` runs unit tests; `pnpm test:e2e` runs browser regressions; `pnpm test:all` runs both plus type-check and production build.
+
+Synthetic traces are educational illustrations, not patient recordings and not a diagnostic device. Automated wave-boundary detection, artifact pipeline, learning modes, and clinical review remain incomplete.

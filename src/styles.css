@@ -80,6 +80,8 @@ h2 span { color: var(--primary); }
 .section-label { border-bottom: 1px solid var(--border); padding-bottom: 12px; }
 .spacing { margin-top: 28px; }
 .controls label { display: block; margin-top: 18px; color: var(--muted); font-size: 12px; }
+.lead-field { min-width: 0; border: 0; margin: 18px 0 0; padding: 0; }
+.lead-field legend { padding: 0; color: var(--muted); font-size: 12px; }
 .controls select, .measure-controls select, .measure-controls input { display: block; min-width: 0; border: 1px solid var(--border-strong); border-radius: 5px; margin-top: 7px; padding: 10px 11px; background: var(--surface); color: var(--text); }
 .controls select { width: 100%; }
 .lead-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 8px; }

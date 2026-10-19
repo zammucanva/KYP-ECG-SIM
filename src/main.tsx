@@ -48,11 +48,11 @@ function Trace({ samples, config, width, height, label, markers }: { samples: Sa
     <path d={path} fill="none" stroke="var(--trace)" strokeWidth={1.4} vectorEffect="non-scaling-stroke" />
     {markerX?.map((x, i) => <line key={i} x1={x} x2={x} y1="0" y2={height} stroke="var(--marker)" strokeWidth="2" strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />)}
   </svg>;
-  return <div className={label ? 'mini-trace' : 'trace-wrap'}>{label ? svg : <div className="trace-scroll">{svg}</div>}{label && <strong className="mini-label">{label}</strong>}{!label && <div className="trace-meta"><span>{config.lead} · {config.paperSpeed} mm/s · {config.gain} mm/mV</span><span>10 s synthetic strip</span></div>}</div>;
+  return <div className={label ? 'mini-trace' : 'trace-wrap'}>{label ? svg : <div className="trace-scroll" role="region" aria-label="ECG waveform viewport" tabIndex={0}>{svg}</div>}{label && <strong className="mini-label">{label}</strong>}{!label && <div className="trace-meta"><span>{config.lead} · {config.paperSpeed} mm/s · {config.gain} mm/mV</span><span>10 s synthetic strip</span></div>}</div>;
 }
 
 function MultiLead({ signals, config, width, height }: { signals: LeadSignals; config: MachineConfig; width: number; height: number }) {
-  return <div className="multi-trace">{leads.map(lead => <Trace key={lead} label={lead} samples={signals[lead]} config={config} width={width} height={height} />)}</div>;
+  return <div className="multi-trace" role="region" aria-label="12-lead ECG waveform viewport" tabIndex={0}>{leads.map(lead => <Trace key={lead} label={lead} samples={signals[lead]} config={config} width={width} height={height} />)}</div>;
 }
 
 function readThemePreference(): 'light' | 'dark' {
@@ -85,6 +85,116 @@ function App() {
       // Theme switching remains available when storage is disabled.
     }
   }, [theme]);
-  return <main><header className="topbar"><div><p className="eyebrow">KYP / FUTURE MODULE</p><h1>ECG <em>Lab</em></h1></div><div className="header-tools"><div className="status"><span className="dot" />SIMULATION ONLY <small>synthetic signal</small></div><button className="theme-toggle" type="button" aria-label="Toggle theme" aria-pressed={theme === 'dark'} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`} onClick={() => setTheme(current => current === 'light' ? 'dark' : 'light')}><span aria-hidden="true">◐</span>{theme === 'dark' ? 'Dark' : 'Light'}</button></div></header><section className="intro"><div><p className="eyebrow">CALIBRATED EXPLORATION</p><h2>Read the trace,<br /><span>understand the heart.</span></h2><p className="lede">A controlled environment for learning ECG fundamentals. One shared timeline drives every lead and every measurement.</p></div><div className="calibration-card"><span>CALIBRATION PULSE</span><strong>1 mV</strong><CalibrationPulse speed={config.paperSpeed} gain={config.gain} /><small>{config.gain} mm/mV · {CALIBRATION_PULSE_DURATION_MS} ms</small></div></section><section className="lab-grid"><aside className="controls"><div className="section-label">01 / SIGNAL</div><label>Rhythm preset<select value={config.preset} onChange={e => patch({ preset: e.target.value as RhythmPreset })}>{presets.map(([v, l]) => <option value={v} key={v}>{l}</option>)}</select></label><label>Displayed lead<div className="lead-grid">{leads.map(lead => <button className={config.lead === lead ? 'active' : ''} onClick={() => patch({ lead })} key={lead}>{lead}</button>)}</div></label><div className="section-label spacing">02 / MACHINE</div><label>Paper speed<select value={config.paperSpeed} onChange={e => patch({ paperSpeed: Number(e.target.value) as PaperSpeed })}><option value="12.5">12.5 mm/s</option><option value="25">25 mm/s</option><option value="50">50 mm/s</option></select></label><label>Gain<select value={config.gain} onChange={e => patch({ gain: Number(e.target.value) as Gain })}><option value="5">5 mm/mV</option><option value="10">10 mm/mV</option><option value="20">20 mm/mV</option></select></label><button className="toggle" onClick={() => patch({ showGrid: !config.showGrid })}><span className={config.showGrid ? 'switch on' : 'switch'} />ECG paper grid <small>{config.showGrid ? 'ON' : 'OFF'}</small></button></aside><section className="monitor"><div className="monitor-head"><div><span className="live">● LIVE PREVIEW</span><h3>{view === 'single' ? `${config.lead} rhythm strip` : '12-lead overview'}</h3></div><div className="view-toggle"><button className={view === 'single' ? 'active' : ''} onClick={() => setView('single')}>Single lead</button><button className={view === 'multi' ? 'active' : ''} onClick={() => setView('multi')}>12 leads</button></div></div>{view === 'single' ? <Trace samples={signals[config.lead]} config={config} width={plotWidth} height={plotHeight} markers={[startMs, endMs]} /> : <MultiLead signals={signals} config={config} width={plotWidth} height={plotHeight} />}<div className="measure-panel"><div className="section-label">03 / MANUAL CALIPERS</div><div className="measure-controls"><label>Measurement<select value={kind} onChange={e => setKindAndDefaults(e.target.value as MeasurementKind)}><option value="RR">R–R interval</option><option value="PR">PR interval</option><option value="QRS">QRS duration</option><option value="QT">QT interval</option></select></label><label>Start point (ms)<input type="number" min="0" max="10000" step="4" value={startMs} onChange={e => setPoints([Number(e.target.value), endMs])} /></label><label>End point (ms)<input type="number" min="0" max="10000" step="4" value={endMs} onChange={e => setPoints([startMs, Number(e.target.value)])} /></label><button className="reset" onClick={() => setPoints(measurementDefaults[kind])}>Reset points</button></div><div className="measurement-result"><strong>{measurement.durationMs.toFixed(0)} <small>ms</small></strong>{measurement.heartRateBpm && <strong>{measurement.heartRateBpm.toFixed(0)} <small>bpm</small></strong>}<span>Manual points are shown on the trace. Values use the shared timebase and remain unchanged when gain changes.</span></div></div><div className="measure-row"><div><span>RATE</span><strong>{rate} <small>bpm</small></strong></div><div><span>CALIBRATION</span><strong>1 mV <small>/ {config.gain} mm</small></strong></div><div className="hint">Synthetic educational signal.<br />Not for clinical diagnosis or patient care.</div></div></section></section><footer><span>ECG LAB v0.2 · 12-LEAD CHECKPOINT</span><span>Educational simulation only.</span></footer></main>;
+  return (
+    <main>
+      <header className="topbar">
+        <div><p className="eyebrow">KYP / FUTURE MODULE</p><h1>ECG <em>Lab</em></h1></div>
+        <div className="header-tools">
+          <div className="status"><span className="dot" />SIMULATION ONLY <small>synthetic signal</small></div>
+          <button className="theme-toggle" type="button" aria-label="Toggle theme" aria-pressed={theme === 'dark'} title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} onClick={() => setTheme(current => current === 'light' ? 'dark' : 'light')}>
+            <span aria-hidden="true">◐</span>{theme === 'dark' ? 'Dark' : 'Light'}
+          </button>
+        </div>
+      </header>
+
+      <section className="intro">
+        <div>
+          <p className="eyebrow">CALIBRATED EXPLORATION</p>
+          <h2>Read the trace,<br /><span>understand the heart.</span></h2>
+          <p className="lede">A controlled environment for learning ECG fundamentals. One shared timeline drives every lead and every measurement.</p>
+        </div>
+        <div className="calibration-card">
+          <span>CALIBRATION PULSE</span>
+          <strong>1 mV</strong>
+          <CalibrationPulse speed={config.paperSpeed} gain={config.gain} />
+          <small>{config.gain} mm/mV · {CALIBRATION_PULSE_DURATION_MS} ms</small>
+        </div>
+      </section>
+
+      <section className="lab-grid">
+        <aside className="controls">
+          <div className="section-label">01 / SIGNAL</div>
+          <label>Rhythm preset
+            <select value={config.preset} onChange={event => patch({ preset: event.target.value as RhythmPreset })}>
+              {presets.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+            </select>
+          </label>
+          <fieldset className="lead-field">
+            <legend>Displayed lead</legend>
+            <div className="lead-grid">
+              {leads.map(lead => (
+                <button aria-pressed={config.lead === lead} className={config.lead === lead ? 'active' : ''} onClick={() => patch({ lead })} key={lead}>
+                  {lead}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="section-label spacing">02 / MACHINE</div>
+          <label>Paper speed
+            <select value={config.paperSpeed} onChange={event => patch({ paperSpeed: Number(event.target.value) as PaperSpeed })}>
+              <option value="12.5">12.5 mm/s</option><option value="25">25 mm/s</option><option value="50">50 mm/s</option>
+            </select>
+          </label>
+          <label>Gain
+            <select value={config.gain} onChange={event => patch({ gain: Number(event.target.value) as Gain })}>
+              <option value="5">5 mm/mV</option><option value="10">10 mm/mV</option><option value="20">20 mm/mV</option>
+            </select>
+          </label>
+          <button className="toggle" aria-pressed={config.showGrid} onClick={() => patch({ showGrid: !config.showGrid })}>
+            <span className={config.showGrid ? 'switch on' : 'switch'} />ECG paper grid <small>{config.showGrid ? 'ON' : 'OFF'}</small>
+          </button>
+        </aside>
+
+        <section className="monitor">
+          <div className="monitor-head">
+            <div>
+              <span className="live">● LIVE PREVIEW</span>
+              <h3>{view === 'single' ? `${config.lead} rhythm strip` : '12-lead overview'}</h3>
+            </div>
+            <div className="view-toggle">
+              <button aria-pressed={view === 'single'} className={view === 'single' ? 'active' : ''} onClick={() => setView('single')}>Single lead</button>
+              <button aria-pressed={view === 'multi'} className={view === 'multi' ? 'active' : ''} onClick={() => setView('multi')}>12 leads</button>
+            </div>
+          </div>
+
+          {view === 'single'
+            ? <Trace samples={signals[config.lead]} config={config} width={plotWidth} height={plotHeight} markers={[startMs, endMs]} />
+            : <MultiLead signals={signals} config={config} width={plotWidth} height={plotHeight} />}
+
+          <div className="measure-panel">
+            <div className="section-label">03 / MANUAL CALIPERS</div>
+            <div className="measure-controls">
+              <label>Measurement
+                <select value={kind} onChange={event => setKindAndDefaults(event.target.value as MeasurementKind)}>
+                  <option value="RR">R–R interval</option><option value="PR">PR interval</option><option value="QRS">QRS duration</option><option value="QT">QT interval</option>
+                </select>
+              </label>
+              <label>Start point (ms)
+                <input type="number" min="0" max="10000" step="4" value={startMs} onChange={event => setPoints([Number(event.target.value), endMs])} />
+              </label>
+              <label>End point (ms)
+                <input type="number" min="0" max="10000" step="4" value={endMs} onChange={event => setPoints([startMs, Number(event.target.value)])} />
+              </label>
+              <button className="reset" onClick={() => setPoints(measurementDefaults[kind])}>Reset points</button>
+            </div>
+            <div className="measurement-result" role="status" aria-live="polite">
+              <strong>{measurement.durationMs.toFixed(0)} <small>ms</small></strong>
+              {measurement.heartRateBpm && <strong>{measurement.heartRateBpm.toFixed(0)} <small>bpm</small></strong>}
+              <span>Manual points are shown on the trace. Values use the shared timebase and remain unchanged when gain changes.</span>
+            </div>
+          </div>
+
+          <div className="measure-row">
+            <div><span>RATE</span><strong>{rate} <small>bpm</small></strong></div>
+            <div><span>CALIBRATION</span><strong>1 mV <small>/ {config.gain} mm</small></strong></div>
+            <div className="hint">Synthetic educational signal.<br />Not for clinical diagnosis or patient care.</div>
+          </div>
+        </section>
+      </section>
+
+      <footer><span>ECG LAB v0.2 · 12-LEAD CHECKPOINT</span><span>Educational simulation only.</span></footer>
+    </main>
+  );
 }
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);

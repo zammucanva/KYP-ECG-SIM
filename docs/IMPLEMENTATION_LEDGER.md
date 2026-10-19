@@ -15,9 +15,10 @@
 | KYP theme parity | Light/dark palette, accessible toggle and persisted preference | Complete | KYP palette tokens applied across app surfaces and SVG; browser verified both modes and reload persistence |
 | Calibration correctness audit | No horizontal/vertical clipping; logical units documented; measurement invariance | Complete | 9/9 tests; 12-lead browser check; screen-to-calibration geometry documented |
 | Learning modes | Learn/practice/exam | Not started | Requires content review metadata |
-| QA | Test/typecheck/build/browser evidence | Complete for calibration checkpoint | Final results recorded in `QA_REPORT.md`; browser verified 12 aligned traces, 50 mm/s scrolling, 1 mV pulse height and theme persistence |
+| Formal browser regressions | Startup, controls, measurements, theme persistence, calibration extent, responsive scrolling | Complete | `pnpm test:e2e`: 5/5 Chromium tests passed; GitHub Actions workflow added |
+| QA | Unit tests/typecheck/build/browser evidence | Complete | Final unit suite 9/9; typecheck, build and browser suite passed; see `QA_REPORT.md` |
 | KYP integration | Public API and guide | Not started | KYP architecture unavailable in preflight |
 
 ## Current checkpoint
 
-Files were extended in `work/ecg-lab`. Calibration geometry is now explicit in logical millimetres and SVG units; screen size is documented separately from physical output. The local folder has no `.git` directory, so it has no local branch/working-tree status. Next action is implementing educational learning modes from reviewed learning objectives, followed by a formal browser test suite and physical-size export.
+Calibration and the formal browser-regression checkpoint are complete. The current implementation preserves the KYP-matched theme and controls while testing actual browser behavior. No learning modes or KYP integration were started. The local folder has no `.git` directory, so local branch and dirty-tree state are unavailable. See `SESSION_CHECKPOINT.md` for the resume point and `ROADMAP.md` for the next phase.
