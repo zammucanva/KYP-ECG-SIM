@@ -3,7 +3,7 @@
 This sequence keeps measurement and rendering reliability ahead of additional learning features.
 
 1. **Calibration hardening — complete.** Shared time/voltage transforms, pulse, viewport extents, 12-lead alignment and unit tests are documented in `ECG_CALIBRATION.md` and `LEAD_SYSTEM.md`.
-2. **Browser regression suite — complete.** Five Chromium scenarios cover startup, all leads, machine controls, manual intervals, theme state/colors, calibration pulse, aligned 12-lead x coordinates and responsive scrolling. A CI workflow runs these with the unit/build gates; remote CI status remains to be checked after push.
+2. **Browser regression suite — complete.** Five Chromium scenarios cover startup, all leads, machine controls, manual intervals, theme state/colors, calibration pulse, aligned 12-lead x coordinates and responsive scrolling. The first GitHub Actions run for this checkpoint passed dependency install, browser setup, unit tests, type-check, build and browser tests.
 3. **Accessibility review — next.** Conduct keyboard and screen-reader review across themes and responsive layouts; add an automated scan only as supporting evidence.
 4. **Measurement tooling.** Add pointer-based and voltage calipers only after the current numeric manual measurements and coordinate mapping remain covered by tests. Do not imply automated wave-boundary detection.
 5. **Content schema and provenance.** Define validated discriminated types and a review/provenance model before placing educational content in React views.

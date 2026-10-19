@@ -15,8 +15,8 @@
 | KYP theme parity | Light/dark palette, accessible toggle and persisted preference | Complete | KYP palette tokens applied across app surfaces and SVG; browser verified both modes and reload persistence |
 | Calibration correctness audit | No horizontal/vertical clipping; logical units documented; measurement invariance | Complete | 9/9 tests; 12-lead browser check; screen-to-calibration geometry documented |
 | Learning modes | Learn/practice/exam | Not started | Requires content review metadata |
-| Formal browser regressions | Startup, controls, measurements, theme persistence, calibration extent, responsive scrolling | Complete | `pnpm test:e2e`: 5/5 Chromium tests passed; GitHub Actions workflow added |
-| QA | Unit tests/typecheck/build/browser evidence | Complete | Final unit suite 9/9; typecheck, build and browser suite passed; see `QA_REPORT.md` |
+| Formal browser regressions | Startup, controls, measurements, theme persistence, calibration extent, responsive scrolling | Complete | `pnpm test:e2e`: 5/5 Chromium tests passed; GitHub Actions run 39247366495 passed |
+| QA | Unit tests/typecheck/build/browser evidence | Complete | Final unit suite 9/9; typecheck, build and browser suite passed locally and in CI; see `QA_REPORT.md` |
 | KYP integration | Public API and guide | Not started | KYP architecture unavailable in preflight |
 
 ## Current checkpoint

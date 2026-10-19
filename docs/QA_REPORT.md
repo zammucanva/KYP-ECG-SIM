@@ -17,9 +17,9 @@ The Playwright tests verify startup without uncaught page/console errors; V3, 25
 
 The first browser attempt found an ambiguous accessible name for the I/II/III buttons because they were nested in a `label`. The control was corrected to a labelled `fieldset`; selectors now identify each lead exactly. Vitest also initially discovered the browser spec; `vite.config.ts` now scopes Vitest to `src/**/*.test.ts`, keeping the unit and browser suites separate.
 
-The local sandbox could not create Playwright's default user cache, so Chromium was installed to a temporary path through `PLAYWRIGHT_BROWSERS_PATH`; the package test script and CI use the normal Playwright runtime discovery when installed conventionally. A GitHub Actions workflow was added, but its remote run has not yet been observed in this report.
+The local sandbox could not create Playwright's default user cache, so Chromium was installed to a temporary path through `PLAYWRIGHT_BROWSERS_PATH`; the package test script and CI use normal Playwright runtime discovery when installed conventionally. GitHub Actions run [39247366495](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39247366495) completed successfully: dependency installation, Chromium setup, unit tests, type-check, build and browser tests all passed.
 
-No local `.git` directory exists in the project folder, so local branch/dirty-tree status is unavailable. Changes are intended for a focused non-main GitHub branch; `main` is not to be modified directly.
+No local `.git` directory exists in the project folder, so local branch/dirty-tree status is unavailable. The verified implementation was published to `codex/playwright-browser-regression`; `main` was not modified.
 
 ## Not verified or implemented
 
