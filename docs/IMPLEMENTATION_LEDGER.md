@@ -25,11 +25,11 @@ This is the canonical task record. Status and evidence below reflect local verif
 ### ECG-QA-06 — Motion regressions, visual QA and checkpoint
 
 - Acceptance: deterministic unit coverage for clock lifecycle, time-based samples, speed/gain/lead invariants; Playwright proves live movement, pause freeze, continuous resume, reset, speed changes, lead/time alignment, reduced motion, responsive layout, axe and bounded path size; documentation records actual test and remote evidence.
-- Status: Complete locally; remote feature-branch publication and Actions verification are pending refresh/update.
+- Status: Complete locally and on the feature branch. Implementation commit `0dce61202093d5f0c08d9186fe027f31ec13494e` is on `codex/accessibility-content-governance`; GitHub Actions run `39340233374` completed successfully. Remote `main` remains `9544b96d87a44fce4334691145f5c53870871fa5`.
 - Files: engine tests, `tests/e2e/ecg-lab.spec.ts`, `playwright.config.ts`, `README.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/QA_REPORT.md`, `docs/IMPLEMENTATION_LEDGER.md`, `docs/SESSION_CHECKPOINT.md`.
 - Tests/evidence: `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all` exited 0; 53 Vitest tests, application and Playwright type checks, Vite production build, and 11 Chromium scenarios passed. Browser checks include unsuppressed axe scans and observed animation lifecycle controls. Local app was also inspected at `http://localhost:5173/` in Chromium.
 - Dependencies: ECG-ANIM-06, ECG-ANIM-07.
-- Limitations/next action: no clinical validation or patient-monitor claim. Refresh remote feature head and CI before a non-forced expected-head branch update; do not merge, deploy, or touch `main`.
+- Limitations/next action: no clinical validation or patient-monitor claim; this cannot be used as a real ECG machine or for patient care. Continue only with educational features or genuine review-gated content work. Do not merge, deploy, or touch `main`.
 
 ## Current checkpoint — ECG-CP5 content review readiness
 

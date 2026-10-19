@@ -5,8 +5,8 @@ Date: 2026-10-20 (Asia/Kolkata)
 ## Repository state
 
 - Repository: `zammucanva/KYP-ECG-SIM`; working source export: `C:\Users\TSHAM\Documents\Codex\2026-10-19\hel\work\ecg-lab`.
-- The local export has no `.git` directory. Do not infer a local branch, commit, or clean status from it. At preflight, GitHub reported feature branch `codex/accessibility-content-governance` at `2cd31e1a864f7ead8286f07aa6587f9cd4f46e6d` and successful Actions run `39324432585`; `main` was `9544b96d87a44fce4334691145f5c53870871fa5`. Refresh those remote refs before writing.
-- No changes have been merged to `main`, deployed, or made to KYP production. Remote commit/CI evidence for this implementation is pending the guarded feature-branch update.
+- The local export has no `.git` directory. Do not infer a local branch, commit, or clean status from it. At preflight, GitHub reported feature branch `codex/accessibility-content-governance` at `2cd31e1a864f7ead8286f07aa6587f9cd4f46e6d` and successful Actions run `39324432585`; `main` was `9544b96d87a44fce4334691145f5c53870871fa5`.
+- Implementation commit `0dce61202093d5f0c08d9186fe027f31ec13494e` is now on the existing feature branch. GitHub Actions run [39340233374](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39340233374) completed successfully for that exact commit. `main` remains `9544b96d87a44fce4334691145f5c53870871fa5`; no merge, deployment or KYP production edits occurred.
 
 ## Completed in ECG-CP6
 
@@ -30,7 +30,7 @@ Date: 2026-10-20 (Asia/Kolkata)
 - This remains a deterministic educational template, not validated patient physiology or an operational clinical monitor. Hospital deployment/use is not established by this work.
 - The clock intentionally drops frame gaps over 100 ms. Long main-thread stalls therefore do not become a large abrupt sweep jump.
 - Absolute measurement points outside the rolling window are not drawn; no drag calipers or automatic interval detection were added. Screen units are a preview scale, not guaranteed physical print dimensions.
-- Next: refresh feature branch and current CI; publish this verified checkpoint using a non-forced expected-head update only if the remote head is unchanged. Then inspect the resulting CI. Do not merge/deploy or modify `main` or KYP production.
+- Next: decide whether the next milestone should improve manual interval marker visibility during the rolling window or continue the source/reviewer workflow for the still-gated Learn drafts. Do not present this educational simulator as equivalent to hospital ECG equipment or use it for patient care; do not merge/deploy or modify `main` or KYP production.
 
 ---
 
