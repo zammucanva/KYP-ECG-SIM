@@ -11,5 +11,7 @@ This sequence keeps measurement and rendering reliability ahead of additional le
 7. **Expert-reviewed case workflow.** Introduce clinical ECG cases only when provenance, licensing/authorization, required technical metadata, medical review, and publication approval are real and recorded.
 8. **Integration boundary.** Stabilize a typed embeddable API and verify it in a separate KYP integration task; do not modify KYP production during standalone work.
 9. **Optional export and signal artifacts.** Defer physical-size export, noise/artifact controls, and import pipelines until core browser and calibration tests are stable.
+10. **Live paper-sweep checkpoint — implemented and regression-tested.** The simulator now has a monotonic time-based clock, bounded rolling SVG windows, shared lead timing, reduced-motion default pause, and accessible playback controls. See `ARCHITECTURE.md`, `QA_REPORT.md`, and the current `SESSION_CHECKPOINT.md`. This is still a synthetic educational model, not a clinical monitor.
 
 No phase may describe the synthetic morphologies as clinically validated without evidence and review.
+

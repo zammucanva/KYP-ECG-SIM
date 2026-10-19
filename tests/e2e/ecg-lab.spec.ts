@@ -17,7 +17,11 @@ test('starts with the verified defaults and a calibration-derived pulse', async 
   await expect(page.getByLabel('Gain')).toHaveValue('20');
   await expect(page.getByRole('button', { name: /ECG paper grid/ })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('button', { name: 'Single lead' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('img', { name: /^V3 synthetic ECG waveform, 10 seconds, 25 mm\/s, 20 mm\/mV, ECG grid visible$/ })).toBeVisible();
+  const waveform = page.getByRole('img', { name: /^V3 synthetic educational ECG waveform, moving paper sweep, 25 mm\/s, 20 mm\/mV, ECG grid visible$/ });
+  await expect(waveform).toBeVisible();
+  const liveViewport = page.getByRole('region', { name: /ECG waveform viewport for V3/ });
+  await expect(liveViewport).toHaveAttribute('data-playing', 'true');
+  await expect.poll(async () => Number(await liveViewport.getAttribute('data-simulation-time-ms'))).toBeGreaterThan(0);
 
   const pulse = page.getByRole('img', { name: /One millivolt, 200 millisecond calibration pulse/ });
   const pulseHeight = await pulse.evaluate(element => {
@@ -33,10 +37,14 @@ test('starts with the verified defaults and a calibration-derived pulse', async 
 
 test('machine controls preserve the recording and keep all twelve rows aligned', async ({ page }) => {
   await page.goto('/');
-  const trace = page.getByRole('img', { name: /synthetic ECG waveform/ });
+  const trace = page.getByRole('img', { name: /synthetic educational ECG waveform/ });
   const v3Path = await trace.locator('path').last().getAttribute('d');
+  const v3Viewport = page.getByRole('region', { name: /ECG waveform viewport for V3/ });
+  const timeBeforeLeadChange = Number(await v3Viewport.getAttribute('data-simulation-time-ms'));
 
   await page.getByRole('button', { name: 'V4', exact: true }).click();
+  const v4Viewport = page.getByRole('region', { name: /ECG waveform viewport for V4/ });
+  expect(Number(await v4Viewport.getAttribute('data-simulation-time-ms'))).toBeGreaterThanOrEqual(timeBeforeLeadChange);
   await expect(page.getByRole('heading', { name: 'V4 rhythm strip' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'V4', exact: true })).toHaveAttribute('aria-pressed', 'true');
   expect(await trace.locator('path').last().getAttribute('d')).not.toBe(v3Path);
@@ -51,10 +59,11 @@ test('machine controls preserve the recording and keep all twelve rows aligned',
   await page.getByRole('button', { name: 'V4', exact: true }).click();
 
   await page.getByLabel('Paper speed').selectOption('50');
-  await expect(trace).toHaveAttribute('viewBox', /^0 0 2000 /);
+  await expect(trace).toHaveAttribute('aria-label', /50 mm\/s/);
   const singleViewport = page.getByRole('region', { name: 'ECG waveform viewport' });
-  const singleScrolls = await singleViewport.evaluate(element => element.scrollWidth > element.clientWidth);
-  expect(singleScrolls).toBe(true);
+  await expect(singleViewport).toHaveAttribute('data-speed-mm-s', '50');
+  const singleFits = await singleViewport.evaluate(element => element.scrollWidth <= element.clientWidth + 1);
+  expect(singleFits).toBe(true);
 
   await page.getByLabel('Gain').selectOption('5');
   await expect(page.getByRole('img', { name: /5 millimetres per millivolt and 50 millimetres per second/ })).toBeVisible();
@@ -65,10 +74,15 @@ test('machine controls preserve the recording and keep all twelve rows aligned',
   await page.getByRole('button', { name: '12 leads' }).click();
   await expect(page.getByRole('heading', { name: '12-lead overview' })).toBeVisible();
   const multiViewport = page.getByRole('region', { name: '12-lead ECG waveform viewport' });
-  const waveforms = page.getByRole('img', { name: /synthetic ECG waveform/ });
+  const waveforms = page.getByRole('img', { name: /synthetic educational ECG waveform/ });
   await expect(waveforms).toHaveCount(12);
   const viewBoxes = await waveforms.evaluateAll(elements => elements.map(element => element.getAttribute('viewBox')));
   expect(new Set(viewBoxes).size).toBe(1);
+  const logicalScales = await waveforms.evaluateAll(elements => elements.map(element => {
+    const svg = element as SVGSVGElement;
+    return svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
+  }));
+  logicalScales.forEach(scale => expect(scale).toBeCloseTo(0.8, 1));
   const timeCoordinates = await waveforms.evaluateAll(elements => elements.map(element => {
     const paths = Array.from(element.querySelectorAll('path'));
     const tracePath = paths.at(-1)?.getAttribute('d') ?? '';
@@ -76,9 +90,9 @@ test('machine controls preserve the recording and keep all twelve rows aligned',
   }));
   expect(new Set(timeCoordinates.map(coordinates => JSON.stringify(coordinates))).size).toBe(1);
   for (const lead of leadNames) {
-    await expect(page.getByRole('img', { name: new RegExp(`^${lead} synthetic ECG waveform`) })).toBeVisible();
+    await expect(page.getByRole('img', { name: new RegExp(`^${lead} synthetic educational ECG waveform`) })).toBeVisible();
   }
-  expect(await multiViewport.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true);
+  expect(await multiViewport.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
 
   await page.getByRole('button', { name: 'Single lead' }).click();
   await expect(page.getByRole('heading', { name: 'V4 rhythm strip' })).toBeVisible();
@@ -120,7 +134,7 @@ test('theme toggle is keyboard accessible, recolours SVG traces and persists aft
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 
-  const trace = page.getByRole('img', { name: /^V3 synthetic ECG waveform/ });
+  const trace = page.getByRole('img', { name: /^V3 synthetic educational ECG waveform/ });
   const getTraceColour = () => trace.locator('path').last().evaluate(element => getComputedStyle(element).stroke);
   const lightTraceColour = await getTraceColour();
   await page.keyboard.press('Tab');
@@ -141,7 +155,7 @@ test('theme toggle is keyboard accessible, recolours SVG traces and persists aft
   expect(await getTraceColour()).toBe(darkTraceColour);
 });
 
-test('desktop, tablet and mobile layouts keep controls readable and long strips scroll inside the viewport', async ({ page }) => {
+test('desktop, tablet and mobile layouts keep controls readable without distorting or clipping the live strip', async ({ page }) => {
   await page.goto('/');
   const speed = page.getByLabel('Paper speed');
   const multiLead = page.getByRole('button', { name: '12 leads' });
@@ -151,13 +165,22 @@ test('desktop, tablet and mobile layouts keep controls readable and long strips 
     await expect(speed).toBeVisible();
     await expect(page.getByLabel('Gain')).toBeVisible();
     await expect(multiLead).toBeVisible();
+    await expect.poll(async () => page.locator('.live-trace-svg').evaluate(element => {
+      const svg = element as SVGSVGElement;
+      return svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
+    })).toBeLessThan(0.85);
+    const logicalScale = await page.locator('.live-trace-svg').evaluate(element => {
+      const svg = element as SVGSVGElement;
+      return svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
+    });
+    expect(logicalScale).toBeCloseTo(0.8, 1);
   }
 
   await speed.selectOption('50');
   await multiLead.click();
   const viewport = page.getByRole('region', { name: '12-lead ECG waveform viewport' });
   const dimensions = await viewport.evaluate(element => ({ scrollWidth: element.scrollWidth, clientWidth: element.clientWidth }));
-  expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
   const pageOverflowsHorizontally = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
   expect(pageOverflowsHorizontally).toBe(false);
   const controlsBounds = await page.locator('.controls').boundingBox();
@@ -200,7 +223,7 @@ test('main controls and waveform regions remain keyboard-operable with visible f
   await page.keyboard.press('Space');
   await expect(grid).toHaveAttribute('aria-pressed', 'false');
 
-  await expect(page.getByRole('img', { name: /^V4 synthetic ECG waveform, 10 seconds, 50 mm\/s, 5 mm\/mV, ECG grid hidden$/ })).toBeVisible();
+  await expect(page.getByRole('img', { name: /^V4 synthetic educational ECG waveform, moving paper sweep, 50 mm\/s, 5 mm\/mV, ECG grid hidden$/ })).toBeVisible();
   const singleViewport = page.getByRole('region', { name: /ECG waveform viewport for V4, 50 mm\/s, 5 mm\/mV/ });
   await singleViewport.focus();
   const singleFocusStyle = await singleViewport.evaluate(element => getComputedStyle(element).outlineWidth);
@@ -232,6 +255,15 @@ test('main controls and waveform regions remain keyboard-operable with visible f
   await page.keyboard.press('Enter');
   await expect(start).toHaveValue('120');
   await expect(page.getByRole('status')).toContainText('160 ms');
+
+  const playbackPause = page.getByRole('button', { name: 'Pause', exact: true });
+  await playbackPause.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('region', { name: /ECG waveform viewport/ })).toHaveAttribute('data-playing', 'false');
+  const playbackResume = page.getByRole('button', { name: 'Start / resume' });
+  await playbackResume.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('region', { name: /ECG waveform viewport/ })).toHaveAttribute('data-playing', 'true');
 });
 
 test('reduced-motion preference receives a static interface', async ({ page }) => {
@@ -242,6 +274,97 @@ test('reduced-motion preference receives a static interface', async ({ page }) =
     return { animation: style.animationDuration, transition: style.transitionDuration };
   }));
   expect(motion.every(style => style.animation === '0s' && style.transition === '0s')).toBe(true);
+  const viewport = page.getByRole('region', { name: /ECG waveform viewport/ });
+  await expect(viewport).toHaveAttribute('data-playing', 'false');
+  await expect(page.getByText('Paused · reduced motion')).toBeVisible();
+  await page.getByRole('button', { name: 'Start / resume' }).click();
+  await expect(viewport).toHaveAttribute('data-playing', 'true');
+});
+
+test('live sweep moves, pauses, resumes continuously, resets, and keeps one bounded trace path', async ({ page }) => {
+  await page.goto('/');
+  const viewport = page.getByRole('region', { name: /ECG waveform viewport for V3/ });
+  await expect(viewport).toHaveAttribute('data-playing', 'true');
+  await expect.poll(async () => (await page.locator('.live-waveform-path').getAttribute('d'))?.length ?? 0).toBeGreaterThan(5000);
+  const firstTime = Number(await viewport.getAttribute('data-simulation-time-ms'));
+  const firstPathLength = await page.locator('.live-waveform-path').getAttribute('d').then(value => value?.length ?? 0);
+  const gridPattern = page.locator('.live-trace-svg defs pattern[id^="major-"]');
+  const firstGridTransform = await gridPattern.getAttribute('patternTransform');
+  await page.waitForTimeout(180);
+  const movingTime = Number(await viewport.getAttribute('data-simulation-time-ms'));
+  expect(movingTime).toBeGreaterThan(firstTime);
+  const movingPathLength = await page.locator('.live-waveform-path').getAttribute('d').then(value => value?.length ?? 0);
+  expect(movingPathLength).toBeLessThan(firstPathLength + 1000);
+  expect(await gridPattern.getAttribute('patternTransform')).not.toBe(firstGridTransform);
+
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  const pausedTime = Number(await viewport.getAttribute('data-simulation-time-ms'));
+  await page.waitForTimeout(180);
+  expect(Number(await viewport.getAttribute('data-simulation-time-ms'))).toBe(pausedTime);
+
+  await page.getByRole('button', { name: 'Start / resume' }).click();
+  await expect(viewport).toHaveAttribute('data-playing', 'true');
+  const resumeOrigin = Number(await viewport.getAttribute('data-simulation-time-ms'));
+  expect(resumeOrigin).toBeGreaterThanOrEqual(pausedTime);
+  expect(resumeOrigin - pausedTime).toBeLessThan(250);
+  await expect.poll(async () => Number(await viewport.getAttribute('data-simulation-time-ms'))).toBeGreaterThan(resumeOrigin);
+  const resumedTime = Number(await viewport.getAttribute('data-simulation-time-ms'));
+  expect(resumedTime - resumeOrigin).toBeLessThan(250);
+
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'Reset playback' }).click();
+  await expect(viewport).toHaveAttribute('data-simulation-time-ms', '0.000');
+  await expect(page.getByLabel('Start point (ms)')).toHaveValue('0');
+  await expect(page.getByLabel('End point (ms)')).toHaveValue('800');
+  await expect(viewport).toHaveAttribute('data-playing', 'false');
+});
+
+test('paper speed changes sweep rate while gain and lead changes preserve the shared clock', async ({ page }) => {
+  await page.goto('/');
+  const viewport = page.getByRole('region', { name: /ECG waveform viewport for V3/ });
+  await page.waitForTimeout(120);
+  const beforeSpeedChange = Number(await viewport.getAttribute('data-simulation-time-ms'));
+  await page.getByLabel('Paper speed').selectOption('50');
+  const afterSpeedChange = Number(await viewport.getAttribute('data-simulation-time-ms'));
+  expect(afterSpeedChange).toBeGreaterThanOrEqual(beforeSpeedChange);
+  expect(afterSpeedChange - beforeSpeedChange).toBeLessThan(1500);
+  const timeStart = Number(await viewport.getAttribute('data-simulation-time-ms'));
+  const paperStart = Number(await viewport.getAttribute('data-paper-position-units'));
+  await page.waitForTimeout(160);
+  const timeEnd = Number(await viewport.getAttribute('data-simulation-time-ms'));
+  const paperEnd = Number(await viewport.getAttribute('data-paper-position-units'));
+  expect((paperEnd - paperStart) / (timeEnd - timeStart)).toBeGreaterThan(0.17);
+
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  const pausedTime = await viewport.getAttribute('data-simulation-time-ms');
+  const path = page.locator('.live-waveform-path');
+  const pathBeforeGain = await path.getAttribute('d');
+  const geometryBeforeGain = await path.evaluate(element => {
+    const svgPath = element as SVGPathElement;
+    const viewBox = svgPath.ownerSVGElement!.viewBox.baseVal;
+    const points = Array.from(svgPath.getAttribute('d')!.matchAll(/(?:^M| L) ([\d.]+) ([\d.]+)/g), match => [Number(match[1]), Number(match[2])]);
+    return { x: points.map(point => point[0]), amplitude: Math.max(...points.map(point => Math.abs(point[1] - viewBox.height / 2))) };
+  });
+  await page.getByLabel('Gain').selectOption('5');
+  const pathAfterGain = await path.getAttribute('d');
+  expect(pathAfterGain).not.toBe(pathBeforeGain);
+  const geometryAfterGain = await path.evaluate(element => {
+    const svgPath = element as SVGPathElement;
+    const viewBox = svgPath.ownerSVGElement!.viewBox.baseVal;
+    const points = Array.from(svgPath.getAttribute('d')!.matchAll(/(?:^M| L) ([\d.]+) ([\d.]+)/g), match => [Number(match[1]), Number(match[2])]);
+    return { x: points.map(point => point[0]), amplitude: Math.max(...points.map(point => Math.abs(point[1] - viewBox.height / 2))) };
+  });
+  expect(geometryAfterGain.x).toEqual(geometryBeforeGain.x);
+  expect(geometryBeforeGain.amplitude / geometryAfterGain.amplitude).toBeCloseTo(4, 0);
+  expect(await viewport.getAttribute('data-simulation-time-ms')).toBe(pausedTime);
+  await page.getByRole('button', { name: 'V4', exact: true }).click();
+  const v4Viewport = page.getByRole('region', { name: /ECG waveform viewport for V4/ });
+  await expect(v4Viewport).toBeVisible();
+  expect(await v4Viewport.getAttribute('data-simulation-time-ms')).toBe(pausedTime);
+  await page.getByRole('button', { name: '12 leads' }).click();
+  await expect(page.getByRole('img', { name: /^I synthetic educational ECG waveform/ })).toBeVisible();
+  const times = await page.getByRole('img', { name: /synthetic educational ECG waveform/ }).evaluateAll(elements => elements.map(element => element.getAttribute('data-simulation-time-ms')));
+  expect(new Set(times).size).toBe(1);
 });
 
 test('Learn navigation keeps draft content private and preserves simulator and theme state', async ({ page }) => {
@@ -317,3 +440,4 @@ test('axe scans the primary light, dark, 12-lead and mobile states without suppr
 
   expect(findings, findings.join('\n')).toEqual([]);
 });
+

@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { calibrationPulseHeightUnits, calibrationPulseWidthUnits, PREVIEW_CSS_PIXELS_PER_SVG_UNIT, recordingViewWidthUnits, SVG_UNITS_PER_MM, timeMsToSvgUnits, traceViewHeightUnits, voltageMvToSvgUnits } from './engine/calibration';
+import { calibrationPulseHeightUnits, calibrationPulseWidthUnits, PREVIEW_CSS_PIXELS_PER_SVG_UNIT, SVG_UNITS_PER_MM } from './engine/calibration';
 import { createMeasurement, type MeasurementKind } from './engine/measurements';
 import { allLeads, generateLeadSignals } from './engine/signal';
-import type { Gain, Lead, LeadSignals, MachineConfig, PaperSpeed, RhythmPreset, Sample } from './engine/types';
+import type { Gain, Lead, MachineConfig, PaperSpeed, RhythmPreset } from './engine/types';
+import { EcgGridDefinitions } from './components/EcgGrid';
+import { LiveEcgMonitor } from './components/LiveEcgMonitor';
 import { LearnMode } from './learn/LearnMode';
 import './styles.css';
 
@@ -12,10 +14,6 @@ const presets: [RhythmPreset, string][] = [['sinus', 'Normal sinus'], ['brady', 
 const measurementDefaults: Record<MeasurementKind, [number, number]> = { RR: [0, 800], PR: [120, 280], QRS: [280, 360], QT: [280, 580] };
 const CALIBRATION_PULSE_DURATION_MS = 200;
 const CALIBRATION_PULSE_MARGIN_MM = 4;
-
-function GridDefinitions({ id }: { id: string }) {
-  return <defs><pattern id={`minor-${id}`} width={SVG_UNITS_PER_MM} height={SVG_UNITS_PER_MM} patternUnits="userSpaceOnUse"><path d={`M ${SVG_UNITS_PER_MM} 0 L 0 0 0 ${SVG_UNITS_PER_MM}`} fill="none" stroke="var(--grid-minor)" strokeWidth="0.45" /></pattern><pattern id={`major-${id}`} width={SVG_UNITS_PER_MM * 5} height={SVG_UNITS_PER_MM * 5} patternUnits="userSpaceOnUse"><rect width={SVG_UNITS_PER_MM * 5} height={SVG_UNITS_PER_MM * 5} fill={`url(#minor-${id})`} /><path d={`M ${SVG_UNITS_PER_MM * 5} 0 L 0 0 0 ${SVG_UNITS_PER_MM * 5}`} fill="none" stroke="var(--grid-major)" strokeWidth="0.8" /></pattern></defs>;
-}
 
 function CalibrationPulse({ speed, gain }: { speed: PaperSpeed; gain: Gain }) {
   const marginUnits = CALIBRATION_PULSE_MARGIN_MM * SVG_UNITS_PER_MM;
@@ -29,31 +27,11 @@ function CalibrationPulse({ speed, gain }: { speed: PaperSpeed; gain: Gain }) {
   const pulseTop = baseline - pulseHeightUnits;
 
   return <svg className="calibration-pulse" width={width * PREVIEW_CSS_PIXELS_PER_SVG_UNIT} height={height * PREVIEW_CSS_PIXELS_PER_SVG_UNIT} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`One millivolt, ${CALIBRATION_PULSE_DURATION_MS} millisecond calibration pulse at ${gain} millimetres per millivolt and ${speed} millimetres per second`}>
-    <GridDefinitions id="calibration" />
+    <EcgGridDefinitions id="calibration" />
     <rect width={width} height={height} fill="var(--surface-soft)" />
     <rect width={width} height={height} fill="url(#major-calibration)" />
     <path d={`M 0 ${baseline} H ${pulseStart} V ${pulseTop} H ${pulseEnd} V ${baseline} H ${width}`} fill="none" stroke="var(--primary)" strokeWidth="2" />
   </svg>;
-}
-
-function Trace({ samples, config, width, height, label, markers }: { samples: Sample[]; config: MachineConfig; width: number; height: number; label?: string; markers?: [number, number] }) {
-  const baseline = height / 2;
-  const patternId = label ? label.replace(/[^a-z0-9]/gi, '-') : 'single';
-  const waveformLabel = `${label ?? config.lead} synthetic ECG waveform, 10 seconds, ${config.paperSpeed} mm/s, ${config.gain} mm/mV, ECG grid ${config.showGrid ? 'visible' : 'hidden'}`;
-  const path = samples.filter((_, i) => i % 2 === 0).map((sample, i) => `${i ? 'L' : 'M'} ${timeMsToSvgUnits(sample.timeMs, config.paperSpeed).toFixed(2)} ${(baseline - voltageMvToSvgUnits(sample.voltageMv, config.gain)).toFixed(2)}`).join(' ');
-  const markerX = markers?.map(timeMs => timeMsToSvgUnits(timeMs, config.paperSpeed));
-  const svg = <svg width={width * PREVIEW_CSS_PIXELS_PER_SVG_UNIT} height={height * PREVIEW_CSS_PIXELS_PER_SVG_UNIT} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={waveformLabel}>
-    <GridDefinitions id={patternId} />
-    {config.showGrid && <rect width={width} height={height} fill={`url(#major-${patternId})`} />}
-    <line x1="0" x2={width} y1={baseline} y2={baseline} stroke="var(--trace-axis)" strokeDasharray="3 4" />
-    <path d={path} fill="none" stroke="var(--trace)" strokeWidth={1.4} vectorEffect="non-scaling-stroke" />
-    {markerX?.map((x, i) => <line key={i} x1={x} x2={x} y1="0" y2={height} stroke="var(--marker)" strokeWidth="2" strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />)}
-  </svg>;
-  return <div className={label ? 'mini-trace' : 'trace-wrap'}>{label ? svg : <div className="trace-scroll" role="region" aria-label={`ECG waveform viewport for ${config.lead}, ${config.paperSpeed} mm/s, ${config.gain} mm/mV`} tabIndex={0}>{svg}</div>}{label && <strong className="mini-label">{label}</strong>}{!label && <div className="trace-meta"><span>{config.lead} · {config.paperSpeed} mm/s · {config.gain} mm/mV</span><span>10 s synthetic strip</span></div>}</div>;
-}
-
-function MultiLead({ signals, config, width, height }: { signals: LeadSignals; config: MachineConfig; width: number; height: number }) {
-  return <div className="multi-trace" role="region" aria-label={`12-lead ECG waveform viewport, 10 seconds, ${config.paperSpeed} mm/s, ${config.gain} mm/mV`} tabIndex={0}>{leads.map(lead => <Trace key={lead} label={lead} samples={signals[lead]} config={config} width={width} height={height} />)}</div>;
 }
 
 function readThemePreference(): 'light' | 'dark' {
@@ -74,8 +52,6 @@ function App() {
   const patch = (next: Partial<MachineConfig>) => setConfig(current => ({ ...current, ...next }));
   const signals = useMemo(() => generateLeadSignals(config.preset), [config.preset]);
   const maxAbsVoltageMv = useMemo(() => Math.max(...Object.values(signals).flatMap(leadSamples => leadSamples.map(sample => Math.abs(sample.voltageMv))), 0), [signals]);
-  const plotWidth = recordingViewWidthUnits(10000, config.paperSpeed);
-  const plotHeight = traceViewHeightUnits(maxAbsVoltageMv, config.gain);
   const measurement = createMeasurement(kind, startMs, endMs);
   const setKindAndDefaults = (next: MeasurementKind) => { setKind(next); setPoints(measurementDefaults[next]); };
   const rate = config.preset === 'brady' ? 50 : config.preset === 'tachy' ? 100 : 75;
@@ -155,20 +131,14 @@ function App() {
         </aside>
 
         <section className="monitor">
-          <div className="monitor-head">
-            <div>
-              <span className="live">● LIVE PREVIEW</span>
-              <h3>{view === 'single' ? `${config.lead} rhythm strip` : '12-lead overview'}</h3>
-            </div>
-            <div className="view-toggle">
-              <button aria-pressed={view === 'single'} className={view === 'single' ? 'active' : ''} onClick={() => setView('single')}>Single lead</button>
-              <button aria-pressed={view === 'multi'} className={view === 'multi' ? 'active' : ''} onClick={() => setView('multi')}>12 leads</button>
-            </div>
-          </div>
-
-          {view === 'single'
-            ? <Trace samples={signals[config.lead]} config={config} width={plotWidth} height={plotHeight} markers={[startMs, endMs]} />
-            : <MultiLead signals={signals} config={config} width={plotWidth} height={plotHeight} />}
+          <LiveEcgMonitor
+            config={config}
+            view={view}
+            onViewChange={setView}
+            onPlaybackReset={() => setPoints(measurementDefaults[kind])}
+            maxAbsVoltageMv={maxAbsVoltageMv}
+            markers={[startMs, endMs]}
+          />
 
           <div className="measure-panel">
             <div className="section-label">03 / MANUAL CALIPERS</div>
@@ -179,17 +149,17 @@ function App() {
                 </select>
               </label>
               <label>Start point (ms)
-                <input type="number" min="0" max="10000" step="4" value={startMs} onChange={event => setPoints([Number(event.target.value), endMs])} />
+                <input type="number" step="4" value={startMs} onChange={event => setPoints([Number(event.target.value), endMs])} />
               </label>
               <label>End point (ms)
-                <input type="number" min="0" max="10000" step="4" value={endMs} onChange={event => setPoints([startMs, Number(event.target.value)])} />
+                <input type="number" step="4" value={endMs} onChange={event => setPoints([startMs, Number(event.target.value)])} />
               </label>
               <button className="reset" onClick={() => setPoints(measurementDefaults[kind])}>Reset points</button>
             </div>
             <div className="measurement-result" role="status" aria-live="polite">
               <strong>{measurement.durationMs.toFixed(0)} <small>ms</small></strong>
               {measurement.heartRateBpm && <strong>{measurement.heartRateBpm.toFixed(0)} <small>bpm</small></strong>}
-              <span>Manual points are shown on the trace. Values use the shared timebase and remain unchanged when gain changes.</span>
+              <span>Manual points are absolute milliseconds from reset. Markers outside the rolling viewport are not shown; measured time is unaffected by speed, gain or zoom.</span>
             </div>
           </div>
 
@@ -207,3 +177,4 @@ function App() {
   );
 }
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);
+

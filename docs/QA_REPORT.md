@@ -92,4 +92,29 @@ All six Learn records remain drafts, all candidate sources remain `unverified`, 
 The local source export has no `.git` metadata. The 19-file checkpoint was committed to the existing `codex/accessibility-content-governance` branch as [`d3f49a33e352d0ab24599cebafdeb6c79c3cee65`](https://github.com/zammucanva/KYP-ECG-SIM/commit/d3f49a33e352d0ab24599cebafdeb6c79c3cee65), with parent `1ffcfd553fd1caa18bd156417c9c6f1e67370db3`, using a non-forced expected-head update. GitHub Actions run [39323889336](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39323889336) completed successfully for that exact commit. At verification, the feature branch pointed to that commit and `main` remained at `9544b96d87a44fce4334691145f5c53870871fa5`. No merge, deployment, or KYP production change was made.
 
 The subsequent three-file documentation-only follow-up commit [`18d53d0d8e214d0a3af02286fc6528f0e501a60a`](https://github.com/zammucanva/KYP-ECG-SIM/commit/18d53d0d8e214d0a3af02286fc6528f0e501a60a) also passed GitHub Actions run [39324210042](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39324210042). `main` remained unchanged.
+# ECG-CP6 — live moving paper sweep verification
+
+## Actual local results
+
+- Local source tree: `C:\Users\TSHAM\Documents\Codex\2026-10-19\hel\work\ecg-lab`; it has no `.git` directory. Branch and CI statements below are remote GitHub observations, not local Git status.
+- `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all`: exit 0.
+- Vitest: 6 files, 53/53 tests passed. New coverage includes deterministic animation-clock lifecycle and time-addressable rolling signal generation across the lead array, plus calibration invariance.
+- `pnpm typecheck` within `test:all`: passed for application and Playwright TypeScript.
+- `pnpm build` within `test:all`: passed; Vite production build completed.
+- `pnpm test:e2e` within `test:all`: 11/11 Chromium scenarios passed. Added checks observed the live sweep move, pause without drift, resume, reset, calibrated speed/gain behavior, lead/layout clock continuity, aligned 12-lead traces, responsive rendering, and reduced-motion startup.
+- Axe scans ran against primary light/dark, single/multi-lead and mobile browser states. No violations were reported; no rules were suppressed. This is automated supporting evidence, not a full WCAG audit.
+- The local Chromium page at `http://localhost:5173/` was visually inspected: the rolling trace and ECG grid move together, controls remain visible, and the existing theme/layout is preserved. Playwright, rather than screenshot appearance alone, verifies the motion and coordinate invariants.
+
+## Scope and limitations
+
+The view generates only the bounded past-to-current sample window; it does not pre-render future beats. The single-lead view computes only the selected lead (or its limb derivation inputs); the 12-lead view derives all leads from one shared clock/window. Screen rendering uses the existing calibrated SVG transforms and a separate explicit CSS preview scale; CSS pixels are not physical millimetres. Render-path decimation is display-only and leaves source samples unchanged.
+
+The clock drops long animation-frame gaps over 100 ms rather than catching up with a visually abrupt paper jump. Thus simulated time deliberately does not account for a long blocked/hidden interval as uninterrupted elapsed wall time. Manual measurement points remain absolute time values from reset and can move outside the visible rolling window. Reduced-motion preference starts playback paused; the learner can start it explicitly.
+
+The synthetic traces are simplified educational illustrations. They are not patient recordings, clinically validated physiology, or a real-time clinical monitor; no clinical validation, diagnostic performance, or equivalence to hospital equipment is claimed. No KYP production change, merge, or deployment was made.
+
+## Remote state
+
+Before implementation, GitHub showed feature branch `codex/accessibility-content-governance` at `2cd31e1a864f7ead8286f07aa6587f9cd4f46e6d` with successful Actions run `39324432585`; `main` was `9544b96d87a44fce4334691145f5c53870871fa5`. Refresh the feature ref and Actions after the checkpoint commit. The local source export has no Git metadata.
+
 

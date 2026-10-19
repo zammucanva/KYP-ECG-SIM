@@ -2,6 +2,35 @@
 
 This is the canonical task record. Status and evidence below reflect local verification and remote GitHub evidence; the local source export has no `.git` metadata. See `SESSION_CHECKPOINT.md` for the verified branch head and CI run.
 
+## Current checkpoint — ECG-CP6 live moving paper sweep
+
+### ECG-ANIM-06 — Time-based shared ECG clock and rolling signal window
+
+- Acceptance: one injectable, deterministic animation clock with idempotent start/pause/resume/reset/dispose and visibility suspension; bounded, time-addressable synthetic signals share one timeline across all 12 leads; rhythm timing does not depend on render-frame count.
+- Status: Complete locally. The injected clock advances on animation-frame timestamps, not frame counts; its lifecycle is tested using a deterministic scheduler. Remote baseline feature branch head `2cd31e1a864f7ead8286f07aa6587f9cd4f46e6d` and Actions run `39324432585` passed before edits. Remote `main` was `9544b96d87a44fce4334691145f5c53870871fa5`. Local export has no `.git` metadata.
+- Files: `src/engine/clock.ts`, `src/engine/clock.test.ts`, `src/engine/signal.ts`, `src/engine/signal-window.test.ts`.
+- Tests/evidence: final local `pnpm test:all` passed: 53/53 Vitest, application and E2E type checks, production build, and 11/11 Chromium scenarios. Clock tests cover injected timestamps, idempotent start, pause/resume/reset, visibility suspension, large frame gaps and disposal. Signal tests cover aligned rolling windows, limb equations across arrays, overlap determinism, lead morphology, no source mutation, and speed/gain invariance.
+- Dependencies: existing calibrated time/voltage transforms, lead templates, Playwright setup.
+- Limitations/next action: the synthetic morphology remains simplified, educational, and unvalidated; no patient data or clinical-monitor performance is represented.
+
+### ECG-ANIM-07 — Responsive rolling SVG renderer and playback controls
+
+- Acceptance: right-edge trace is generated only through current simulated time; calibrated grid and samples move together in a fixed responsive viewport; paper speed changes horizontal scale without resetting the clock; gain changes only vertical mapping; single/12-lead layouts share time; pause/resume/reset and reduced-motion defaults work.
+- Status: Complete locally. A bounded rolling SVG viewport now moves trace and calibrated grid together; all 12 leads share one simulation clock and sample timeline. Reduced-motion users start paused. Pause/resume/reset and single/multi switching preserve the intended clock state.
+- Files: `src/components/LiveEcgMonitor.tsx`, `src/components/EcgGrid.tsx`, `src/main.tsx`, `src/styles.css`, `tests/e2e/ecg-lab.spec.ts`, `playwright.config.ts`, `README.md`.
+- Tests/evidence: final browser suite passed 11/11. It observes movement, pause freeze, resume, reset, speed-dependent horizontal scale, gain-only vertical change, lead/layout time consistency, 12-lead alignment, reduced motion, responsive logical scale, and axe scans without suppressing rules. Existing calibration, themes, measurements and draft-gated Learn behavior remain covered.
+- Dependencies: ECG-ANIM-06.
+- Limitations/next action: manual measurement points remain absolute milliseconds from reset and are visible only while within the rolling window; no drag calipers or automatic boundary detection were added. The next product milestone should address genuine content review rather than claim this simulator is clinically validated.
+
+### ECG-QA-06 — Motion regressions, visual QA and checkpoint
+
+- Acceptance: deterministic unit coverage for clock lifecycle, time-based samples, speed/gain/lead invariants; Playwright proves live movement, pause freeze, continuous resume, reset, speed changes, lead/time alignment, reduced motion, responsive layout, axe and bounded path size; documentation records actual test and remote evidence.
+- Status: Complete locally; remote feature-branch publication and Actions verification are pending refresh/update.
+- Files: engine tests, `tests/e2e/ecg-lab.spec.ts`, `playwright.config.ts`, `README.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/QA_REPORT.md`, `docs/IMPLEMENTATION_LEDGER.md`, `docs/SESSION_CHECKPOINT.md`.
+- Tests/evidence: `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all` exited 0; 53 Vitest tests, application and Playwright type checks, Vite production build, and 11 Chromium scenarios passed. Browser checks include unsuppressed axe scans and observed animation lifecycle controls. Local app was also inspected at `http://localhost:5173/` in Chromium.
+- Dependencies: ECG-ANIM-06, ECG-ANIM-07.
+- Limitations/next action: no clinical validation or patient-monitor claim. Refresh remote feature head and CI before a non-forced expected-head branch update; do not merge, deploy, or touch `main`.
+
 ## Current checkpoint — ECG-CP5 content review readiness
 
 ### ECG-CONTENT-05 — Claim inventory and reviewer packets

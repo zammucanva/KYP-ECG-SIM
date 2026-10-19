@@ -1,4 +1,40 @@
-# Current session checkpoint — ECG-CP5 content review readiness
+# Current session checkpoint — ECG-CP6 live moving paper sweep
+
+Date: 2026-10-20 (Asia/Kolkata)
+
+## Repository state
+
+- Repository: `zammucanva/KYP-ECG-SIM`; working source export: `C:\Users\TSHAM\Documents\Codex\2026-10-19\hel\work\ecg-lab`.
+- The local export has no `.git` directory. Do not infer a local branch, commit, or clean status from it. At preflight, GitHub reported feature branch `codex/accessibility-content-governance` at `2cd31e1a864f7ead8286f07aa6587f9cd4f46e6d` and successful Actions run `39324432585`; `main` was `9544b96d87a44fce4334691145f5c53870871fa5`. Refresh those remote refs before writing.
+- No changes have been merged to `main`, deployed, or made to KYP production. Remote commit/CI evidence for this implementation is pending the guarded feature-branch update.
+
+## Completed in ECG-CP6
+
+- Implemented an injectable, time-based `SimulationClock` with idempotent playback controls, reset, disposal, visibility suspension and protection against large catch-up jumps.
+- Implemented deterministic absolute-time sample generation and bounded past-to-now windows; shared event timing and aligned samples span all twelve leads. Selected-lead mode avoids computing all unrelated leads.
+- Replaced the static viewport with a responsive moving SVG paper sweep. Trace and grid use the shared calibration transforms; speed changes horizontal scale, gain changes vertical mapping, and changing lead/layout preserves the common clock.
+- Added accessible start/pause/reset controls and reduced-motion startup pause. Manual time measurement remains keyboard-editable and uses absolute simulated time.
+- Kept the synthetic-signal and non-clinical limitations explicit. Learn stays governed by existing review gates; no Practice/Exam experience was started.
+
+## Actual verification and files
+
+- `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all`: exit 0.
+- Vitest: 6 files, 53/53 tests passed; application and Playwright type checks passed; production build passed; Playwright: 11/11 Chromium scenarios passed.
+- Browser regressions cover motion/pause/resume/reset, speed and gain invariants, lead and 12-lead timeline alignment, responsive rendering, reduced motion, keyboard controls, themes, measurement controls and unsuppressed axe states.
+- The local app at `http://localhost:5173/` was visually inspected in the browser. Automated motion and calibration assertions supplement the manual visual check; axe does not constitute a full WCAG evaluation.
+- Changed implementation files: `src/engine/clock.ts`, `src/engine/clock.test.ts`, `src/engine/signal.ts`, `src/engine/signal-window.test.ts`, `src/components/EcgGrid.tsx`, `src/components/LiveEcgMonitor.tsx`, `src/main.tsx`, `src/styles.css`, `playwright.config.ts`, `tests/e2e/ecg-lab.spec.ts`, and `README.md`.
+- Updated project records: `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/IMPLEMENTATION_LEDGER.md`, `docs/QA_REPORT.md`, and this checkpoint.
+
+## Limitations and exact next action
+
+- This remains a deterministic educational template, not validated patient physiology or an operational clinical monitor. Hospital deployment/use is not established by this work.
+- The clock intentionally drops frame gaps over 100 ms. Long main-thread stalls therefore do not become a large abrupt sweep jump.
+- Absolute measurement points outside the rolling window are not drawn; no drag calipers or automatic interval detection were added. Screen units are a preview scale, not guaranteed physical print dimensions.
+- Next: refresh feature branch and current CI; publish this verified checkpoint using a non-forced expected-head update only if the remote head is unchanged. Then inspect the resulting CI. Do not merge/deploy or modify `main` or KYP production.
+
+---
+
+# Historical checkpoint — ECG-CP5 content review readiness
 
 Date: 2026-10-20 (Asia/Kolkata)
 
