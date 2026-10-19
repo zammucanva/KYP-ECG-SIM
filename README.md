@@ -21,4 +21,4 @@ pnpm exec playwright install chromium
 
 `pnpm test` runs unit tests; `pnpm test:e2e` runs browser regressions; `pnpm test:all` runs both plus type-check and production build.
 
-Synthetic traces are educational illustrations, not patient recordings and not a diagnostic device. Automated wave-boundary detection, artifact pipeline, learning modes, and clinical review remain incomplete.
+Synthetic traces are educational illustrations, not patient recordings and not a diagnostic device. Automated wave-boundary detection, artifact pipeline, learning modes, and clinical review remain incomplete. Content records are governed independently of the UI; see [the schema](docs/CONTENT_SCHEMA.md), [provenance rules](docs/CONTENT_PROVENANCE.md), [review workflow](docs/CONTENT_REVIEW_WORKFLOW.md), and [accessibility audit](docs/ACCESSIBILITY_AUDIT.md). No clinical content is published by this checkpoint.

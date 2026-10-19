@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 test('starts with the verified defaults and a calibration-derived pulse', async ({ page }) => {
   const runtimeErrors: string[] = [];
@@ -16,7 +17,7 @@ test('starts with the verified defaults and a calibration-derived pulse', async 
   await expect(page.getByLabel('Gain')).toHaveValue('20');
   await expect(page.getByRole('button', { name: /ECG paper grid/ })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('button', { name: 'Single lead' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('img', { name: 'synthetic ECG waveform' })).toBeVisible();
+  await expect(page.getByRole('img', { name: /^V3 synthetic ECG waveform, 10 seconds, 25 mm\/s, 20 mm\/mV, ECG grid visible$/ })).toBeVisible();
 
   const pulse = page.getByRole('img', { name: /One millivolt, 200 millisecond calibration pulse/ });
   const pulseHeight = await pulse.evaluate(element => {
@@ -32,7 +33,7 @@ test('starts with the verified defaults and a calibration-derived pulse', async 
 
 test('machine controls preserve the recording and keep all twelve rows aligned', async ({ page }) => {
   await page.goto('/');
-  const trace = page.getByRole('img', { name: 'synthetic ECG waveform' });
+  const trace = page.getByRole('img', { name: /synthetic ECG waveform/ });
   const v3Path = await trace.locator('path').last().getAttribute('d');
 
   await page.getByRole('button', { name: 'V4', exact: true }).click();
@@ -75,7 +76,7 @@ test('machine controls preserve the recording and keep all twelve rows aligned',
   }));
   expect(new Set(timeCoordinates.map(coordinates => JSON.stringify(coordinates))).size).toBe(1);
   for (const lead of leadNames) {
-    await expect(page.getByRole('img', { name: `${lead} synthetic ECG waveform`, exact: true })).toBeVisible();
+    await expect(page.getByRole('img', { name: new RegExp(`^${lead} synthetic ECG waveform`) })).toBeVisible();
   }
   expect(await multiViewport.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true);
 
@@ -119,7 +120,7 @@ test('theme toggle is keyboard accessible, recolours SVG traces and persists aft
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 
-  const trace = page.getByRole('img', { name: 'synthetic ECG waveform' });
+  const trace = page.getByRole('img', { name: /^V3 synthetic ECG waveform/ });
   const getTraceColour = () => trace.locator('path').last().evaluate(element => getComputedStyle(element).stroke);
   const lightTraceColour = await getTraceColour();
   await page.keyboard.press('Tab');
@@ -159,4 +160,114 @@ test('desktop, tablet and mobile layouts keep controls readable and long strips 
   expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
   const pageOverflowsHorizontally = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
   expect(pageOverflowsHorizontally).toBe(false);
+  const controlsBounds = await page.locator('.controls').boundingBox();
+  const monitorBounds = await page.locator('.monitor').boundingBox();
+  expect(controlsBounds).not.toBeNull();
+  expect(monitorBounds).not.toBeNull();
+  expect(controlsBounds!.y).toBeLessThan(monitorBounds!.y);
+});
+
+test('main controls and waveform regions remain keyboard-operable with visible focus', async ({ page }) => {
+  await page.goto('/');
+
+  await page.keyboard.press('Tab');
+  const themeToggle = page.getByRole('button', { name: 'Toggle theme' });
+  await expect(themeToggle).toBeFocused();
+  await page.keyboard.press('Space');
+  await expect(themeToggle).toHaveAttribute('aria-pressed', 'true');
+
+  const lead = page.getByRole('button', { name: 'V4', exact: true });
+  await lead.focus();
+  await page.keyboard.press('Enter');
+  await expect(lead).toHaveAttribute('aria-pressed', 'true');
+
+  const preset = page.getByLabel('Rhythm preset');
+  await preset.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(preset).toHaveValue('brady');
+
+  const speed = page.getByLabel('Paper speed');
+  await speed.focus();
+  await page.keyboard.press('End');
+  await expect(speed).toHaveValue('50');
+  const gain = page.getByLabel('Gain');
+  await gain.focus();
+  await page.keyboard.press('Home');
+  await expect(gain).toHaveValue('5');
+
+  const grid = page.getByRole('button', { name: /ECG paper grid/ });
+  await grid.focus();
+  await page.keyboard.press('Space');
+  await expect(grid).toHaveAttribute('aria-pressed', 'false');
+
+  await expect(page.getByRole('img', { name: /^V4 synthetic ECG waveform, 10 seconds, 50 mm\/s, 5 mm\/mV, ECG grid hidden$/ })).toBeVisible();
+  const singleViewport = page.getByRole('region', { name: /ECG waveform viewport for V4, 50 mm\/s, 5 mm\/mV/ });
+  await singleViewport.focus();
+  const singleFocusStyle = await singleViewport.evaluate(element => getComputedStyle(element).outlineWidth);
+  expect(parseFloat(singleFocusStyle)).toBeGreaterThan(0);
+
+  const multiLeadButton = page.getByRole('button', { name: '12 leads' });
+  await multiLeadButton.focus();
+  await page.keyboard.press('Enter');
+  const multiViewport = page.getByRole('region', { name: '12-lead ECG waveform viewport' });
+  await multiViewport.focus();
+  const focusStyle = await multiViewport.evaluate(element => ({
+    outlineStyle: getComputedStyle(element).outlineStyle,
+    outlineWidth: getComputedStyle(element).outlineWidth,
+    outlineColor: getComputedStyle(element).outlineColor,
+  }));
+  expect(focusStyle.outlineStyle).not.toBe('none');
+  expect(parseFloat(focusStyle.outlineWidth)).toBeGreaterThan(0);
+
+  const measurement = page.getByLabel('Measurement');
+  await measurement.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(measurement).toHaveValue('PR');
+  const start = page.getByLabel('Start point (ms)');
+  await start.focus();
+  await page.keyboard.press('ArrowUp');
+  await expect(start).toHaveValue('124');
+  const reset = page.getByRole('button', { name: 'Reset points' });
+  await reset.focus();
+  await page.keyboard.press('Enter');
+  await expect(start).toHaveValue('120');
+  await expect(page.getByRole('status')).toContainText('160 ms');
+});
+
+test('reduced-motion preference receives a static interface', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  const motion = await page.locator('body').evaluate(() => Array.from(document.querySelectorAll('button, select, input, svg')).map(element => {
+    const style = getComputedStyle(element);
+    return { animation: style.animationDuration, transition: style.transitionDuration };
+  }));
+  expect(motion.every(style => style.animation === '0s' && style.transition === '0s')).toBe(true);
+});
+
+test('axe scans the primary light, dark, 12-lead and mobile states without suppressing rules', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  const findings: string[] = [];
+  const scan = async (state: string) => {
+    const result = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+    findings.push(...result.violations.map(violation =>
+      `${state}: ${violation.id} ${violation.impact ?? 'unknown'} — ${violation.nodes.map(node => `${node.target.join(' ')} (${node.failureSummary ?? ''})`).join('; ')}`,
+    ));
+  };
+
+  await scan('light single-lead desktop');
+  await page.getByRole('button', { name: 'Toggle theme' }).click();
+  await scan('dark single-lead desktop');
+  await page.getByRole('button', { name: '12 leads' }).click();
+  await scan('dark 12-lead desktop');
+  await page.getByRole('button', { name: 'Toggle theme' }).click();
+  await scan('light 12-lead desktop');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await scan('light 12-lead mobile');
+  await page.getByRole('button', { name: 'Toggle theme' }).click();
+  await scan('dark 12-lead mobile');
+
+  expect(findings, findings.join('\n')).toEqual([]);
 });

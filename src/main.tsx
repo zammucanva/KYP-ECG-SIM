@@ -39,20 +39,21 @@ function CalibrationPulse({ speed, gain }: { speed: PaperSpeed; gain: Gain }) {
 function Trace({ samples, config, width, height, label, markers }: { samples: Sample[]; config: MachineConfig; width: number; height: number; label?: string; markers?: [number, number] }) {
   const baseline = height / 2;
   const patternId = label ? label.replace(/[^a-z0-9]/gi, '-') : 'single';
+  const waveformLabel = `${label ?? config.lead} synthetic ECG waveform, 10 seconds, ${config.paperSpeed} mm/s, ${config.gain} mm/mV, ECG grid ${config.showGrid ? 'visible' : 'hidden'}`;
   const path = samples.filter((_, i) => i % 2 === 0).map((sample, i) => `${i ? 'L' : 'M'} ${timeMsToSvgUnits(sample.timeMs, config.paperSpeed).toFixed(2)} ${(baseline - voltageMvToSvgUnits(sample.voltageMv, config.gain)).toFixed(2)}`).join(' ');
   const markerX = markers?.map(timeMs => timeMsToSvgUnits(timeMs, config.paperSpeed));
-  const svg = <svg width={width * DISPLAY_CSS_PIXELS_PER_SVG_UNIT} height={height * DISPLAY_CSS_PIXELS_PER_SVG_UNIT} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${label ? `${label} ` : ''}synthetic ECG waveform`}>
+  const svg = <svg width={width * DISPLAY_CSS_PIXELS_PER_SVG_UNIT} height={height * DISPLAY_CSS_PIXELS_PER_SVG_UNIT} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={waveformLabel}>
     <GridDefinitions id={patternId} />
     {config.showGrid && <rect width={width} height={height} fill={`url(#major-${patternId})`} />}
     <line x1="0" x2={width} y1={baseline} y2={baseline} stroke="var(--trace-axis)" strokeDasharray="3 4" />
     <path d={path} fill="none" stroke="var(--trace)" strokeWidth={1.4} vectorEffect="non-scaling-stroke" />
     {markerX?.map((x, i) => <line key={i} x1={x} x2={x} y1="0" y2={height} stroke="var(--marker)" strokeWidth="2" strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />)}
   </svg>;
-  return <div className={label ? 'mini-trace' : 'trace-wrap'}>{label ? svg : <div className="trace-scroll" role="region" aria-label="ECG waveform viewport" tabIndex={0}>{svg}</div>}{label && <strong className="mini-label">{label}</strong>}{!label && <div className="trace-meta"><span>{config.lead} · {config.paperSpeed} mm/s · {config.gain} mm/mV</span><span>10 s synthetic strip</span></div>}</div>;
+  return <div className={label ? 'mini-trace' : 'trace-wrap'}>{label ? svg : <div className="trace-scroll" role="region" aria-label={`ECG waveform viewport for ${config.lead}, ${config.paperSpeed} mm/s, ${config.gain} mm/mV`} tabIndex={0}>{svg}</div>}{label && <strong className="mini-label">{label}</strong>}{!label && <div className="trace-meta"><span>{config.lead} · {config.paperSpeed} mm/s · {config.gain} mm/mV</span><span>10 s synthetic strip</span></div>}</div>;
 }
 
 function MultiLead({ signals, config, width, height }: { signals: LeadSignals; config: MachineConfig; width: number; height: number }) {
-  return <div className="multi-trace" role="region" aria-label="12-lead ECG waveform viewport" tabIndex={0}>{leads.map(lead => <Trace key={lead} label={lead} samples={signals[lead]} config={config} width={width} height={height} />)}</div>;
+  return <div className="multi-trace" role="region" aria-label={`12-lead ECG waveform viewport, 10 seconds, ${config.paperSpeed} mm/s, ${config.gain} mm/mV`} tabIndex={0}>{leads.map(lead => <Trace key={lead} label={lead} samples={signals[lead]} config={config} width={width} height={height} />)}</div>;
 }
 
 function readThemePreference(): 'light' | 'dark' {
@@ -91,7 +92,7 @@ function App() {
         <div><p className="eyebrow">KYP / FUTURE MODULE</p><h1>ECG <em>Lab</em></h1></div>
         <div className="header-tools">
           <div className="status"><span className="dot" />SIMULATION ONLY <small>synthetic signal</small></div>
-          <button className="theme-toggle" type="button" aria-label="Toggle theme" aria-pressed={theme === 'dark'} title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} onClick={() => setTheme(current => current === 'light' ? 'dark' : 'light')}>
+          <button className="theme-toggle" type="button" aria-label={`Toggle theme, current mode ${theme}`} aria-pressed={theme === 'dark'} title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} onClick={() => setTheme(current => current === 'light' ? 'dark' : 'light')}>
             <span aria-hidden="true">◐</span>{theme === 'dark' ? 'Dark' : 'Light'}
           </button>
         </div>

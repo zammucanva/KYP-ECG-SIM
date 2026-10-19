@@ -7,7 +7,7 @@
   --surface-soft: oklch(98% .006 220);
   --text: oklch(18% .02 240);
   --muted: oklch(50% .02 230);
-  --subtle: oklch(62% .018 220);
+  --subtle: var(--muted);
   --border: oklch(92% .012 210);
   --border-strong: oklch(86% .018 205);
   --primary: oklch(53% .11 195);
@@ -65,7 +65,7 @@ h1 em { color: var(--primary); font-style: normal; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); }
 .theme-toggle { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border-strong); border-radius: 999px; padding: 7px 11px; background: var(--surface); color: var(--muted); font-size: 11px; cursor: pointer; }
 .theme-toggle:hover { border-color: var(--primary); color: var(--primary-ink); }
-.theme-toggle:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.theme-toggle:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, .trace-scroll:focus-visible, .multi-trace:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .intro { display: flex; justify-content: space-between; gap: 40px; max-width: 1100px; padding: 58px 0 44px; }
 h2 { margin: 12px 0 20px; font: 500 clamp(42px, 5vw, 72px)/.95 Georgia, serif; letter-spacing: -.055em; }
 h2 span { color: var(--primary); }
@@ -131,7 +131,6 @@ footer span:last-child { color: var(--subtle); }
   .intro { display: block; padding: 38px 0 30px; }
   .calibration-card { margin-top: 30px; }
   .lab-grid { grid-template-columns: 1fr; }
-  .controls { order: 2; }
   .monitor-head { align-items: flex-start; flex-direction: column; gap: 12px; }
   .measure-row { flex-wrap: wrap; }
   .hint { width: 100%; margin: 8px 0 0; text-align: left; }
