@@ -4,3 +4,4 @@
 
 The public integration boundary is planned as an `EcgLab` component accepting typed initial machine settings. It is not exported yet; the current app is a standalone checkpoint.
 
+The UI theme uses CSS custom properties mapped to the live KYP light and dark palette: neutral blue-gray surfaces and text, cyan-teal primary controls, and low-contrast teal ECG grid lines. The standalone theme toggle persists its choice in `localStorage` under `ecg-lab-theme`; it does not access host application state.

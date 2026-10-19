@@ -12,11 +12,11 @@
 | Lead-specific morphology | Explicit V1–V6 educational templates | Complete | Shared event timing with documented projection profiles |
 | Measurements | Manual time calipers for RR/PR/QRS/QT | Complete | Accessible numeric points, visible overlay, shared measurement helpers |
 | Simultaneous view | Twelve aligned labelled traces | Complete | Shared `generateLeadSignals()` timeline and responsive horizontal overflow |
+| KYP theme parity | Light/dark palette, accessible toggle and persisted preference | Complete | KYP palette tokens applied across app surfaces and SVG; browser verified both modes and reload persistence |
 | Learning modes | Learn/practice/exam | Not started | Requires content review metadata |
 | QA | Test/typecheck/build/browser evidence | Complete for checkpoint | `pnpm test`: 5/5 passed; typecheck/build passed; browser verified 12 traces and editable 800 ms RR measurement |
 | KYP integration | Public API and guide | Not started | KYP architecture unavailable in preflight |
 
 ## Current checkpoint
 
-Files were extended in `work/ecg-lab`. No unrelated project was changed. Next action is educational learning modes and a formal browser test suite.
-
+Files were extended in `work/ecg-lab`. KYP-matched light and dark themes are implemented; the theme preference persists locally. Next action is educational learning modes and a formal browser test suite.

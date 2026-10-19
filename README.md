@@ -1,6 +1,6 @@
 # ECG Lab Simulator
 
-Standalone React/TypeScript educational module for future KYP integration. The current release includes a deterministic shared-timeline synthetic 12-lead model, single- and multi-lead views, calibrated machine controls, and manual time calipers.
+Standalone React/TypeScript educational module for future KYP integration. The current release includes a deterministic shared-timeline synthetic 12-lead model, single- and multi-lead views, calibrated machine controls, manual time calipers, and KYP-matched light/dark themes.
 
 ## Run locally
 
@@ -13,4 +13,3 @@ pnpm build
 ```
 
 Synthetic traces are educational illustrations, not patient recordings and not a diagnostic device. Automated wave-boundary detection, artifact pipeline, learning modes, a formal Playwright suite, and clinical review remain incomplete.
-
