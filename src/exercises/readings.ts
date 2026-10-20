@@ -12,6 +12,8 @@ export const exerciseReadingSchema = z.strictObject({
   endMs: timeSchema,
   /** Learner-reported width of the marked interval, only used by the paper-speed exercise. */
   answerMm: z.number().finite().min(0).max(10_000).optional(),
+  /** Second learner-reported length in millimetres (the calibration-pulse width in the grid exercise). */
+  answerMm2: z.number().finite().min(0).max(10_000).optional(),
 }).refine(reading => reading.endMs >= reading.startMs, { message: 'A reading end must be at or after its start.', path: ['endMs'] });
 
 export type ExerciseReading = z.infer<typeof exerciseReadingSchema>;

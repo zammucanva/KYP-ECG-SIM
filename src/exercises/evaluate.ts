@@ -1,4 +1,4 @@
-import { svgUnitsToMm, voltageMvToSvgUnits } from '../engine/calibration';
+import { calibrationPulseHeightUnits, calibrationPulseWidthUnits, svgUnitsToMm, voltageMvToSvgUnits } from '../engine/calibration';
 import { beatIntervalMs, generateLeadSamples, qrsEventTimesMs, R_PEAK_PHASE } from '../engine/signal';
 import type { ExerciseDefinition, ExerciseTolerance } from './definitions';
 import { exerciseReadingSchema, type ExerciseReading } from './readings';
@@ -135,6 +135,30 @@ export function evaluateExercise(definition: ExerciseDefinition, readings: unkno
           : ok
             ? `Reading ${index + 1}: ${reading.answerMm} mm is correct for ${reading.paperSpeed} mm/s (expected ${expected.toFixed(1)} mm).`
             : `Reading ${index + 1}: expected about ${expected.toFixed(1)} mm at ${reading.paperSpeed} mm/s (${beatIntervalMs(reading.preset)} ms × ${reading.paperSpeed} mm/s), not ${reading.answerMm} mm.`));
+      });
+      break;
+    }
+    case 'grid-calibration': {
+      const changed = first.gain !== second.gain || first.paperSpeed !== second.paperSpeed;
+      checks.push(check('settings-changed', changed, changed
+        ? `Settings differ: ${first.gain} and ${second.gain} mm/mV, ${first.paperSpeed} and ${second.paperSpeed} mm/s.`
+        : 'Change the Gain or the Paper speed between the two readings so the pulse changes size.'));
+      [first, second].forEach((reading, index) => {
+        // Expected values come from the same functions that draw the calibration pulse.
+        const expectedHeight = svgUnitsToMm(calibrationPulseHeightUnits(reading.gain));
+        const expectedWidth = svgUnitsToMm(calibrationPulseWidthUnits(reading.paperSpeed));
+        const heightOk = reading.answerMm !== undefined && Math.abs(reading.answerMm - expectedHeight) <= tolerance.widthMm;
+        const widthOk = reading.answerMm2 !== undefined && Math.abs(reading.answerMm2 - expectedWidth) <= tolerance.widthMm;
+        checks.push(check(`pulse-height-${index + 1}`, heightOk, reading.answerMm === undefined
+          ? `Reading ${index + 1}: enter the pulse height in millimetres.`
+          : heightOk
+            ? `Reading ${index + 1}: a height of ${reading.answerMm} mm is correct for ${reading.gain} mm/mV.`
+            : `Reading ${index + 1}: the pulse is 1 mV tall, so at ${reading.gain} mm/mV it is ${expectedHeight.toFixed(1)} mm, not ${reading.answerMm} mm.`));
+        checks.push(check(`pulse-width-${index + 1}`, widthOk, reading.answerMm2 === undefined
+          ? `Reading ${index + 1}: enter the pulse width in millimetres.`
+          : widthOk
+            ? `Reading ${index + 1}: a width of ${reading.answerMm2} mm is correct for ${reading.paperSpeed} mm/s.`
+            : `Reading ${index + 1}: the pulse is 200 ms wide, so at ${reading.paperSpeed} mm/s it is ${expectedWidth.toFixed(1)} mm, not ${reading.answerMm2} mm.`));
       });
       break;
     }

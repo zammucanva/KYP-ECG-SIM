@@ -20,6 +20,10 @@ type GuidedExercisesProps = {
   measurement: ManualMeasurementSet | undefined;
   /** Injectable for tests; defaults to this browser's local storage. */
   storage?: ProgressStorage | null;
+  /** Called once, the first time an exercise is passed, so progress systems can record it. */
+  onCompleted?: (definition: ExerciseDefinition) => void;
+  /** Lets a finished exercise lead on to the Rhythm Challenge. */
+  onOpenChallenge?: () => void;
 };
 
 function localStorageOrNull(): ProgressStorage | null {
@@ -30,18 +34,23 @@ function localStorageOrNull(): ProgressStorage | null {
   }
 }
 
-export function GuidedExercises({ config, measurement, storage }: GuidedExercisesProps) {
+export function GuidedExercises({ config, measurement, storage, onCompleted, onOpenChallenge }: GuidedExercisesProps) {
   const storageRef = useRef<ProgressStorage | null>(storage === undefined ? localStorageOrNull() : storage);
   const initial = useMemo(() => (storageRef.current ? readExerciseProgress(storageRef.current) : { progress: { version: 1 as const, exercises: {} } }), []);
   const [progress, setProgress] = useState<ExerciseProgress>(initial.progress);
   const [selectedId, setSelectedId] = useState<string>(exerciseRegistry[0].id);
   const [widthText, setWidthText] = useState('');
+  const [widthText2, setWidthText2] = useState('');
+  const [hintCount, setHintCount] = useState(0);
   const [status, setStatus] = useState(initial.notice ?? '');
   const [evaluation, setEvaluation] = useState<ExerciseEvaluation | null>(null);
 
   const definition: ExerciseDefinition = exerciseRegistry.find(item => item.id === selectedId) ?? exerciseRegistry[0];
   const entry = entryFor(progress, definition);
-  const needsWidth = definition.kind === 'paper-speed-grid';
+  const needsWidth = definition.kind === 'paper-speed-grid' || definition.kind === 'grid-calibration';
+  const needsSecondLength = definition.kind === 'grid-calibration';
+  const firstLabel = definition.kind === 'grid-calibration' ? 'Calibration pulse height (mm)' : 'Interval width on paper (mm)';
+  const nextExercise = exerciseRegistry[exerciseRegistry.findIndex(item => item.id === definition.id) + 1];
   const stepIndex = Math.min(entry.readings.length, definition.steps.length - 1);
 
   const commit = (next: ExerciseProgress, message: string) => {
@@ -55,6 +64,8 @@ export function GuidedExercises({ config, measurement, storage }: GuidedExercise
     setSelectedId(id);
     setEvaluation(null);
     setWidthText('');
+    setWidthText2('');
+    setHintCount(0);
     setStatus('');
   };
 
@@ -65,7 +76,14 @@ export function GuidedExercises({ config, measurement, storage }: GuidedExercise
     }
     const answerMm = needsWidth && widthText.trim() !== '' ? Number(widthText) : undefined;
     if (needsWidth && (answerMm === undefined || !Number.isFinite(answerMm) || answerMm < 0)) {
-      setStatus('Enter the interval width in millimetres (a non-negative number) before recording.');
+      setStatus(needsSecondLength
+        ? 'Enter the pulse height and width in millimetres (non-negative numbers) before recording.'
+        : 'Enter the interval width in millimetres (a non-negative number) before recording.');
+      return;
+    }
+    const answerMm2 = needsSecondLength && widthText2.trim() !== '' ? Number(widthText2) : undefined;
+    if (needsSecondLength && (answerMm2 === undefined || !Number.isFinite(answerMm2) || answerMm2 < 0)) {
+      setStatus('Enter both lengths in millimetres (non-negative numbers) before recording.');
       return;
     }
     try {
@@ -77,6 +95,7 @@ export function GuidedExercises({ config, measurement, storage }: GuidedExercise
         startMs: measurement.startMs,
         endMs: measurement.endMs,
         ...(answerMm === undefined ? {} : { answerMm }),
+        ...(answerMm2 === undefined ? {} : { answerMm2 }),
       });
       setEvaluation(null);
       commit(next, `Reading ${Math.min(entry.readings.length + 1, definition.requiredReadings)} of ${definition.requiredReadings} recorded.`);
@@ -88,18 +107,23 @@ export function GuidedExercises({ config, measurement, storage }: GuidedExercise
   const check = () => {
     const result = evaluateExercise(definition, entry.readings);
     setEvaluation(result);
+    const firstPass = result.passed && !entry.passed;
     commit(recordCheckResult(progress, definition, result.passed), result.passed ? 'Passed. Every check below is met.' : 'Not yet. See the checks below, then retry.');
+    if (firstPass) onCompleted?.(definition);
   };
 
   const retry = () => {
     setEvaluation(null);
     setWidthText('');
+    setWidthText2('');
     commit(retryExercise(progress, definition), 'Readings cleared. Record new readings to try again.');
   };
 
   const reset = () => {
     setEvaluation(null);
     setWidthText('');
+    setWidthText2('');
+    setHintCount(0);
     commit(resetExercise(progress, definition), 'Exercise reset, including attempts and completion.');
   };
 
@@ -133,8 +157,13 @@ export function GuidedExercises({ config, measurement, storage }: GuidedExercise
           {measurement ? ` ${measurement.name}: Start ${measurement.startMs.toFixed(0)} ms, End ${measurement.endMs.toFixed(0)} ms` : ' no measurement selected'}
         </p>
         {needsWidth && (
-          <label className="exercise-width">Interval width on paper (mm)
+          <label className="exercise-width">{firstLabel}
             <input type="number" min="0" step="0.5" value={widthText} onChange={event => setWidthText(event.target.value)} />
+          </label>
+        )}
+        {needsSecondLength && (
+          <label className="exercise-width">Calibration pulse width (mm)
+            <input type="number" min="0" step="0.5" value={widthText2} onChange={event => setWidthText2(event.target.value)} />
           </label>
         )}
         <div className="exercise-actions">
@@ -143,10 +172,27 @@ export function GuidedExercises({ config, measurement, storage }: GuidedExercise
           <button type="button" className="measurement-set-select" onClick={retry}>Retry</button>
           <button type="button" className="delete-measurement" onClick={reset}>Reset exercise</button>
         </div>
+        {definition.hints.length > 0 && (
+          <div className="exercise-hints">
+            <button type="button" className="measurement-set-select" disabled={hintCount >= definition.hints.length} onClick={() => setHintCount(count => Math.min(definition.hints.length, count + 1))}>
+              Show hint ({hintCount}/{definition.hints.length})
+            </button>
+            {hintCount > 0 && <ol aria-label="Hints">{definition.hints.slice(0, hintCount).map(hint => <li key={hint}>{hint}</li>)}</ol>}
+          </div>
+        )}
+        {entry.passed && (
+          <div className="exercise-next" role="group" aria-label="Next steps">
+            <p><strong>Completed.</strong> Choose what to do next.</p>
+            <div className="exercise-actions">
+              {nextExercise && <button type="button" className="add-measurement" onClick={() => select(nextExercise.id)}>Next exercise: {nextExercise.title}</button>}
+              {onOpenChallenge && <button type="button" className="measurement-set-select" onClick={onOpenChallenge}>Practise rate estimation in the Rhythm Challenge</button>}
+            </div>
+          </div>
+        )}
         {entry.readings.length > 0 && (
           <ol className="exercise-readings" aria-label="Recorded readings">
             {entry.readings.map((reading, index) => (
-              <li key={index}>Reading {index + 1}: lead {reading.lead}, {reading.paperSpeed} mm/s, {reading.gain} mm/mV, Start {reading.startMs.toFixed(0)} ms, End {reading.endMs.toFixed(0)} ms{reading.answerMm === undefined ? '' : `, width ${reading.answerMm} mm`}</li>
+              <li key={index}>Reading {index + 1}: lead {reading.lead}, {reading.paperSpeed} mm/s, {reading.gain} mm/mV, Start {reading.startMs.toFixed(0)} ms, End {reading.endMs.toFixed(0)} ms{reading.answerMm === undefined ? '' : `, ${definition.kind === 'grid-calibration' ? 'height' : 'width'} ${reading.answerMm} mm`}{reading.answerMm2 === undefined ? '' : `, width ${reading.answerMm2} mm`}</li>
             ))}
           </ol>
         )}

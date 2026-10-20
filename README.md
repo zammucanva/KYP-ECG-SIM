@@ -2,6 +2,13 @@
 
 Standalone React/TypeScript educational module for future KYP integration. The current release includes a deterministic shared-timeline synthetic 12-lead model, a real-time moving paper sweep with start/pause/reset controls, single- and multi-lead views, calibrated machine controls, manual time calipers, KYP-matched light/dark themes, and a content-governed Learn shell with lesson rendering, formative checks, shared-engine demonstrations, and local progress. Playback starts automatically unless the browser requests reduced motion.
 
+## What is in the app
+
+- **ECG simulator**: calibrated moving paper, twelve leads, measurements, private annotations, local save/restore, and five guided exercises with hints.
+- **Rhythm Challenge**: six-second synthetic strips across 18 rhythm categories with Learn, Practice and Timed modes, rate estimation, and explanations. Draft content, not clinically reviewed.
+- **Academy**: local XP, levels, achievements and personal bests derived only from what you actually do.
+- **Learn**: draft lessons behind review gates (the published catalog is intentionally empty).
+
 ## Run locally
 
 ```bash

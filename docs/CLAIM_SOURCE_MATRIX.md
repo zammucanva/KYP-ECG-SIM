@@ -91,7 +91,7 @@ For every external-source row, record the source edition/version actually inspec
 
 ## Guided exercises — release 1 (added 2026-10-21)
 
-The four exercises are **draft/unreviewed and are not content-schema records** (see [CONTENT_REVIEW_WORKFLOW.md](CONTENT_REVIEW_WORKFLOW.md), "Exercises and the content schema"). The IDs below are documentation IDs. Full exact text, questions for reviewers and recommended revisions are in packets 4–7 of [LESSON_REVIEW_PACKETS.md](LESSON_REVIEW_PACKETS.md). A candidate is a source to inspect, not evidence. Class A rows cite software tests, which evidence behavior only, never medical correctness.
+The five exercises are **draft/unreviewed and are not content-schema records** (see [CONTENT_REVIEW_WORKFLOW.md](CONTENT_REVIEW_WORKFLOW.md), "Exercises and the content schema"). The IDs below are documentation IDs. Full exact text, questions for reviewers and recommended revisions are in packets 4–8 of [LESSON_REVIEW_PACKETS.md](LESSON_REVIEW_PACKETS.md). A candidate is a source to inspect, not evidence. Class A rows cite software tests, which evidence behavior only, never medical correctness.
 
 ### `rr-interval-measurement` — version `0.1.0`
 
@@ -130,4 +130,40 @@ The four exercises are **draft/unreviewed and are not content-schema records** (
 | `ex-speed.expected-width-feedback` | A | `evaluate.ts` width check; logical-mm note in `calibration.ts` | Verified by tests; logical mm only. |
 | `ex-speed.grid-unit-label` | D | UI label "Interval width on paper (mm)" | Reviewer to confirm or rename to avoid implying physical paper. |
 
-Rights for all four exercises: they reproduce no third-party text or figure that was identified; the synthetic signal's declared rights are unknown (no repository licence).
+### `grid-and-calibration` — version `0.1.0`
+
+| Claim ID | Class | Candidate source or evidence | Status / reviewer action |
+|---|---|---|---|
+| `ex-grid.pulse-is-1mv-200ms` | A | `CALIBRATION_PULSE_AMPLITUDE_MV`, `CALIBRATION_PULSE_DURATION_MS` in `src/engine/calibration.ts`; grid exercise tests | Verified by tests. |
+| `ex-grid.height-equals-gain` | A (+B) | `calibrationPulseHeightUnits`; exercise tests at all supported settings | Software part verified; no statement about real paper is made. |
+| `ex-grid.width-equals-0.2-times-speed` | A (+B) | `calibrationPulseWidthUnits`; exercise tests at all supported settings | Software part verified; same scoping. |
+| `ex-grid.logical-mm-label` | D | UI labels "Calibration pulse height (mm)" / "width (mm)" | Reviewer to confirm or rename to the logical grid. |
+
+## Rhythm Challenge categories — release 1 (added 2026-10-21)
+
+Each category explanation is a class C medical statement shown to learners. **No source is attached to any of them, no reviewer exists, and none may be treated as reviewed.** Exact text, expected features, rate bands, reviewer questions R1–R6 and recommended revisions are in packet 9 of [LESSON_REVIEW_PACKETS.md](LESSON_REVIEW_PACKETS.md). Software evidence (that the drawn strip, rate, options and scoring agree with the category description) is `src/rhythm/cases.test.ts`; it is not medical evidence.
+
+| Category ID | Class | Source status | Reviewer action |
+|---|---|---|---|
+| `nsr` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `sinus-bradycardia` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `sinus-tachycardia` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `sinus-arrhythmia` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `pac` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `atrial-fibrillation` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `atrial-flutter` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `svt` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `first-degree-avb` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `mobitz-1` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `mobitz-2` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `avb-2to1` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `third-degree-avb` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `pvc` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `idioventricular` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `vt` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `vf` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `paced` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+
+Additional rows needing specific attention: `avb-2to1` (the "cannot be determined" handling, R4), `vt` and `vf` (high-risk framing, R5), `idioventricular` and `third-degree-avb` (distinguishability, R6).
+
+Rights for all five exercises and the Rhythm Challenge: they reproduce no third-party text or figure that was identified; the synthetic signal's declared rights are unknown (no repository licence).

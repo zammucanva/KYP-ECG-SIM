@@ -14,8 +14,11 @@ export const timeMsToSvgUnits = (timeMs: number, speed: PaperSpeed) => timeToMm(
 export const svgUnitsToTimeMs = (units: number, speed: PaperSpeed) => mmToTimeMs(svgUnitsToMm(units), speed);
 export const voltageMvToSvgUnits = (mv: number, gain: Gain) => voltageToMm(mv, gain) * SVG_UNITS_PER_MM;
 export const svgUnitsToVoltageMv = (units: number, gain: Gain) => mmToVoltageMv(svgUnitsToMm(units), gain);
-export const calibrationPulseHeightUnits = (gain: Gain, amplitudeMv = 1) => voltageMvToSvgUnits(amplitudeMv, gain);
-export const calibrationPulseWidthUnits = (speed: PaperSpeed, durationMs = 200) => timeMsToSvgUnits(durationMs, speed);
+/** The simulator's calibration pulse: 1 mV tall and this many milliseconds wide. */
+export const CALIBRATION_PULSE_AMPLITUDE_MV = 1;
+export const CALIBRATION_PULSE_DURATION_MS = 200;
+export const calibrationPulseHeightUnits = (gain: Gain, amplitudeMv = CALIBRATION_PULSE_AMPLITUDE_MV) => voltageMvToSvgUnits(amplitudeMv, gain);
+export const calibrationPulseWidthUnits = (speed: PaperSpeed, durationMs = CALIBRATION_PULSE_DURATION_MS) => timeMsToSvgUnits(durationMs, speed);
 
 /** Keeps the full recording visible while preserving a 250 mm minimum paper width. */
 export const recordingViewWidthUnits = (durationMs: number, speed: PaperSpeed, minimumWidthMm = 250) =>

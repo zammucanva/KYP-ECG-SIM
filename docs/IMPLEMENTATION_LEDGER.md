@@ -1,5 +1,24 @@
 # Implementation ledger
 
+## Current checkpoint - ECG-CP13 product build: Guided Lab, Rhythm Challenge and Academy (2026-10-21)
+
+### ECG-PRODUCT-13 - Milestones 1-4 delivered locally (not pushed, not CI-verified)
+
+- Milestone 1 (simulator integrity): verified, not rebuilt. Clock seek/restore, snapshots, local save/restore, measurement sets and annotations were already present and tested (ECG-STATE-09, CI-verified earlier on `6e3bce2`/`685fba5`).
+- Milestone 2 (Guided Lab): a fifth exercise `grid-and-calibration` (reads the calibration pulse at two settings; expected size comes from `calibrationPulseHeightUnits` / `calibrationPulseWidthUnits`, now with shared `CALIBRATION_PULSE_*` constants), progressive hints on every exercise, a next-step panel after completion, a link on to the Rhythm Challenge, and an `onCompleted` callback that feeds the Academy. Definitions stay draft/unreviewed.
+- Milestone 3 (Rhythm Challenge):
+  - Engine: `src/engine/rhythm-signal.ts` extends the existing deterministic engine with beat schedules (P waves, QRS complexes, pacing spikes, flutter, fibrillatory and chaotic activity). It reuses `morphology`, the `index * 1000 / rate` sample timing and `limbLeads`; no second engine or clock.
+  - Library: `src/rhythm/rhythms.ts` builds 18 categories from a rate and seed; `analyseRhythm` derives regularity, QRS width, P-wave relationship and rate from the schedule itself.
+  - Cases: `src/rhythm/cases.ts` has one validated definition per case (36 cases, all draft/unreviewed). The strip, answer options, hints, expected rate, distractor rationales and explanation are all derived from it. Rate is taken from the displayed signal (60 000 / median R-R for regular rhythms, six-second count x 10 for irregular), accepted within +/-10 per minute or 10% (regular) and +/-15 or 20% (irregular). VF has no measurable rate. 2:1 AV block accepts "cannot be determined" and never accepts Mobitz I/II.
+  - Sessions: `src/rhythm/session.ts` is pure and immutable. Learn (hints, unscored retry), Practice (filters, review of misses), Timed (countdown, pause, no hints, expiry). Scoring is accuracy only; elapsed time never changes points. Duplicate submissions are ignored.
+  - UI: `RhythmChallenge.tsx` and `RhythmStrip.tsx` (calibrated 6 s strip at 25 mm/s, 10 mm/mV, lead II, accessible name that never names the rhythm). The challenge stays mounted while hidden so a session survives navigation, and a timed session pauses itself when the learner leaves.
+- Milestone 4 (Academy): `src/academy/progress.ts` is the one place XP, levels, achievements, mastery and bests are decided; `useAcademy.ts` is the single store. Rules: 10 XP first correct rhythm, 5 first in-range rate, 25 completed exercise, 15 completed session (needs at least min(5, questions) answered), 5 for correcting a previously missed strip, at most 3 one-XP repeat awards per strip. Every award has a unique key (idempotent), only first attempts count, speed never earns XP. Level n needs 50*(n-1)^2 XP. Versioned storage `ecg-lab-academy-v1`; corrupt, tampered, extra-field, oversized or other-version data resets safely with a notice. The dashboard shows only recorded events and an honest empty state.
+- Navigation: ECG simulator (with Guided exercises), Rhythm Challenge, Academy, Learn. No empty pages were added.
+- Not started: Milestone 5 (Virtual Patient), Milestone 6 (Medication Center), the Home dashboard and cross-feature "continue where you left off" (Milestone 7), and further polish (Milestone 8). Nothing is claimed for them.
+- Content governance: the 18 category explanations and 36 cases are unreviewed class C medical text with no sources. They are documented in packet 9 of `LESSON_REVIEW_PACKETS.md` with questions R1-R6 and decision D5; the exercise packets now cover five exercises and their hints. `review-packet.test.ts` fails if the documents drift from the code.
+- Findings fixed along the way: axe flagged low contrast on locked achievements (reduced opacity), now a dashed border plus a "Locked" label; Playwright `getByLabel` also matches hidden elements, so the word "again" in a hidden mode description collided with the `Gain` selector, and the copy was changed instead of weakening ten existing tests.
+- Verification (local only): see `QA_REPORT.md` ECG-CP13.
+
 ## Current checkpoint - ECG-CP12 content review-input packet (2026-10-21)
 
 ### ECG-REVIEW-12 - Review-ready packet for lessons, checks and guided exercises

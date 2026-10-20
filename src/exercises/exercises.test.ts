@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mmToTimeMs, svgUnitsToTimeMs, timeMsToSvgUnits, timeToMm, voltageMvToSvgUnits } from '../engine/calibration';
+import { calibrationPulseHeightUnits, calibrationPulseWidthUnits, mmToTimeMs, svgUnitsToMm, svgUnitsToTimeMs, timeMsToSvgUnits, timeToMm, voltageMvToSvgUnits } from '../engine/calibration';
 import { beatIntervalMs, generateLeadSamples, qrsEventTimesMs } from '../engine/signal';
 import type { RhythmPreset } from '../engine/types';
 import { publishedLearnLessons } from '../content/learn/registry';
@@ -46,8 +46,9 @@ function memoryStorage(initial: string | null = null): ProgressStorage & { value
 }
 
 describe('exercise registry', () => {
-  it('contains the four first-release exercises, all draft and unreviewed, and publishes nothing', () => {
-    expect(exerciseRegistry.map(item => item.kind).sort()).toEqual(['cross-lead-beat', 'gain-invariance', 'paper-speed-grid', 'rr-interval']);
+  it('contains the five exercises, all draft and unreviewed, each with progressive hints, and publishes nothing', () => {
+    expect(exerciseRegistry.map(item => item.kind).sort()).toEqual(['cross-lead-beat', 'gain-invariance', 'grid-calibration', 'paper-speed-grid', 'rr-interval']);
+    expect(exerciseRegistry.every(item => item.hints.length === 3)).toBe(true);
     expect(exerciseRegistry.every(item => item.publicationStatus === 'draft' && item.reviewStatus === 'unreviewed')).toBe(true);
     expect(new Set(exerciseRegistry.map(item => item.id)).size).toBe(exerciseRegistry.length);
     expect(Object.isFrozen(exerciseRegistry)).toBe(true);
@@ -296,5 +297,45 @@ describe('exercise progress persistence', () => {
     expect(storage.value).toBeNull();
     expect(writeExerciseProgress(memoryStorage(), { version: 1, exercises: { 'BAD ID': { definitionVersion: '0.1.0', attempts: 0, passed: false, readings: [] } } })).toBe(false);
     expect(EXERCISE_PROGRESS_STORAGE_KEY).toContain('exercise-progress');
+  });
+});
+
+describe('grid and calibration exercise', () => {
+  const gridExercise = exercise('grid-and-calibration');
+  const at = (gain: 5 | 10 | 20, paperSpeed: 12.5 | 25 | 50, answerMm: number | undefined, answerMm2: number | undefined) =>
+    reading({ gain, paperSpeed, answerMm, answerMm2 });
+
+  it('expects the pulse size from the same calibration functions that draw it', () => {
+    // 1 mV tall = gain mm; 200 ms wide = 0.2 s x speed mm.
+    expect(evaluateExercise(gridExercise, [at(10, 25, 10, 5), at(20, 50, 20, 10)]).passed).toBe(true);
+    expect(evaluateExercise(gridExercise, [at(5, 12.5, 5, 2.5), at(10, 25, 10, 5)]).passed).toBe(true);
+  });
+
+  it('applies the width tolerance and reports the expected value when wrong', () => {
+    expect(evaluateExercise(gridExercise, [at(10, 25, 10.9, 5.9), at(20, 50, 20, 10)]).passed).toBe(true);
+    const wrong = evaluateExercise(gridExercise, [at(10, 25, 12, 5), at(20, 50, 20, 10)]);
+    expect(wrong.passed).toBe(false);
+    expect(wrong.checks.find(item => item.id === 'pulse-height-1')?.message).toContain('10.0 mm');
+    expect(evaluateExercise(gridExercise, [at(10, 25, 12, 5), at(20, 50, 20, 10)], { widthMm: 3 }).passed).toBe(true);
+  });
+
+  it('needs the settings to change and both lengths to be entered', () => {
+    expect(evaluateExercise(gridExercise, [at(10, 25, 10, 5), at(10, 25, 10, 5)]).checks.find(item => item.id === 'settings-changed')?.passed).toBe(false);
+    const missing = evaluateExercise(gridExercise, [at(10, 25, undefined, 5), at(20, 50, 20, undefined)]);
+    expect(missing.passed).toBe(false);
+    expect(missing.checks.find(item => item.id === 'pulse-height-1')?.message).toContain('enter the pulse height');
+    expect(missing.checks.find(item => item.id === 'pulse-width-2')?.message).toContain('enter the pulse width');
+  });
+
+  it('matches what the calibration pulse draws at every supported setting', () => {
+    for (const gain of [5, 10, 20] as const) {
+      for (const speed of [12.5, 25, 50] as const) {
+        const heightMm = svgUnitsToMm(calibrationPulseHeightUnits(gain));
+        const widthMm = svgUnitsToMm(calibrationPulseWidthUnits(speed));
+        expect(heightMm).toBeCloseTo(gain, 9);
+        expect(widthMm).toBeCloseTo(0.2 * speed, 9);
+        expect(evaluateExercise(gridExercise, [at(gain, speed, heightMm, widthMm), at(gain === 5 ? 10 : 5, speed, gain === 5 ? 10 : 5, widthMm)]).passed).toBe(true);
+      }
+    }
   });
 });

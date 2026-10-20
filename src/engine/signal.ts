@@ -2,8 +2,9 @@ import type { Lead, LeadSignals, RhythmPreset, Sample, Signal } from './types';
 
 const LEADS: Lead[] = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6'];
 export const allLeads = (): Lead[] => [...LEADS];
-type Morphology = { p: number; q: number; r: number; s: number; t: number; st: number };
-const morphology: Record<Lead, Morphology> = {
+export type Morphology = { p: number; q: number; r: number; s: number; t: number; st: number };
+/** Per-lead wave scale factors shared by the preset generator and the beat-schedule rhythm generator. */
+export const morphology: Record<Lead, Morphology> = {
   I: { p: 1, q: 1, r: 0.8, s: 0.8, t: 0.9, st: 0 }, II: { p: 1.1, q: 1, r: 1, s: 1, t: 1, st: 0 },
   V1: { p: 0.7, q: 0.7, r: 0.35, s: 1.55, t: -0.55, st: 0 }, V2: { p: 0.8, q: 0.8, r: 0.65, s: 1.25, t: 0.1, st: 0 },
   V3: { p: 0.9, q: 0.9, r: 0.95, s: 0.85, t: 0.55, st: 0 }, V4: { p: 1, q: 1, r: 1.15, s: 0.55, t: 0.8, st: 0 },

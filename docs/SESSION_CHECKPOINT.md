@@ -1,6 +1,20 @@
 ## CI result for the fix (added after the run finished)
 
 - Run [39507495800](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39507495800) on `6e3bce2`: completed / success; 118 unit tests and 32 Chromium scenarios passed. `codex/guided-exercises-local` is pushed; `main` and other branches unchanged; no PR opened.
+# Current session checkpoint - ECG-CP13 product build (Guided Lab, Rhythm Challenge, Academy)
+
+Date: 2026-10-21
+
+- Checkout `ecg-lab-git`, branch `codex/guided-exercises-local`. Last pushed and CI-verified commit: `685fba5` (run 39510886866, success). Local commits ahead of the remote: `3c905f0` (docs only) and the commit(s) for this milestone. Nothing was pushed, merged or deployed in this task; production KYP untouched.
+- Delivered: Milestones 2-4 (see `IMPLEMENTATION_LEDGER.md`, ECG-PRODUCT-13). 18 rhythm categories, 36 cases, three challenge modes, a fifth guided exercise, hints, and the Academy (XP, levels, achievements, personal bests, honest empty state, confirm-before-reset).
+- Local verification: Vitest 18 files / 215 tests; app and E2E type checks exit 0; build OK (143 modules); Chromium 50/50 on two consecutive full runs. One earlier full run had 1 failure in an existing animation test (`live sweep moves...`) that passed 3/3 alone and in the two later full runs: treated as a load-sensitive flake, not a regression, and recorded as such.
+- Visually checked in the browser pane: setup screen, a full question with hints and feedback, and strips for all 18 categories (regular and irregular rhythms, sawtooth, fibrillatory baseline, dropped beats, independent P waves, wide complexes, VF, pacing). Not checked: real devices, screen readers, forced-colours mode.
+- Open problems and limits: the rhythm morphologies are simplified invented templates, not validated physiology; all category text is unreviewed; the timed countdown is paused by tab navigation but background-tab throttling is not specially handled (ticks are clamped to 1 s); `getByLabel` matches hidden elements, so new copy must avoid colliding with existing selector labels.
+- Not started: Virtual Patient, Medication Center, Home dashboard.
+- Next unfinished milestone: Milestone 5, Virtual Patient. It should reuse `buildCase`, `RhythmStrip` and the Academy store, add a validated fictional-case schema (authored separately from learner answers), and keep escalation content gated until reviewed (decision D5).
+
+---
+
 # Current session checkpoint - ECG-CP12 content review-input packet
 
 Date: 2026-10-21

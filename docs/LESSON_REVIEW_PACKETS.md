@@ -1,6 +1,6 @@
 # ECG Lab — lesson review packets
 
-**Purpose:** reviewer intake for the three current draft lessons, their linked formative checks, and (packets 4–7, added 2026-10-21) the four draft guided exercises. These packets expose answer keys to reviewers and are not learner-facing content. They do not assert that any medical, source, licensing, or publication review has occurred.
+**Purpose:** reviewer intake for the three current draft lessons, their linked formative checks, the five draft guided exercises (packets 4–8) and the draft Rhythm Challenge categories and cases (packet 9), all added 2026-10-21. These packets expose answer keys to reviewers and are not learner-facing content. They do not assert that any medical, source, licensing, or publication review has occurred.
 
 **Current release state (2026-10-20):** lessons/questions 1 and 2 remain at version `0.3.0`; lesson 3 and its linked question are version `0.4.0` after a scope correction. All six records remain `draft`, have zero review records, and are excluded from the Learn catalog. `lastReviewedAt` is absent. Candidate Becker and Kligfield reference records remain `verificationStatus: unverified`; the revised lesson 3 and question have no attached external references because their remaining claims describe simulator behavior only. No genuine educational review, qualified medical review, source/licensing approval, or publication approval exists.
 
@@ -14,7 +14,7 @@ After review, provide genuine structured records matching the fields in [CONTENT
 
 ## Content inventory (all draft items, 2026-10-21)
 
-One list covers every learner-facing item that needs review. Lessons and questions live in the content registry (`src/content/learn/records.ts`); the four guided exercises live in their own read-only registry (`src/exercises/definitions.ts`) and are **not** content-schema records yet (see "Exercises and the content schema" in [CONTENT_REVIEW_WORKFLOW.md](CONTENT_REVIEW_WORKFLOW.md)). No competing registry was created. Claims are counted as recorded in the code (lessons/questions) or as documentation claim IDs (exercises).
+One list covers every learner-facing item that needs review. Lessons and questions live in the content registry (`src/content/learn/records.ts`); the five guided exercises and the Rhythm Challenge cases live in their own read-only registries (`src/exercises/definitions.ts`, `src/rhythm/cases.ts`) and are **not** content-schema records yet (see "Exercises and the content schema" in [CONTENT_REVIEW_WORKFLOW.md](CONTENT_REVIEW_WORKFLOW.md)). No competing registry was created. Claims are counted as recorded in the code (lessons/questions) or as documentation claim IDs (exercises).
 
 | Item | ID | Version | Status | Claims (external-source / project-behavior or software) | References | Required reviewers | Publication eligibility |
 |---|---|---|---|---|---|---|---|
@@ -28,6 +28,8 @@ One list covers every learner-facing item that needs review. Lessons and questio
 | Exercise 2 | `gain-measurement-invariance` | 0.1.0 | draft / unreviewed | 2 class B, 2 class A | none | same | No release path exists yet (D1) |
 | Exercise 3 | `cross-lead-beat-matching` | 0.1.0 | draft / unreviewed | 2 class B, 2 class A | none | same | No release path exists yet (D1) |
 | Exercise 4 | `paper-speed-and-grid` | 0.1.0 | draft / unreviewed | 2 class B, 1 class A, 1 class D | none | same | No release path exists yet (D1) |
+| Exercise 5 | `grid-and-calibration` | 0.1.0 | draft / unreviewed | 2 class A (+B), 1 class A, 1 class D | none | same | No release path exists yet (D1) |
+| Rhythm Challenge | 36 cases, 18 categories (`rhythm.<category>.NN`) | 0.1.0 | draft / unreviewed | 18 category explanations, class C | none | educational; source; qualified medical (R1–R6) | No release path exists yet (D1, D5) |
 
 The published Learn catalog is empty and stays empty. Every lesson and question still has `reviewRecords: []` and no `lastReviewedAt`; every external reference still has `verificationStatus: unverified`.
 
@@ -204,6 +206,9 @@ Reviewer should confirm the answer against current code/tests and ensure the pro
 | Step 1 (`select-rr`) | Select a measurement set (use the R–R interval set) and choose Start. |
 | Step 2 (`place-markers`) | Pause playback, then click the peak of one R wave for Start and the peak of the next R wave for End. |
 | Step 3 (`record-check`) | Choose Record reading, then Check answer. |
+| Hint 1 | In most leads the R wave is the tallest, sharpest peak. Pick one and then the very next one. |
+| Hint 2 | Pause playback first so the trace stands still, then fine-tune with the numeric fields. |
+| Hint 3 | Start and End must sit on neighbouring peaks, not two peaks apart. |
 | Required readings | 1 |
 | Tolerances | marker 40 ms; repeat-measurement 8 ms; width 1 mm |
 | Provenance | Synthetic signal (`ecg-lab.signal.generateLeadSignals`); signal rights not yet declared (repository has no licence file). Not a patient recording; morphology unvalidated. |
@@ -251,6 +256,9 @@ Reviewer should confirm the answer against current code/tests and ensure the pro
 | Step 1 (`first-gain`) | Pause, mark two consecutive R peaks, and record a reading at the current gain. |
 | Step 2 (`change-gain`) | Change the Gain control to a different value. Keep the same Start and End times. |
 | Step 3 (`second-gain`) | Record a second reading, then choose Check answer. |
+| Hint 1 | Change only the Gain control and watch the height of the trace, not where the beats sit in time. |
+| Hint 2 | Keep Start and End exactly the same between the two readings. |
+| Hint 3 | A taller trace on screen does not mean a longer interval. |
 | Required readings | 2 |
 | Tolerances | marker 40 ms; repeat-measurement 8 ms; width 1 mm |
 | Provenance | Synthetic signal (`ecg-lab.signal.generateLeadSignals`); signal rights not yet declared (repository has no licence file). Not a patient recording; morphology unvalidated. |
@@ -294,6 +302,9 @@ Reviewer should confirm the answer against current code/tests and ensure the pro
 | Step 1 (`first-lead`) | Pause, choose a lead, place Start on the centre of a QRS complex, and record a reading. |
 | Step 2 (`second-lead`) | Choose a different lead and place Start on the QRS complex of the same beat. Record a second reading. |
 | Step 3 (`check`) | Choose Check answer. |
+| Hint 1 | In this simulator every lead shares one timeline, so the same beat sits at the same time in each lead. |
+| Hint 2 | In some leads the QRS complex points downward; look for the sharpest deflection either way. |
+| Hint 3 | Compare the time of the beat in each lead, not the shape. |
 | Required readings | 2 |
 | Tolerances | marker 40 ms; repeat-measurement 8 ms; width 1 mm |
 | Provenance | Synthetic signal (`ecg-lab.signal.generateLeadSignals`); signal rights not yet declared (repository has no licence file). Not a patient recording; morphology unvalidated. |
@@ -337,6 +348,9 @@ Reviewer should confirm the answer against current code/tests and ensure the pro
 | Step 1 (`first-speed`) | Pause, mark two consecutive R peaks, enter the interval width in millimetres for the current paper speed, and record a reading. |
 | Step 2 (`change-speed`) | Change the Paper speed control to a different value, keeping the same Start and End times. |
 | Step 3 (`second-speed`) | Enter the new width in millimetres, record the second reading, then choose Check answer. |
+| Hint 1 | In this simulator, width in millimetres = interval in seconds × paper speed in millimetres per second. |
+| Hint 2 | Convert the interval from milliseconds to seconds first. |
+| Hint 3 | A faster paper speed stretches the same interval wider without changing its duration. |
 | Required readings | 2 |
 | Tolerances | marker 40 ms; repeat-measurement 8 ms; width 1 mm |
 | Provenance | Synthetic signal (`ecg-lab.signal.generateLeadSignals`); signal rights not yet declared (repository has no licence file). Not a patient recording; morphology unvalidated. |
@@ -365,6 +379,107 @@ Reviewer should confirm the answer against current code/tests and ensure the pro
 - Re-scope the principle text to "In this simulator" (as lesson 3 v0.4.0 did), or add an exact source passage.
 - Rename the input label to avoid implying physical paper.
 
+## Packet 8 — Guided exercise: Read the calibration pulse
+
+### Exercise record (exact current text from `src/exercises/definitions.ts`)
+
+| Field | Current record |
+|---|---|
+| ID / version | `grid-and-calibration` / `0.1.0` |
+| Kind | `grid-calibration` |
+| Status | `draft` / `unreviewed`; no review records exist; not in the content registry; not published |
+| Title | Read the calibration pulse |
+| Objective | Use the calibration pulse to work out how tall 1 mV and how wide 200 ms are on the simulator grid at two different settings. |
+| Principle | In this simulator the calibration pulse is 1 mV tall and 200 ms wide. Its height in grid millimetres equals the gain setting and its width equals 0.2 s multiplied by the paper speed setting, so changing either control resizes the pulse on the grid. |
+| Step 1 (`first-setting`) | Look at the calibration pulse for the current Gain and Paper speed, enter its height and width in grid millimetres, and record a reading. |
+| Step 2 (`change-setting`) | Change the Gain or the Paper speed so the pulse changes size. |
+| Step 3 (`second-setting`) | Enter the new height and width, record the second reading, then choose Check answer. |
+| Hint 1 | The calibration pulse card at the top of the simulator shows the pulse for the current settings. |
+| Hint 2 | In this simulator the pulse is 1 mV tall, so its height in millimetres equals the gain setting. |
+| Hint 3 | In this simulator the pulse lasts 200 ms (0.2 s), so its width in millimetres is 0.2 times the paper speed setting. |
+| Required readings | 2 |
+| Tolerances | marker 40 ms; repeat-measurement 8 ms; width 1 mm |
+| Provenance | Synthetic signal (`ecg-lab.signal.generateLeadSignals`); signal rights not yet declared (repository has no licence file). Not a patient recording; morphology unvalidated. |
+| References attached | None. Candidate references are listed in the register below; none verified. |
+
+**Claim inventory** (documentation IDs; the exercise has no claim IDs in code because exercises are not yet content-schema records). Class: A software behavior · B basic ECG measurement principle needing an authoritative source · C medical/physiological claim needing qualified review · D wording/licensing note.
+
+| Claim ID | Statement (as presented) | Location | Class | Evidence status and action |
+|---|---|---|---|---|
+| `ex-grid.pulse-is-1mv-200ms` | In this simulator the calibration pulse is 1 mV tall and 200 ms wide. | principle; hints | A: software behavior | Verified by tests: `CALIBRATION_PULSE_*` constants and the exercise grid tests match the pulse the app draws at all nine gain/speed settings. |
+| `ex-grid.height-equals-gain` | Its height in grid millimetres equals the gain setting. | principle; hint 2; height check | A: software behavior (+ B) | Verified by tests for the simulator logical mm. Any statement about real ECG paper or a clinical standard is not made here and would need a source. |
+| `ex-grid.width-equals-0.2-times-speed` | Its width equals 0.2 s multiplied by the paper speed setting. | principle; hint 3; width check | A: software behavior (+ B) | Verified by tests for the simulator logical mm; same scoping as above. |
+| `ex-grid.logical-mm-label` | The inputs are labelled "Calibration pulse height (mm)" and "Calibration pulse width (mm)". | UI labels | D: wording | "mm" are logical grid millimetres, not physical screen or print size (see packet 3); consider "on the logical grid (mm)". |
+
+**Questions for the educational reviewer**
+
+- Is comparing two settings enough to show a learner understands the scaling, or should they also read grid boxes directly?
+- Is it clear that the answer is read from the calibration pulse card and the settings, not from the trace?
+
+**Questions requiring qualified medical review**
+
+- M6: Does the simulator-scoped wording ("In this simulator ...") avoid implying a clinical standard for calibration or paper, and is that scoping sufficient?
+
+**Recommended revisions before any release**
+
+- Keep the "In this simulator" scoping in every principle and hint.
+- Rename the inputs to refer to the logical grid.
+
+## Packet 9 — Rhythm Challenge categories and cases (draft, unreviewed)
+
+The Rhythm Challenge (`src/rhythm/`) generates every strip from a validated case definition (`rhythmCaseSchema`): 36 cases across 18 categories, each `draft` / `unreviewed`. The waveform comes from a beat schedule (`src/engine/rhythm-signal.ts`, which extends the existing deterministic engine), and the facts shown to learners (regularity, QRS width, P-wave relationship, rate) are computed from that schedule, then asserted against the category description in `src/rhythm/cases.test.ts`. Those tests prove the **drawn strip matches the description**; they say nothing about whether the description or the simplified morphology is medically right. No source is attached to any category, no reviewer exists, and the templates are invented teaching shapes, not validated physiology.
+
+**Exact category text** (class C: each explanation is a medical statement awaiting source and qualified review). "Expected" is what the synthetic generator is built to show.
+
+| Category ID | Label | Explanation shown to learners (exact) | Expected on the strip | Rate band of the synthetic cases |
+|---|---|---|---|---|
+| `nsr` | Normal sinus rhythm | Regular R–R intervals, one P wave before each narrow QRS complex, and a rate within the 60–100 per minute band. | regular; QRS narrow; P: one-per-qrs | 60–100 per minute |
+| `sinus-bradycardia` | Sinus bradycardia | Regular rhythm with a P wave before each narrow QRS, at a rate below 60 per minute. | regular; QRS narrow; P: one-per-qrs | 30–59 per minute |
+| `sinus-tachycardia` | Sinus tachycardia | Regular rhythm with a P wave before each narrow QRS, at a rate above 100 per minute. | regular; QRS narrow; P: one-per-qrs | 101–160 per minute |
+| `sinus-arrhythmia` | Sinus arrhythmia | The R–R interval gradually lengthens and shortens, while every QRS is still preceded by a P wave and remains narrow. | irregular; QRS narrow; P: one-per-qrs | 55–100 per minute |
+| `pac` | Premature atrial contraction | An underlying regular rhythm interrupted by an early beat that has a differently shaped P wave and a narrow QRS. | irregular; QRS narrow; P: one-per-qrs | 60–100 per minute |
+| `atrial-fibrillation` | Atrial fibrillation | Irregularly irregular R–R intervals with no organised P waves; the baseline shows fine fibrillatory activity. | irregular; QRS narrow; P: fibrillatory | 60–180 per minute |
+| `atrial-flutter` | Atrial flutter | A regular sawtooth baseline of flutter waves with QRS complexes following at a fixed ratio (here every fourth flutter wave). | regular; QRS narrow; P: flutter-waves | 60–100 per minute |
+| `svt` | Supraventricular tachycardia | A very regular, fast rhythm with narrow QRS complexes and no clearly visible P waves. | regular; QRS narrow; P: absent | 150–220 per minute |
+| `first-degree-avb` | First-degree AV block | Every P wave is followed by a QRS, but the PR interval is prolonged and stays constant. | regular; QRS narrow; P: one-per-qrs | 55–100 per minute |
+| `mobitz-1` | Second-degree AV block, Mobitz type I | The PR interval lengthens with each beat until a P wave is not followed by a QRS; the cycle then repeats. | irregular; QRS narrow; P: more-p-than-qrs | 35–70 per minute |
+| `mobitz-2` | Second-degree AV block, Mobitz type II | The PR interval of conducted beats stays constant, then a P wave suddenly fails to conduct and no QRS follows. | irregular; QRS narrow; P: more-p-than-qrs | 35–70 per minute |
+| `avb-2to1` | 2:1 AV block (Mobitz type cannot be determined) | Every second P wave is followed by a QRS. With only 2:1 conduction there is no PR-lengthening sequence to observe, so this strip alone cannot show whether the block is Mobitz type I or type II. | regular; QRS narrow; P: more-p-than-qrs | 30–60 per minute |
+| `third-degree-avb` | Third-degree (complete) AV block | P waves and QRS complexes each occur at their own regular rate with no consistent relationship between them (AV dissociation). | regular; QRS wide; P: more-p-than-qrs | 20–50 per minute |
+| `pvc` | Premature ventricular contraction | An underlying regular rhythm interrupted by an early, wide, differently shaped QRS with no preceding P wave and a discordant T wave, followed by a pause. | irregular; QRS wide; P: some-qrs-without-p | 60–100 per minute |
+| `idioventricular` | Idioventricular rhythm | A slow, regular rhythm of wide QRS complexes with no visible P waves. | regular; QRS wide; P: absent | 20–49 per minute |
+| `vt` | Ventricular tachycardia | A fast, regular rhythm of wide QRS complexes with no visible P waves. | regular; QRS wide; P: absent | 150–250 per minute |
+| `vf` | Ventricular fibrillation | Chaotic, disorganised electrical activity with no discrete QRS complexes, so a rate cannot be measured. | irregular; QRS none; P: absent | not measurable |
+| `paced` | Paced rhythm | Narrow pacing spikes, each followed by a wide QRS complex, at a regular rate. | regular; QRS wide; P: absent | 50–100 per minute |
+
+**Other learner-facing text generated from these records:** answer options (the correct category, three chosen from its `similarTo` list, and "Cannot be determined from this strip"); distractor rationales built by comparing the expected features above; three progressive hints that state regularity, P-wave relationship and QRS width without naming the answer; and the rate method sentence ("count the QRS complexes in the 6-second strip and multiply by 10, or for a regular rhythm divide 60 000 by the R–R interval in milliseconds").
+
+**Rate expectation policy (software, tested):** the expected ventricular rate is taken from the displayed signal: 60 000 divided by the median R–R interval for regular rhythms, and the six-second QRS count × 10 for irregular ones. The accepted range is ±10 per minute or 10% (regular) and ±15 per minute or 20% (irregular), configurable per case. These tolerances are design choices for a counting estimate, not clinical thresholds. Ventricular fibrillation shows no discrete QRS complexes, so no rate is asked for or scored.
+
+**Handling of ambiguity (software, tested):** the 2:1 AV block category states that this strip alone cannot show Mobitz type I or II. For those cases both the category and "Cannot be determined from this strip" are accepted, and choosing Mobitz I or II is marked incorrect. On every other case the uncertainty answer scores zero and is explained.
+
+**Questions for the educational reviewer**
+
+- Are the answer options at each difficulty level plausible without being unfair, and is offering "Cannot be determined" on every question appropriate?
+- Are the three hints useful without giving the answer away?
+- Is the six-second counting method explained clearly, and is the rate tolerance reasonable for learners?
+- Are 36 cases enough, and is the difficulty assignment (1–3) sensible?
+
+**Questions requiring qualified medical review**
+
+- R1: Is each category explanation accurate, appropriately qualified and suitable for introductory learners?
+- R2: Are the synthetic rate bands acceptable design choices (for example sinus tachycardia above 100, bradycardia below 60, idioventricular 20–49, VT 150–250), given they are not offered as clinical thresholds?
+- R3: Could any simplified morphology teach a wrong pattern (flutter shown as a 4:1 sawtooth, atrial fibrillation baseline, paced spikes, wide-complex shapes, the premature-beat pauses)?
+- R4: Is the 2:1 AV block handling right, and should other inherently ambiguous presentations be excluded or treated the same way?
+- R5: Ventricular tachycardia and ventricular fibrillation are high-risk patterns. Do they need escalation-oriented framing, or additional review, before release (decision D5)?
+- R6: Are idioventricular rhythm and third-degree block with an escape rhythm distinguishable as designed, and is the distinction presented fairly?
+
+**Recommended revisions before any release**
+
+- Attach a source and exact location to every category explanation, or narrow the explanation to what can be sourced.
+- Keep "draft teaching text, not clinical guidance" visible on every feedback panel (currently shown).
+- Consider withholding VT and VF from Practice and Timed modes until R5 is answered.
+- Record, with the reviewer, which morphology simplifications must be labelled to learners.
 
 ## Candidate reference register — additions for the exercises (all UNVERIFIED)
 
@@ -417,7 +532,7 @@ Nothing below has been opened, read or confirmed in this pass. Only title/author
 - Decide whether exercise wording must match lesson 3's "In this simulator" scoping (recommended).
 
 ### 4. Qualified medical review
-- M1 regular-R–R caveat for the simplified atrial-fibrillation preset; M2–M5 in packets 4–7.
+- M1 regular-R–R caveat for the simplified atrial-fibrillation preset; M2–M6 in packets 4–8; R1–R6 for the Rhythm Challenge categories in packet 9.
 - Lessons 1–2 definition accuracy and the "more lead views than electrodes" statement.
 - Whether lesson 3/check 3 truly need medical review under their current `clinical-education` domain (D2). Do not reclassify without a version bump and a reviewer's advice; the `non-clinical-education` value exists but changing it relaxes a gate.
 
@@ -428,6 +543,9 @@ Nothing below has been opened, read or confirmed in this pass. Only title/author
 | Time/voltage transforms, calibration pulse, logical grid units | `src/engine/calibration.test.ts` |
 | Exercise targets follow the preset; tolerance boundaries; progress and persistence | `src/exercises/exercises.test.ts`, `src/exercises/GuidedExercises.test.tsx` |
 | Exercise workflows, keyboard use, axe, no overflow, exercises absent from Learn | `tests/e2e/ecg-lab.spec.ts` (guided ECG exercises), `tests/e2e/layout-stress.spec.ts` |
+| Rhythm strips match their category descriptions; rate expectations come from the displayed signal; scoring, options, hints, ambiguity handling | `src/rhythm/cases.test.ts` |
+| Challenge sessions: selection, duplicate-submission prevention, retry, timer, pause, expiry | `src/rhythm/session.test.ts`, `src/rhythm/RhythmChallenge.test.tsx` |
+| XP, achievements, personal bests, persistence, corrupt storage | `src/academy/progress.test.ts` |
 | Review packets and matrix stay in step with the code | `src/exercises/review-packet.test.ts` (added 2026-10-21) |
 No class-A claim is currently untested. Class-A tests say nothing about whether the synthetic morphology is medically sound.
 
@@ -436,6 +554,7 @@ No class-A claim is currently untested. Class-A tests say nothing about whether 
 - **D2** Decide the correct content domain and review scope for lesson 3 / check 3 and for the exercises.
 - **D3** Declare licence and signal usage rights (VT8).
 - **D4** Decide whether exercise text is narrowed to "In this simulator" or sourced for general statements.
+- **D5** Decide whether ventricular tachycardia and fibrillation strips stay in Practice and Timed modes before escalation-oriented framing is reviewed (R5).
 
 ## Reviewer checklist (blank; to be completed only by a real reviewer)
 
@@ -456,7 +575,7 @@ Do not tick on anyone's behalf. Bind every record you submit to the exact conten
 
 **Qualified medical reviewer**
 - [ ] I supplied my own name and qualifications for the record (not copied from this document).
-- [ ] I answered M1–M5 and the lesson 1–2 definition questions.
+- [ ] I answered M1–M6, R1–R6 and the lesson 1–2 definition questions.
 - [ ] I confirmed or corrected the limitation statements about synthetic, unvalidated morphology.
 
 **Publication approver**

@@ -33,6 +33,9 @@ import { EcgGridDefinitions } from './components/EcgGrid';
 import { LiveEcgMonitor } from './components/LiveEcgMonitor';
 import { LearnMode } from './learn/LearnMode';
 import { GuidedExercises } from './exercises/GuidedExercises';
+import { AcademyDashboard } from './academy/AcademyDashboard';
+import { useAcademy } from './academy/useAcademy';
+import { RhythmChallenge } from './rhythm/RhythmChallenge';
 import './styles.css';
 
 const leads = allLeads();
@@ -81,7 +84,12 @@ function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(readThemePreference);
   const [config, setConfig] = useState<MachineConfig>({ lead: 'V3', paperSpeed: 25, gain: 20, showGrid: true, preset: 'sinus' });
   const [view, setView] = useState<'single' | 'multi'>('single');
-  const [activeSection, setActiveSection] = useState<'simulator' | 'learn'>('simulator');
+  const [activeSection, setActiveSection] = useState<'simulator' | 'challenge' | 'academy' | 'learn'>('simulator');
+  const academy = useAcademy();
+  const missedCaseIds = useMemo(
+    () => Object.entries(academy.progress.cases).filter(([, stats]) => stats.missedBefore && !stats.everCorrect).map(([id]) => id),
+    [academy.progress.cases],
+  );
   const [measurementSets, setMeasurementSets] = useState<ManualMeasurementSet[]>(() => [
     createMeasurementSet('measurement-1', 'RR', 'R–R interval'),
   ]);
@@ -275,6 +283,8 @@ function App() {
 
       <nav className="module-nav" aria-label="Main sections">
         <button type="button" aria-current={activeSection === 'simulator' ? 'page' : undefined} onClick={() => setActiveSection('simulator')}>ECG simulator</button>
+        <button type="button" aria-current={activeSection === 'challenge' ? 'page' : undefined} onClick={() => setActiveSection('challenge')}>Rhythm Challenge</button>
+        <button type="button" aria-current={activeSection === 'academy' ? 'page' : undefined} onClick={() => setActiveSection('academy')}>Academy</button>
         <button type="button" aria-current={activeSection === 'learn' ? 'page' : undefined} onClick={() => setActiveSection('learn')}>Learn</button>
       </nav>
 
@@ -460,7 +470,7 @@ function App() {
                 <button type="button" className="measurement-set-select" onClick={() => setPendingDelete(null)}>Cancel delete</button>
               </div>}
             </details>
-            <GuidedExercises config={config} measurement={selectedMeasurement} />
+            <GuidedExercises config={config} measurement={selectedMeasurement} onCompleted={definition => academy.recordExercise(definition.id, definition.version, definition.title)} onOpenChallenge={() => setActiveSection('challenge')} />
           </div>
 
           <div className="measure-row">
@@ -470,7 +480,23 @@ function App() {
           </div>
         </section>
       </section>
-      </> : <LearnMode />}
+      </> : activeSection === 'academy' ? <AcademyDashboard
+        progress={academy.progress}
+        notice={academy.notice}
+        onReset={academy.reset}
+        onOpenChallenge={() => setActiveSection('challenge')}
+        onOpenSimulator={() => setActiveSection('simulator')}
+      /> : activeSection === 'learn' ? <LearnMode /> : null}
+      {/* Kept mounted while hidden so an in-progress session survives navigation; a timed session pauses itself. */}
+      <div hidden={activeSection !== 'challenge'}>
+        <RhythmChallenge
+          active={activeSection === 'challenge'}
+          missedCaseIds={missedCaseIds}
+          onSessionEnded={academy.recordSession}
+          onOpenAcademy={() => setActiveSection('academy')}
+          timedBestScore={academy.progress.bests.timedScore}
+        />
+      </div>
 
       <footer><span>ECG LAB v0.3 · LEARN CHECKPOINT</span><span>Educational simulation only.</span></footer>
     </main>
