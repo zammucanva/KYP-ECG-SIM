@@ -3,6 +3,7 @@ import { EcgGridDefinitions } from './EcgGrid';
 import { PREVIEW_CSS_PIXELS_PER_SVG_UNIT, SVG_UNITS_PER_MM, svgUnitsToTimeMs, timeMsToSvgUnits, traceViewHeightUnits, voltageMvToSvgUnits } from '../engine/calibration';
 import { SimulationClock, type ClockSnapshot } from '../engine/clock';
 import { locateMeasurementMarker, measurementTimeAtPreviewX, type MeasurementMarkerPosition } from '../engine/measurements';
+import type { EcgAnnotation } from '../engine/annotations';
 import { generateLeadSamples, generateLeadWindow, allLeads } from '../engine/signal';
 import type { Gain, Lead, LeadSignals, MachineConfig, PaperSpeed, Sample } from '../engine/types';
 
@@ -14,7 +15,10 @@ type LiveEcgMonitorProps = {
   onPlaceMarker: (timeMs: number) => void;
   activeMarker: 'start' | 'end';
   maxAbsVoltageMv: number;
-  markers: [number, number];
+  markers?: [number, number];
+  annotations: EcgAnnotation[];
+  onClockSnapshot?: (snapshot: ClockSnapshot) => void;
+  restoreRequest?: { id: number; elapsedMs: number };
 };
 
 const leads = allLeads();
@@ -107,7 +111,24 @@ function markerDescription(position: MeasurementMarkerPosition): string {
   return 'in view';
 }
 
-function LiveTrace({ lead, samples, config, elapsedMs, widthUnits, heightUnits, showLabel, showMarkers, showMarkerLabels, markers, activeMarker, onPlaceMarker }: {
+function AnnotationRegion({ annotation, start, end, widthUnits }: {
+  annotation: EcgAnnotation;
+  start: MeasurementMarkerPosition;
+  end: MeasurementMarkerPosition;
+  widthUnits: number;
+}) {
+  if (end.xUnits < 0 || start.xUnits > widthUnits) return null;
+  const x = Math.max(0, start.xUnits);
+  const endX = Math.min(widthUnits, end.xUnits);
+  const width = Math.max(1, endX - x);
+  const label = annotation.source === 'authored' ? `Teaching region: ${annotation.label}` : `Learner note: ${annotation.label}`;
+  return <g className={`timeline-annotation timeline-annotation-${annotation.source}`} data-annotation-id={annotation.id} data-annotation-source={annotation.source} aria-hidden="true">
+    <rect x={x} y="1" width={width} height="27" />
+    {width >= 38 && <text x={x + 4} y="18" textLength={Math.max(0, width - 8)} lengthAdjust="spacingAndGlyphs"><title>{label}</title>{annotation.label}</text>}
+  </g>;
+}
+
+function LiveTrace({ lead, samples, config, elapsedMs, widthUnits, heightUnits, showLabel, showMarkers, showMarkerLabels, markers, annotations, activeMarker, onPlaceMarker }: {
   lead: Lead;
   samples: Sample[];
   config: MachineConfig;
@@ -117,7 +138,8 @@ function LiveTrace({ lead, samples, config, elapsedMs, widthUnits, heightUnits, 
   showLabel: boolean;
   showMarkers: boolean;
   showMarkerLabels: boolean;
-  markers: [number, number];
+  markers?: [number, number];
+  annotations: EcgAnnotation[];
   activeMarker: 'start' | 'end';
   onPlaceMarker: (timeMs: number) => void;
 }) {
@@ -125,7 +147,12 @@ function LiveTrace({ lead, samples, config, elapsedMs, widthUnits, heightUnits, 
   const patternId = `live-${lead.replace(/[^a-z0-9]/gi, '-')}`;
   const currentPaperPositionUnits = timeMsToSvgUnits(elapsedMs, config.paperSpeed);
   const gridOffsetUnits = widthUnits - currentPaperPositionUnits;
-  const markerPositions = markers.map(timeMs => locateMeasurementMarker(timeMs, elapsedMs, widthUnits, config.paperSpeed));
+  const markerPositions = markers?.map(timeMs => locateMeasurementMarker(timeMs, elapsedMs, widthUnits, config.paperSpeed)) ?? [];
+  const annotationPositions = annotations.map(annotation => ({
+    annotation,
+    start: locateMeasurementMarker(annotation.startMs, elapsedMs, widthUnits, config.paperSpeed),
+    end: locateMeasurementMarker(annotation.endMs, elapsedMs, widthUnits, config.paperSpeed),
+  }));
   const visibleStartMs = elapsedMs - svgUnitsToTimeMs(widthUnits, config.paperSpeed);
   const waveformLabel = `${lead} synthetic educational ECG waveform, moving paper sweep, ${config.paperSpeed} mm/s, ${config.gain} mm/mV, ECG grid ${config.showGrid ? 'visible' : 'hidden'}`;
 
@@ -150,6 +177,7 @@ function LiveTrace({ lead, samples, config, elapsedMs, widthUnits, heightUnits, 
     >
       <EcgGridDefinitions id={patternId} paperOffsetUnits={gridOffsetUnits} />
       {config.showGrid && <rect width={widthUnits} height={heightUnits} fill={`url(#major-${patternId})`} />}
+      {annotationPositions.map(({ annotation, start, end }) => <AnnotationRegion key={annotation.id} annotation={annotation} start={start} end={end} widthUnits={widthUnits} />)}
       <line x1="0" x2={widthUnits} y1={baseline} y2={baseline} stroke="var(--trace-axis)" strokeDasharray="3 4" />
       <path className="live-waveform-path" d={pathForSamples(samples, elapsedMs, config.paperSpeed, config.gain, widthUnits, heightUnits, config.preset)} fill="none" stroke="var(--trace)" strokeWidth={1.4} vectorEffect="non-scaling-stroke" />
       {showMarkers && markerPositions.map((position, index) => <MeasurementMarker key={index} marker={position} name={index === 0 ? 'start' : 'end'} selected={activeMarker === (index === 0 ? 'start' : 'end')} labelLane={index} showLabel={showMarkerLabels} labelMinX={showLabel ? 44 : 0} widthUnits={widthUnits} heightUnits={heightUnits} />)}
@@ -157,18 +185,20 @@ function LiveTrace({ lead, samples, config, elapsedMs, widthUnits, heightUnits, 
   </div>;
 }
 
-export function LiveEcgMonitor({ config, view, onViewChange, onPlaybackReset, onPlaceMarker, activeMarker, maxAbsVoltageMv, markers }: LiveEcgMonitorProps) {
+export function LiveEcgMonitor({ config, view, onViewChange, onPlaybackReset, onPlaceMarker, activeMarker, maxAbsVoltageMv, markers, annotations, onClockSnapshot, restoreRequest }: LiveEcgMonitorProps) {
   const [clockSnapshot, setClockSnapshot] = useState(initialClock);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [viewportElement, setViewportElement] = useState<HTMLDivElement | null>(null);
   const clockRef = useRef<SimulationClock | null>(null);
   const viewRef = useRef(view);
+  const onClockSnapshotRef = useRef(onClockSnapshot);
   viewRef.current = view;
+  onClockSnapshotRef.current = onClockSnapshot;
   const viewportWidthPx = useViewportWidth(viewportElement);
   const widthUnits = Math.max(1, viewportWidthPx / PREVIEW_CSS_PIXELS_PER_SVG_UNIT);
   const heightUnits = traceViewHeightUnits(maxAbsVoltageMv, config.gain);
   const visibleDurationMs = svgUnitsToTimeMs(widthUnits, config.paperSpeed);
-  const markerPositions = markers.map(timeMs => locateMeasurementMarker(timeMs, clockSnapshot.elapsedMs, widthUnits, config.paperSpeed));
+  const markerPositions = markers?.map(timeMs => locateMeasurementMarker(timeMs, clockSnapshot.elapsedMs, widthUnits, config.paperSpeed)) ?? [];
   const singleSamples = useMemo(
     () => generateLeadSamples(config.preset, config.lead, clockSnapshot.elapsedMs - visibleDurationMs, clockSnapshot.elapsedMs),
     [config.preset, config.lead, clockSnapshot.elapsedMs, visibleDurationMs],
@@ -189,6 +219,7 @@ export function LiveEcgMonitor({ config, view, onViewChange, onPlaybackReset, on
         lastRenderedElapsedMs = snapshot.elapsedMs;
         setClockSnapshot(snapshot);
       }
+      onClockSnapshotRef.current?.(snapshot);
     });
     const motionPreference = typeof window.matchMedia === 'function'
       ? window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -216,6 +247,12 @@ export function LiveEcgMonitor({ config, view, onViewChange, onPlaybackReset, on
       if (clockRef.current === clock) clockRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (!restoreRequest || !clockRef.current) return;
+    // Restores deliberately pause, even if the saved experiment was running.
+    clockRef.current.restore({ elapsedMs: restoreRequest.elapsedMs, isPlaying: false });
+  }, [restoreRequest?.id]);
 
   const reset = () => {
     clockRef.current?.reset();
@@ -258,19 +295,22 @@ export function LiveEcgMonitor({ config, view, onViewChange, onPlaybackReset, on
       data-paper-position-units={timeMsToSvgUnits(clockSnapshot.elapsedMs, config.paperSpeed).toFixed(3)}
       data-speed-mm-s={config.paperSpeed}
       data-gain-mm-mv={config.gain}
-      data-marker-start-ms={markers[0].toFixed(3)}
-      data-marker-end-ms={markers[1].toFixed(3)}
-      data-marker-start-state={markerPositions[0].visibility}
-      data-marker-end-state={markerPositions[1].visibility}
+      data-marker-start-ms={markers?.[0].toFixed(3)}
+      data-marker-end-ms={markers?.[1].toFixed(3)}
+      data-marker-start-state={markerPositions[0]?.visibility ?? 'none'}
+      data-marker-end-state={markerPositions[1]?.visibility ?? 'none'}
+      data-annotation-count={annotations.length}
     >
       {view === 'single'
-        ? <LiveTrace lead={config.lead} samples={singleSamples} config={config} elapsedMs={clockSnapshot.elapsedMs} widthUnits={widthUnits} heightUnits={heightUnits} showLabel={false} showMarkers showMarkerLabels markers={markers} activeMarker={activeMarker} onPlaceMarker={onPlaceMarker} />
-        : leads.map((lead, index) => <LiveTrace key={lead} lead={lead} samples={multiSamples?.[lead] ?? []} config={config} elapsedMs={clockSnapshot.elapsedMs} widthUnits={widthUnits} heightUnits={heightUnits} showLabel showMarkers showMarkerLabels={index === 0} markers={markers} activeMarker={activeMarker} onPlaceMarker={onPlaceMarker} />)}
+        ? <LiveTrace lead={config.lead} samples={singleSamples} config={config} elapsedMs={clockSnapshot.elapsedMs} widthUnits={widthUnits} heightUnits={heightUnits} showLabel={false} showMarkers showMarkerLabels markers={markers} annotations={annotations} activeMarker={activeMarker} onPlaceMarker={onPlaceMarker} />
+        : leads.map((lead, index) => <LiveTrace key={lead} lead={lead} samples={multiSamples?.[lead] ?? []} config={config} elapsedMs={clockSnapshot.elapsedMs} widthUnits={widthUnits} heightUnits={heightUnits} showLabel showMarkers showMarkerLabels={index === 0} markers={markers} annotations={index === 0 ? annotations : []} activeMarker={activeMarker} onPlaceMarker={onPlaceMarker} />)}
       <div className="trace-meta"><span>{config.paperSpeed} mm/s · {config.gain} mm/mV</span><span>Shared recording clock · {view === 'single' ? config.lead : '12 leads aligned'}</span></div>
     </div>
     <div className="measurement-window-status" data-testid="measurement-window-status" aria-live="off">
-      <span>Start point {markers[0].toFixed(0)} ms: {markerDescription(markerPositions[0])}</span>
-      <span>End point {markers[1].toFixed(0)} ms: {markerDescription(markerPositions[1])}</span>
+      {markers && markerPositions.length === 2 ? <>
+        <span>Start point {markers[0].toFixed(0)} ms: {markerDescription(markerPositions[0])}</span>
+        <span>End point {markers[1].toFixed(0)} ms: {markerDescription(markerPositions[1])}</span>
+      </> : <span>No active measurement. Add a measurement set to place markers.</span>}
     </div>
   </>;
 }

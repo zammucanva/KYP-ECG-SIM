@@ -1,14 +1,55 @@
-# Current session checkpoint — ECG-CP7 moving-strip measurements and Learn review readiness
+# Current session checkpoint - ECG-CP10 guided ECG exercises, release 1
+
+Date: 2026-10-21
+
+- Source export still has no `.git` of its own. Nothing committed, pushed, merged or deployed; production KYP untouched.
+- Verification this run (no `pnpm` here, same commands via `node_modules/.bin`): Vitest 13 files / 118 tests passed; `tsc --noEmit` and `tsc --project tsconfig.e2e.json` exit 0; `tsc -b` + `vite build` passed (134 modules); `scripts/test-e2e.mjs` 26/26 Chromium scenarios passed (19 earlier + 7 guided-exercise). An earlier full run had 4 failures from a shared selector; fixed and re-run green.
+- Delivered: `src/exercises/` (definitions, readings, evaluate, progress, GuidedExercises.tsx, tests), signal-model event-time exports in `src/engine/signal.ts`, panel wiring in `src/main.tsx`, styles. Details in `IMPLEMENTATION_LEDGER.md` (ECG-EXERCISE-10).
+- Git reconnection assessment (read-only; nothing changed): (1) `ecg-lab` has no `.git`. (2) `C:\Users\TSHAM` (the home directory) IS a Git repository on `master` with no commits and about 79 untracked entries, so any git command run inside `ecg-lab` silently targets that home repo; do not run `git add`/`commit` here until a separate repo exists. (3) `https://github.com/zammucanva/KYP-ECG-SIM` is public with `main` at `9544b96d`, feature branch `codex/accessibility-content-governance` at `e266dfbe`, plus `codex/calibration-correctness-audit` and `codex/playwright-browser-regression`. The local tree is newer than `e266dfbe` (measurement workspaces, snapshots, save/restore, exercises) and contains uncommitted work absent remotely.
+- Proposed non-destructive reconnection (needs explicit approval, none performed): (a) copy `ecg-lab` to a backup folder; (b) `git clone` the remote into a NEW empty sibling folder, check out `codex/accessibility-content-governance`; (c) diff the clone against the backup (excluding `node_modules`, `dist`, `test-results`) to see exactly what local work is new; (d) in the clone, create a new branch, copy the local source over, rerun the full suite, and review `git status`/`git diff`; (e) only then commit, and push the new branch only if explicitly authorized. Never `git init` over `ecg-lab`, never reset/clean, no push to `main`.
+- Not done: CI, screen-reader testing, reviewer approval of exercise text.
+- Next: approve the reconnection plan above, or start the source/reviewer workflow for the exercise text.
+
+---
+# Current session checkpoint - ECG-CP9 clock seek/restore and local save/restore
+
+Date: 2026-10-21
+
+- Source export has no `.git`; nothing committed, pushed, merged or deployed; no remote or CI state checked. Historical remote facts below are not re-verified.
+- Found on resume: seek/restore, `experiment-storage.ts` and the Saved experiments UI already existed locally but were undocumented, the app failed `tsc --noEmit`, and no browser test covered save/restore. This session fixed the type error, added unit and Chromium coverage, and recorded the contract in `IMPLEMENTATION_LEDGER.md` (ECG-STATE-09).
+- Verification this run (no `pnpm` on this machine, so the same commands were run through `node_modules/.bin`): Vitest 11 files / 81 tests passed; `tsc --noEmit` and `tsc --project tsconfig.e2e.json` exit 0; `tsc -b` + `vite build` passed (129 modules); `scripts/test-e2e.mjs` 19/19 Chromium scenarios passed, including the new save/refresh/restore, corrupt/quota storage, tampered-record restore, and axe + overflow scenarios. Restore now re-reads and re-validates the stored record by `snapshotId` instead of trusting the in-memory list.
+- Not done: CI, screen-reader testing, migration (only v1 exists), authored-region reference resolution.
+- Next: guided calibration/lead/grid exercises, or authored-region references after review.
+
+---
+# Current session checkpoint — ECG-CP8 measurement workspace foundations
 
 Date: 2026-10-20 (Asia/Kolkata)
 
-## Repository state at preflight
+## Current resume state
 
 - Repository: `zammucanva/KYP-ECG-SIM`; working source export: `C:\Users\TSHAM\Documents\Codex\2026-10-19\hel\work\ecg-lab`.
-- At resume, GitHub reported feature branch `codex/accessibility-content-governance` at `bb0ff3b61679293db28da1eca97236c4d30b7054`. Actions run `39344393711` failed one narrow-viewport marker-label assertion; the other 12 Chromium scenarios and CI unit/type/build jobs passed. `main` remained at `9544b96d87a44fce4334691145f5c53870871fa5`.
+- Last verified remote feature commit: `e266dfbe276172888ff04ca39e9c45e5425983d9` on `codex/accessibility-content-governance`; its Actions run `39344966547` passed. `main` remains `9544b96d87a44fce4334691145f5c53870871fa5`. This is historical remote evidence; refresh the branch before any push.
 - Local export has no `.git`; do not infer local branch, commit, or clean status. Git facts above are remote observations.
 
-## Completed locally in ECG-CP7
+## Completed locally in ECG-CP8
+
+- Added session-only named manual measurement sets with accessible selection, native keyboard operation, deletion and deterministic absolute-time summaries. Selecting a set changes only the active markers; no source signal or calibration data is mutated.
+- Added `src/engine/annotations.ts`, a non-React timeline-annotation model. Learner notes are private absolute time ranges. Authored teaching regions are a distinct discriminated record and require a semantic role, content ID and exact content version. No authored annotation was created, registered or presented as medically reviewed.
+- The monitor maps learner-note bounds through the same rolling time transform as the trace and calipers. A note is a translucent band; it does not intercept waveform placement, change measurements, or modify samples. In 12-lead mode it appears once in the first row to preserve readability.
+- Added the storage-neutral `src/engine/experiment-state.ts` version-1 snapshot and runtime parser. It contains only supported simulator/learning state, validates references and ranges, and returns `null` for unknown versions or malformed data. It does not yet read/write browser storage.
+
+## CP8 verification evidence
+
+- `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all`: exit 0; 10 Vitest files / 68 tests passed, application and E2E TypeScript checks passed, Vite build passed (127 modules), and 15/15 Chromium scenarios passed.
+- Existing unsuppressed axe scenarios passed in their tested states. No manual visual browser inspection is claimed for CP8 because UI automation could not initialize in this execution environment.
+- The local export remains a source export without `.git`; CP8 has not been committed or pushed. No merge, deployment, KYP production edit or `main` change occurred.
+
+## Next exact action
+
+- Implement task 026 only: add a bounded clock seek/restore API with deterministic tests, then wire validated experiment snapshots to a local-only storage adapter. Invalid stored data must leave the active simulator at safe defaults. Do not start guided experiments, cases, medication content, Practice, Exam, gamification or KYP integration before that boundary is tested.
+
+## Historical ECG-CP7 summary
 
 - Measurement points stay as absolute simulation timestamps. Clicking the visible trace places the active Start/End point through the existing preview/calibration transform. Outside-window points retain their timestamps and are explicitly reported as before/after; they are never moved to a visible edge.
 - Interval duration and RR-derived rate continue to use stored timestamps and are invariant to speed, gain, lead, layout and viewport position. Numeric millisecond fields and the native Start/End radio group remain keyboard alternatives; visible marker labels now avoid the lead label in the first row of the 12-lead view.
@@ -146,4 +187,3 @@ Date: 2026-10-20 (Asia/Kolkata)
 ## Exact next action
 
 On resume, refresh `codex/accessibility-content-governance` and its current Actions run before making changes. Source implementation and checkpoint-documentation CI runs both passed. After actual review records are supplied, verify references and versions, update draft metadata without fabricating missing details, and confirm the published registry then exposes only eligible published lessons.
-

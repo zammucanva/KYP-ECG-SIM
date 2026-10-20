@@ -128,6 +128,337 @@ test('manual interval measurements keep their units across machine settings and 
   await expect(result).toContainText('800 ms');
 });
 
+test('named manual measurement sets remain independently selectable and deletable', async ({ page }) => {
+  await page.goto('/');
+  const result = page.getByRole('status');
+  const start = page.getByLabel('Start point (ms)');
+  const end = page.getByLabel('End point (ms)');
+  const first = page.getByRole('button', { name: /R–R interval.*RR.*800 ms/ });
+  const viewport = page.getByRole('region', { name: /ECG waveform viewport for V3/ });
+
+  await expect(first).toHaveAttribute('aria-pressed', 'true');
+  await start.fill('100');
+  await end.fill('900');
+  await expect(result).toContainText('800 ms');
+  await expect(viewport).toHaveAttribute('data-marker-start-ms', '100.000');
+
+  await page.getByRole('button', { name: 'Add measurement set' }).click();
+  const second = page.getByRole('button', { name: /Measurement 2.*RR.*800 ms/ });
+  await expect(second).toHaveAttribute('aria-pressed', 'true');
+  await expect(start).toHaveValue('0');
+  await expect(end).toHaveValue('800');
+  await expect(viewport).toHaveAttribute('data-marker-start-ms', '0.000');
+  await page.getByLabel('Set name').fill('Manual QRS');
+  await page.getByLabel('Measurement').selectOption('QRS');
+  await start.fill('400');
+  await end.fill('490');
+  await expect(result).toContainText('90 ms');
+  await expect(page.getByRole('button', { name: /Manual QRS.*QRS.*90 ms/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(viewport).toHaveAttribute('data-marker-start-ms', '400.000');
+
+  await first.focus();
+  await page.keyboard.press('Enter');
+  await expect(first).toHaveAttribute('aria-pressed', 'true');
+  await expect(start).toHaveValue('100');
+  await expect(end).toHaveValue('900');
+  await expect(result).toContainText('800 ms');
+  await expect(viewport).toHaveAttribute('data-marker-start-ms', '100.000');
+
+  await page.getByRole('button', { name: 'Delete R–R interval' }).click();
+  await expect(page.getByRole('button', { name: /Manual QRS.*QRS/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(start).toHaveValue('400');
+  await expect(end).toHaveValue('490');
+  await expect(viewport).toHaveAttribute('data-marker-start-ms', '400.000');
+
+  await page.getByRole('button', { name: 'Delete Manual QRS' }).click();
+  await expect(result).toContainText('No active measurement');
+  await expect(start).toBeDisabled();
+  await expect(end).toBeDisabled();
+  await expect(viewport).toHaveAttribute('data-marker-start-state', 'none');
+  await expect(page.getByTestId('measurement-window-status')).toContainText('No active measurement');
+
+  await page.getByRole('button', { name: 'Add measurement set' }).click();
+  await expect(page.getByLabel('Set name')).toHaveValue('Measurement 3');
+  await expect(start).toHaveValue('0');
+  await expect(end).toHaveValue('800');
+});
+
+test('private timeline annotations stay timestamp-anchored without becoming authored teaching content', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Pause' }).click();
+  const viewport = page.getByRole('region', { name: /ECG waveform viewport for V3/ });
+  const elapsedMs = Number(await viewport.getAttribute('data-simulation-time-ms'));
+  const startMs = Math.max(0, Math.floor(elapsedMs) - 120);
+  const endMs = Math.floor(elapsedMs);
+
+  await page.locator('details.annotation-workspace > summary').click();
+  await expect(page.getByText(/not automated boundary detection or clinical interpretation/i)).toBeVisible();
+  await page.getByRole('button', { name: 'Add annotation' }).click();
+  await page.getByLabel('Annotation label').fill('Manual landmark');
+  await page.getByLabel('Annotation start (ms)').fill(String(startMs));
+  await page.getByLabel('Annotation end (ms)').fill(String(endMs));
+  const annotation = page.getByRole('button', { name: /Manual landmark.*Learner note/ });
+  await expect(annotation).toHaveAttribute('aria-pressed', 'true');
+  await expect(viewport).toHaveAttribute('data-annotation-count', '1');
+  await expect(page.locator('[data-annotation-id="annotation-1"]')).toHaveCount(1);
+
+  await page.getByLabel('Paper speed').selectOption('12.5');
+  await page.getByLabel('Gain').selectOption('5');
+  await expect(page.locator('[data-annotation-id="annotation-1"]')).toHaveCount(1);
+
+  await page.getByRole('button', { name: '12 leads' }).click();
+  await expect(page.locator('[data-annotation-id="annotation-1"]')).toHaveCount(1);
+  await annotation.focus();
+  await page.keyboard.press('Enter');
+  await expect(annotation).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Delete Manual landmark' }).click();
+  await expect(page.getByRole('region', { name: /12-lead ECG waveform viewport/ })).toHaveAttribute('data-annotation-count', '0');
+  await expect(page.locator('[data-annotation-id="annotation-1"]')).toHaveCount(0);
+});
+
+test('local experiment save, refresh, cancel, restore and delete preserve learner work and stay paused', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  const viewport = page.getByRole('region', { name: /ECG waveform viewport for V3/ });
+  const savedTime = await viewport.getAttribute('data-simulation-time-ms');
+  await page.getByLabel('Paper speed').selectOption('50');
+  await page.getByLabel('Gain').selectOption('10');
+  await page.locator('details.annotation-workspace > summary').click();
+  await page.getByRole('button', { name: 'Add annotation' }).click();
+  await page.getByLabel('Annotation label').fill('Saved landmark');
+
+  await page.locator('details.experiment-workspace > summary').click();
+  await expect(page.getByText('No saved experiments in this browser.')).toBeVisible();
+  await page.getByLabel('Experiment name').fill('Lab one');
+  await page.getByRole('button', { name: 'Save experiment' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Saved “Lab one” locally in this browser.' })).toBeVisible();
+
+  await page.reload();
+  await page.locator('details.experiment-workspace > summary').click();
+  const list = page.getByRole('list', { name: 'Saved experiments' });
+  await expect(list.getByText('Lab one')).toBeVisible();
+
+  await page.getByLabel('Paper speed').selectOption('12.5');
+  await page.getByLabel('Gain').selectOption('5');
+  await page.getByRole('button', { name: 'Restore', exact: true }).click();
+  await page.getByRole('button', { name: 'Cancel restore' }).click();
+  await expect(page.getByLabel('Paper speed')).toHaveValue('12.5');
+  await expect(page.getByLabel('Gain')).toHaveValue('5');
+
+  await page.getByRole('button', { name: 'Restore', exact: true }).click();
+  await expect(page.getByRole('group', { name: 'Restore saved experiment confirmation' })).toBeVisible();
+  await page.getByRole('button', { name: 'Restore now' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Playback is paused.' })).toBeVisible();
+  await expect(page.getByLabel('Paper speed')).toHaveValue('50');
+  await expect(page.getByLabel('Gain')).toHaveValue('10');
+  const restoredViewport = page.getByRole('region', { name: /ECG waveform viewport for V3/ });
+  await expect(restoredViewport).toHaveAttribute('data-simulation-time-ms', savedTime ?? '');
+  await expect(restoredViewport).toHaveAttribute('data-annotation-count', '1');
+  await page.locator('details.annotation-workspace > summary').click();
+  await expect(page.getByRole('button', { name: /Saved landmark.*Learner note/ })).toBeVisible();
+  await page.waitForTimeout(400);
+  await expect(restoredViewport).toHaveAttribute('data-simulation-time-ms', savedTime ?? '');
+
+  await page.getByRole('button', { name: 'Delete', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Cancel delete' }).click();
+  await expect(list.getByText('Lab one')).toBeVisible();
+  await page.getByRole('button', { name: 'Delete', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Delete now' }).click();
+  await expect(page.getByText('No saved experiments in this browser.')).toBeVisible();
+});
+
+test('corrupt or unavailable local experiment storage leaves the live simulator usable', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('ecg-lab-experiments-v1', JSON.stringify({ version: 1, snapshots: [{ invalid: true }] }));
+  });
+  await page.goto('/');
+  await page.locator('details.experiment-workspace > summary').click();
+  await expect(page.getByText('No saved experiments in this browser.')).toBeVisible();
+  await expect(page.getByLabel('Paper speed')).toHaveValue('25');
+
+  await page.evaluate(() => {
+    Storage.prototype.setItem = () => { throw new DOMException('quota', 'QuotaExceededError'); };
+  });
+  await page.getByRole('button', { name: 'Save experiment' }).click();
+  await expect(page.getByRole('status').filter({ hasText: /not saved/i })).toBeVisible();
+  await expect(page.getByText('No saved experiments in this browser.')).toBeVisible();
+});
+test('saved-experiment panel, confirmations and mobile layout are axe-clean and do not overflow horizontally', async ({ page }) => {
+  for (const size of [{ width: 1280, height: 900 }, { width: 375, height: 812 }]) {
+    await page.setViewportSize(size);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await page.locator('details.experiment-workspace > summary').click();
+    await page.getByRole('button', { name: 'Save experiment' }).click();
+    await page.getByRole('button', { name: 'Restore', exact: true }).first().click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).first().click();
+    await expect(page.getByRole('group', { name: 'Restore saved experiment confirmation' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Delete saved experiment confirmation' })).toBeVisible();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+    const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+    expect(result.violations.map(violation => `${violation.id}: ${violation.nodes.map(node => node.target.join(' ')).join(', ')}`)).toEqual([]);
+  }
+});
+test('restore re-reads storage and leaves current work unchanged when the saved record is tampered with', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.locator('details.experiment-workspace > summary').click();
+  await page.getByRole('button', { name: 'Save experiment' }).click();
+  await page.getByLabel('Paper speed').selectOption('50');
+  await page.getByRole('button', { name: 'Restore', exact: true }).click();
+  await page.evaluate(() => {
+    const key = 'ecg-lab-experiments-v1';
+    const envelope = JSON.parse(window.localStorage.getItem(key) ?? '{}');
+    envelope.snapshots[0].version = 99;
+    window.localStorage.setItem(key, JSON.stringify(envelope));
+  });
+  await page.getByRole('button', { name: 'Restore now' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'missing or invalid and was not restored' })).toBeVisible();
+  await expect(page.getByLabel('Paper speed')).toHaveValue('50');
+  await expect(page.getByText('No saved experiments in this browser.')).toBeVisible();
+});
+test.describe('guided ECG exercises', () => {
+  const openExercises = async (page: import('@playwright/test').Page) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await page.locator('details.guided-exercises > summary').click();
+  };
+  const setMarkers = async (page: import('@playwright/test').Page, startMs: number, endMs: number) => {
+    await page.getByLabel('Start point (ms)').fill(String(startMs));
+    await page.getByLabel('End point (ms)').fill(String(endMs));
+  };
+  const status = (page: import('@playwright/test').Page) => page.locator('.exercise-status');
+
+  test('R–R exercise: miss, retry, pass, and completion survives a refresh', async ({ page }) => {
+    await openExercises(page);
+    await expect(page.getByText('draft · unreviewed · synthetic signal')).toBeVisible();
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.getByRole('button', { name: 'Check answer' }).click();
+    await expect(status(page)).toContainText('Not yet');
+    await expect(page.getByRole('list', { name: 'Check results' })).toContainText('Not yet:');
+    await page.getByRole('button', { name: 'Retry' }).click();
+    await expect(page.getByRole('list', { name: 'Check results' })).toHaveCount(0);
+
+    await setMarkers(page, 240, 1040);
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.getByRole('button', { name: 'Check answer' }).click();
+    await expect(status(page)).toContainText('Passed');
+    await expect(page.getByRole('list', { name: 'Check results' })).toContainText('75 beats per minute');
+    await expect(page.getByText(/Attempts 2 · Completed/)).toBeVisible();
+
+    await page.reload();
+    await page.locator('details.guided-exercises > summary').click();
+    await expect(page.getByText(/Attempts 2 · Completed/)).toBeVisible();
+    await page.getByRole('button', { name: 'Reset exercise' }).click();
+    await expect(page.getByText(/Readings 0 of 1 · Attempts 0/)).toBeVisible();
+  });
+
+  test('targets follow the rhythm preset instead of fixed times', async ({ page }) => {
+    await openExercises(page);
+    await page.getByLabel('Rhythm preset').selectOption('brady');
+    await setMarkers(page, 240, 1040);
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.getByRole('button', { name: 'Check answer' }).click();
+    await expect(status(page)).toContainText('Not yet');
+    await page.getByRole('button', { name: 'Retry' }).click();
+    await setMarkers(page, 360, 1560);
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.getByRole('button', { name: 'Check answer' }).click();
+    await expect(status(page)).toContainText('Passed');
+  });
+
+  test('gain exercise passes only after the gain changes with unchanged timing', async ({ page }) => {
+    await openExercises(page);
+    await page.getByRole('button', { name: /Gain changes height/ }).click();
+    await page.locator('aside.controls').getByLabel('Gain').selectOption('5');
+    await setMarkers(page, 240, 1040);
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.getByRole('button', { name: 'Check answer' }).click();
+    await expect(page.getByRole('list', { name: 'Check results' })).toContainText('Change the Gain control');
+    await page.getByRole('button', { name: 'Retry' }).click();
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.locator('aside.controls').getByLabel('Gain').selectOption('20');
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.getByRole('button', { name: 'Check answer' }).click();
+    await expect(status(page)).toContainText('Passed');
+    await expect(page.getByRole('list', { name: 'Check results' })).toContainText('mm tall at 5 mm/mV');
+  });
+
+  test('cross-lead exercise matches the same beat by time in two differently shaped leads', async ({ page }) => {
+    await openExercises(page);
+    await page.getByRole('button', { name: /Find the same beat/ }).click();
+    await page.locator('.lead-grid').getByRole('button', { name: 'II', exact: true }).click();
+    await setMarkers(page, 240, 1040);
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.locator('.lead-grid').getByRole('button', { name: 'V1', exact: true }).click();
+    await page.getByLabel('Start point (ms)').fill('1040');
+    await page.getByLabel('End point (ms)').fill('1100');
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.getByRole('button', { name: 'Check answer' }).click();
+    await expect(status(page)).toContainText('Not yet');
+    await expect(page.getByRole('list', { name: 'Check results' })).toContainText('different beats');
+    await page.getByRole('button', { name: 'Retry' }).click();
+    await page.getByLabel('Start point (ms)').fill('245');
+    await page.getByLabel('End point (ms)').fill('300');
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.locator('.lead-grid').getByRole('button', { name: 'II', exact: true }).click();
+    await page.getByLabel('Start point (ms)').fill('265');
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.getByRole('button', { name: 'Check answer' }).click();
+    await expect(status(page)).toContainText('Passed');
+  });
+
+  test('paper-speed exercise validates widths in millimetres at two speeds', async ({ page }) => {
+    await openExercises(page);
+    await page.getByRole('button', { name: /One interval, two paper speeds/ }).click();
+    await setMarkers(page, 240, 1040);
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await expect(status(page)).toContainText('Enter the interval width');
+    await page.getByLabel('Interval width on paper (mm)').fill('20');
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.locator('aside.controls').getByLabel('Paper speed').selectOption('50');
+    await page.getByLabel('Interval width on paper (mm)').fill('20');
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.getByRole('button', { name: 'Check answer' }).click();
+    await expect(page.getByRole('list', { name: 'Check results' })).toContainText('expected about 40.0 mm at 50 mm/s');
+    await page.getByRole('button', { name: 'Retry' }).click();
+    await page.locator('aside.controls').getByLabel('Paper speed').selectOption('25');
+    await page.getByLabel('Interval width on paper (mm)').fill('20');
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.locator('aside.controls').getByLabel('Paper speed').selectOption('50');
+    await page.getByLabel('Interval width on paper (mm)').fill('40');
+    await page.getByRole('button', { name: 'Record reading' }).click();
+    await page.getByRole('button', { name: 'Check answer' }).click();
+    await expect(status(page)).toContainText('Passed');
+  });
+
+  test('corrupt stored progress is discarded, exercises are keyboard operable, and layouts stay axe-clean', async ({ page }) => {
+    await page.addInitScript(() => window.localStorage.setItem('ecg-lab-exercise-progress-v1', '{"version":7}'));
+    for (const size of [{ width: 1280, height: 900 }, { width: 375, height: 812 }]) {
+      await page.setViewportSize(size);
+      await openExercises(page);
+      await expect(status(page)).toContainText('discarded');
+      await page.getByRole('button', { name: 'Record reading' }).focus();
+      await expect(page.getByRole('button', { name: 'Record reading' })).toBeFocused();
+      await page.keyboard.press('Enter');
+      await page.getByRole('button', { name: 'Check answer' }).focus();
+      await page.keyboard.press('Space');
+      await expect(page.getByRole('list', { name: 'Check results' })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+      const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      expect(result.violations.map(violation => `${violation.id}: ${violation.nodes.map(node => node.target.join(' ')).join(', ')}`)).toEqual([]);
+      await page.evaluate(() => window.localStorage.setItem('ecg-lab-exercise-progress-v1', '{"version":7}'));
+    }
+  });
+
+  test('exercise definitions never reach the Learn catalog', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Learn', exact: true }).click();
+    await expect(page.getByText(/R–R interval measurement|Measure an R–R interval/)).toHaveCount(0);
+  });
+});
 test('theme toggle is keyboard accessible, recolours SVG traces and persists after reload', async ({ page }) => {
   await page.goto('/');
   const toggle = page.getByRole('button', { name: 'Toggle theme' });
@@ -574,4 +905,3 @@ test('axe scans the primary light, dark, 12-lead and mobile states without suppr
 
   expect(findings, findings.join('\n')).toEqual([]);
 });
-

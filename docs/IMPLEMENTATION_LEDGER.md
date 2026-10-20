@@ -1,15 +1,54 @@
 # Implementation ledger
 
-## In progress — ECG-CP7 moving-strip measurement UX and review readiness (2026-10-20)
+## Current checkpoint - ECG-CP10 guided ECG exercises, release 1 (2026-10-21)
+
+### ECG-EXERCISE-10 - Typed draft exercise registry, signal-derived validation, versioned progress (tasks 027+)
+
+- Status: Implemented, unit-tested and Chromium-tested locally. Not verified in CI (no `.git`). All four exercises are `publicationStatus: 'draft'`, `reviewStatus: 'unreviewed'`; the schema accepts no other value, and a test confirms the published Learn catalog is still empty.
+- Verified first: before building, `tsc`, Vitest (81) and Chromium (19) were green on the existing seek/restore, snapshot, local save/restore, measurement and annotation work (see ECG-STATE-09).
+- Authored vs learner state: `src/exercises/definitions.ts` is a frozen, zod-validated registry (read-only). Learner work lives in `src/exercises/progress.ts` (key `ecg-lab-exercise-progress-v1`, schema version 1, strict, max 50 exercises / 100,000 chars, readings capped at 2). Corrupt, oversized, wrong-version or blocked storage yields empty progress plus a notice; corrupt records are removed. An entry recorded against another definition `version` is treated as not started. Exercise progress is deliberately NOT part of experiment snapshots (that would need a snapshot schema v2 and migration); measurement workspaces and annotations used by the exercises remain in the snapshot system.
+- Reuse, no second engine: event targets come from the existing signal model. `src/engine/signal.ts` now exports `R_PEAK_PHASE`, `beatIntervalMs` and `qrsEventTimesMs`; the generator itself uses the same constant, so targets move with the rhythm preset (sinus 240/1040 ms, brady 360/1560, tachy 180/780) and are verified against the generated lead II peaks. Conversions use `engine/calibration.ts`; markers use the existing measurement sets; no clock was added.
+- Exercises: R-R interval (consecutive R peaks), gain invariance (two gains, same times, drawn height scales by gain ratio), cross-lead beat matching (same beat index in two leads by time only), paper speed and grid (two speeds, same duration, learner-entered width in mm = seconds x speed). Evaluation (`evaluate.ts`) is a placement check only: no automatic detection or clinical interpretation.
+- Tolerances (configurable per definition and by override, boundary-tested): marker 40 ms, repeat-measurement invariance 8 ms, width 1 mm. The 40 ms default is about one small grid box at 25 mm/s and also covers the offset of the V1 S-wave from the R event; it is an educational choice, not a clinical standard.
+- UI: `GuidedExercises.tsx` ("Guided exercises - draft · unreviewed · synthetic signal") with step list, Record reading, Check answer, Retry (clears readings, keeps attempts and an earlier pass), Reset exercise, a `role=status` live region, and Pass/Not yet text on every check (not colour only). Class is `guided-exercises`, not `experiment-workspace`, so existing selectors are unaffected.
+- Tests added: 31 engine/progress tests (`exercises.test.ts`), 6 component tests (`GuidedExercises.test.tsx`), 7 Chromium scenarios (full workflows for all four exercises, preset-driven targets, refresh persistence, corrupt progress, keyboard operation, axe at 1280 px and 375 px with no overflow, Learn catalog unaffected). Debug note: one regression (4 saved-experiment scenarios) was caused by the new panel sharing a CSS class/selector with the saved-experiment panel; fixed by renaming rather than editing those tests.
+- Limitations: the cross-lead task checks a point in each lead, not the shape; the rhythm 'afib' preset has regular R-R timing in this model, so the R-R exercise there is not an irregularity lesson; text of all exercises is unreviewed and uses no external clinical claims; no screen-reader (NVDA/VoiceOver) test; exercise progress is not exported or synced.
+- Next: reviewer/source workflow for the exercise text, then optional snapshot schema v2 if exercise progress should travel with saved experiments.
+## Current checkpoint - ECG-CP9 clock seek/restore and local experiment save/restore (2026-10-21)
+
+### ECG-STATE-09 - Clock seek/restore, snapshot persistence and restore UI (task 026)
+
+- Status: Implemented, locally unit-tested and Chromium-tested in the source export. Not verified in CI (no `.git`; no commit, push or Actions run exists for this work).
+- Clock contract (`src/engine/clock.ts`, single `SimulationClock`, no second clock): `elapsedMs` is absolute simulated time advanced only by animation-frame deltas (deltas over `MAX_FRAME_DELTA_MS` = 100 ms are discarded, so a backgrounded tab does not jump). `seek(ms)` sets absolute time, clears the stale frame timestamp, preserves paused/running state and rejects non-finite, negative, non-number or > `MAX_SIMULATION_TIME_MS` (86,400,000) values with `RangeError` before any state changes. `restore({elapsedMs,isPlaying})` validates then seeks and applies play/pause; `reset` returns to 0. Waveforms are a pure function of (preset, seed, absolute time), so playback, pause/resume, seek and restore give identical windows (unit-tested).
+- Snapshot (`src/engine/experiment-state.ts`, version 1, zod strict): machine settings, view, theme, playback time/wasPlaying, named measurements, learner annotations, selections, and authored-region references only (never authored content). Unknown versions and malformed records parse to `null`. No older schema version exists, so no migration is implemented; unknown versions are rejected, not reinterpreted.
+- Storage (`src/engine/experiment-storage.ts`): local `localStorage` only, key `ecg-lab-experiments-v1`, max 20 snapshots / 200,000 characters, per-record validation (corrupt records dropped, valid ones kept), explicit blocked-read, write/quota failure, duplicate-id, limit and missing-delete results; success is reported only after `setItem` returns. Duplicate display names get a numeric suffix; the stable `snapshotId` is the identity.
+- Restore (`src/main.tsx`): selecting Restore opens a confirmation; Cancel changes nothing. Confirm re-validates the record, then applies machine/view/theme/measurements/annotations/selections together and issues a single clock `restore` with `isPlaying:false`, so playback is always restored paused and no second animation loop starts. Current authored annotations are kept; only learner notes come from the snapshot. Snapshot saves exclude authored annotations.
+- Fixed in this session: `src/main.tsx` failed `tsc --noEmit` (annotation state typed `LearnerAnnotation[]` while helpers return `EcgAnnotation[]`); state is now `EcgAnnotation[]`, saves filter to learner notes, restore preserves authored entries.
+- Tests added: 4 clock-contract tests (determinism across playback/pause/seek/restore, annotation and measurement invariance, malformed-input rejection without mutation/notifications, seek after reset), 3 storage-failure tests (blocked storage, oversize, limit, failed write, missing delete, invalid snapshot, reload), 3 Chromium scenarios (save-refresh-cancel-restore-delete with paused clock check; corrupt and quota-failing storage; axe + no horizontal overflow with both confirmations open on desktop and 375 px).
+- Follow-up in same checkpoint: `restoreExperiment` re-reads storage and re-validates the record by id before applying, so a tampered, deleted or stale record cannot be restored and current work stays unchanged. Totals after this follow-up: 81 Vitest tests, 19 Chromium scenarios.
+- Limitations: a full storage-quota failure is simulated, not observed on a real full browser; restore applies via React state setters plus a clock call, so it is validated-then-applied rather than a true transaction (nothing can fail between validation and application in the current code); no authored teaching regions exist yet, so reference resolution is untested end to end; no screen-reader (NVDA/VoiceOver) check was run, only axe and role/status assertions.
+- Next task: guided calibration/lead/grid exercises on top of the validated state boundary, or wiring authored-region references once reviewed authored regions exist.
+## Current checkpoint — ECG-CP8 measurement workspace foundations (2026-10-20)
+
+### ECG-WORKSPACE-08 — Named measurements, annotations and reproducible state (tasks 021–025)
+
+- Acceptance: multiple named manual measurement sets can be selected and deleted; an accessible list reports their duration/rate; optional annotations stay anchored to absolute simulated timestamps; learner notes remain distinct from versioned authored teaching regions; a reproducible state boundary validates supported simulator state before any persistence is attempted; none alters waveform samples, calibration or measurement results.
+- Status: Implemented and locally verified in the source export. `src/engine/measurement-sets.ts` owns immutable manual sets. `src/engine/annotations.ts` defines a discriminated learner/authored annotation boundary: authored regions require content ID and exact content version, while the UI currently creates only private learner notes. `src/engine/experiment-state.ts` defines version 1 snapshots for supported machine/layout/playback state, measurements and annotations; malformed, stale, duplicate or contradictory records parse as `null`. A rendered note uses the existing rolling-window time transform, appears once on the first row of a 12-lead display to avoid repeated-label clutter, and leaves source signals unchanged. No authored annotation or clinical interpretation was added.
+- Files: `src/engine/measurement-sets.ts`, `src/engine/measurement-sets.test.ts`, `src/engine/annotations.ts`, `src/engine/annotations.test.ts`, `src/engine/experiment-state.ts`, `src/engine/experiment-state.test.ts`, `src/components/LiveEcgMonitor.tsx`, `src/main.tsx`, `src/styles.css`, `tests/e2e/ecg-lab.spec.ts`, and checkpoint documentation.
+- Tests/evidence: final local `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all` exited 0: 10 Vitest files / 68 tests, application and E2E TypeScript checks, Vite build (127 modules), and 15 Chromium scenarios. The new browser scenario verifies a learner annotation remains timestamp-anchored across paper-speed/gain changes and appears once in 12-lead view; unit coverage rejects incomplete authored provenance, protects immutable updates, and rejects stale/contradictory experiment snapshots.
+- Dependencies: ECG-MEASURE-07 absolute-time mapping, shared calibration, accessible native controls and the existing content version convention.
+- Limitations/next action: state is intentionally not persisted or restored yet. Do not present learner notes as reviewed teaching content. Next task is 026: add local save/restore only after the clock has an explicit tested seek/restore operation.
+
+## Completed — ECG-CP7 moving-strip measurement UX and review readiness (2026-10-20)
 
 ### ECG-MEASURE-07 — Absolute-time marker placement and rolling-window status
 
 - Acceptance: extend existing timestamp-based measurement points; place a selected start/end point from the visible trace and through keyboard-operable controls; show labeled/selected markers and explicit before/in/after-window state; preserve duration through speed, gain, lead, pause/resume and viewport movement; test inclusive bounds, exit transitions, reset policy, 12-lead consistency, themes and responsive behavior.
-- Status: Implemented and locally verified; remote feature commit `bb0ff3b61679293db28da1eca97236c4d30b7054`. Its first Actions run `39344393711` exposed one flaky narrow-viewport label assertion; deterministic fixture correction is locally verified and follow-up CI is pending. `main` remains `9544b96d87a44fce4334691145f5c53870871fa5`. Local export has no `.git` metadata.
+- Status: Implemented and verified. Remote follow-up commit `e266dfbe276172888ff04ca39e9c45e5425983d9` passed Actions run `39344966547` after correcting the deterministic narrow-viewport fixture. `main` remains `9544b96d87a44fce4334691145f5c53870871fa5`. Local export has no `.git` metadata.
 - Files: `src/engine/measurements.ts`, `src/engine/measurements.test.ts`, `src/components/LiveEcgMonitor.tsx`, `src/main.tsx`, `src/styles.css`, `tests/e2e/ecg-lab.spec.ts` and documentation.
 - Dependencies: shared `calibration.ts`, existing `createMeasurement()`, `SimulationClock` and rolling trace.
 - Tests/evidence: final local `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all` passed: 59/59 unit tests, app and E2E type checks, build (125 modules) and 13/13 Chromium scenarios. The targeted marker scenarios passed 2/2. Manual UI check found and fixed a 12-lead left-edge label collision; E2E verifies the safe inset. Full details are in `docs/QA_REPORT.md`.
-- Limitations/next action: timestamp authority and reset-to-example-points policy are verified; no automated boundary detection or drag marker. Commit the deterministic test correction with a non-forced expected-head update and verify its Actions run.
+- Limitations/next action: timestamp authority and reset-to-example-points policy are verified; no automated boundary detection or drag marker. Continue with session-only experiment-state design before persistence.
 
 ### ECG-REVIEW-07 — Paper-speed-and-gain lesson claim review
 
@@ -22,17 +61,17 @@
 ### ECG-QA-07 — Regression, checkpoint and branch verification
 
 - Acceptance: all local unit/type/build/Chromium/axe checks pass; update actual evidence; inspect changed files; push only on the intended feature branch by expected-head check; verify resulting Actions; leave `main` untouched.
-- Status: Local `pnpm test:all` rerun passes after the E2E fixture correction; remote branch update and follow-up Actions result pending.
+- Status: Local suite passed and the remote correction above passed Actions. The CP8 source-export changes are newer local work and have not been committed or pushed from this no-`.git` workspace.
 - Files: tests and current architecture/roadmap/ledger/QA/session records.
 - Dependencies: ECG-MEASURE-07 and ECG-REVIEW-07.
 - Limitations/next action: no merge/deploy, clinical-use representation, patient data, or KYP production edits.
 
-## Next milestone — ECG-WORKSPACE-08 measurement workspace foundations
+## Next milestone — ECG-EXPERIMENT-09 supported local save and restore
 
-- Acceptance: multiple named manual measurement sets can be selected and deleted; an accessible list reports absolute timestamps, computed durations and units; state remains deterministic and does not mutate ECG source samples or calibration. This is the first scoped slice of long-horizon tasks 021–023, not the complete experiments roadmap.
-- Status: Not started. Begin after the CP7 local test correction has a successful remote Actions run.
-- Dependencies: existing timestamp-based measurement model, rolling viewport state, calibration transforms, accessible controls and current test harness.
-- Limitations: no automated boundary detection, diagnostic interpretation, or clinical thresholding. Keep Learn content and clinical cases behind their existing review gates.
+- Acceptance: add an explicit, tested clock seek/restore operation and a local-storage adapter for valid version-1 experiment snapshots; malformed stored data must safely fall back without presenting a clinical record.
+- Status: Not started.
+- Dependencies: ECG-WORKSPACE-08, `experiment-state.ts`, `SimulationClock`, and existing local-first progress patterns.
+- Limitations: no accounts, KYP integration, patient information, clinical cases, automatic interpretation, or physical-size export.
 
 This is the canonical task record. Status and evidence below reflect local verification and remote GitHub evidence; the local source export has no `.git` metadata. See `SESSION_CHECKPOINT.md` for the verified branch head and CI run.
 
@@ -234,4 +273,3 @@ This is the canonical task record. Status and evidence below reflect local verif
 ## Current checkpoint summary
 
 ECG-CP4 implements the Learn framework while preserving the simulator and strict publication gate. The 16-topic curriculum plan is documented and three lessons/checks are authored as drafts with unverified candidate references. The learner catalog is intentionally empty until genuine reviews arrive. No Practice/Exam mode, KYP integration, merge, or deployment has been performed. The exact branch/commit and next action are recorded in `SESSION_CHECKPOINT.md` and the task handoff.
-

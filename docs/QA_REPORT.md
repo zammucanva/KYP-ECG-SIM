@@ -2,6 +2,39 @@
 
 Date: 2026-10-20. This report records checks actually run against the local source. It is not a clinical-validation report.
 
+## ECG-CP10 - guided ECG exercises, release 1 (2026-10-21)
+
+- Ran locally via `node_modules/.bin` (pnpm unavailable): Vitest 13 files / 118/118 tests; app and E2E `tsc` exit 0; `tsc -b` and Vite build OK (134 modules); Playwright 26/26 Chromium scenarios.
+- New unit coverage: tolerance boundaries (40 ms pass, 41 ms fail) and overrides; event times per preset vs generated lead II peaks; coordinate/time conversion; gain scaling of drawn height with unchanged timing; cross-lead same-beat matching with different shapes; paper-speed width arithmetic; malformed/NaN/negative readings; retry, reset, progression; progress persistence including corrupt, wrong-version, oversized, blocked and failing storage, and definition-version invalidation.
+- New browser coverage: all four exercise workflows (miss, retry, pass), preset-driven targets, completion surviving refresh, corrupt stored progress discarded with a notice, keyboard activation (Enter/Space), axe WCAG 2 A/AA + 2.1 A/AA with results visible at 1280 px and 375 px with no horizontal overflow, and no exercise text in the Learn section.
+- A first full run failed 4 existing saved-experiment scenarios (strict-mode selector collision with the new panel); the new panel was renamed to its own class and the full suite re-run green. No existing test was weakened.
+- Not covered: manual screen-reader testing, forced-colours mode, CI, any Git/remote verification, clinical or educational review of exercise wording.
+## ECG-CP9 - clock seek/restore and local experiment save/restore (2026-10-21)
+
+- Ran locally via `node_modules/.bin` (pnpm unavailable): Vitest 11 files / 81/81 tests; app and E2E `tsc` exit 0; `tsc -b` and Vite build OK (129 modules); Playwright 19/19 Chromium scenarios.
+- New browser checks: save, reload, list, cancel restore, restore (settings, paused clock time unchanged after 400 ms, annotation count), cancel/confirm delete; corrupt stored record ignored; `setItem` quota error shows "not saved" and the list stays empty; axe (WCAG 2 A/AA, 2.1 A/AA) with restore and delete confirmations open at 1280 px and 375 px with no horizontal overflow.
+- Tampered-record check: after Restore is armed, storage is edited to an unknown schema version; Restore now reports "missing or invalid", leaves paper speed unchanged and drops the record from the list. Unit test added for seeking across a rolling-window boundary (overlapping samples identical, disjoint windows ordered).`n- Not covered: manual screen-reader testing, real full-storage quota, CI, any Git/remote verification (no `.git`).
+## ECG-CP8 — measurement workspace foundations
+
+### Local verification (2026-10-20)
+
+- Final `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all`: exit 0.
+- Vitest: 10 files, 68/68 tests passed. New domain tests verify immutable named manual-set operations, the provenance boundary for timeline annotations, and version-1 experiment snapshots: incomplete authored regions, duplicate IDs, stale versions, dangling selection IDs and invalid ranges are rejected.
+- Application and Playwright TypeScript checks passed.
+- Vite 8.3.4 production build passed: 127 modules transformed; generated CSS was 24.24 kB and JavaScript 406.76 kB before gzip.
+- Playwright Chromium: 15/15 scenarios passed. The new scenario creates a private learner note, verifies its timestamp anchoring after paper-speed/gain changes, verifies exactly one rendered band in twelve-lead view, checks keyboard selection, and deletion.
+- Existing unsuppressed axe coverage ran as part of the Chromium suite; it passed its selected light/dark, single/multi-lead and responsive states. That is supporting evidence only, not a complete accessibility conformance audit.
+- A first targeted annotation run found a test locator that still addressed the removed single-lead region after the test switched to twelve leads. The application behavior was correct; the test now addresses the active 12-lead region. The targeted rerun passed, followed by the full suite above.
+
+### Visual-review limitation
+
+- No manual browser visual inspection is claimed for CP8. Browser automation tests layout and observable DOM behavior, but the available UI-automation runtime could not initialize in this environment. Desktop/tablet/mobile visual judgement, browser zoom, and long-session memory profiling remain unverified for this checkpoint.
+
+### Scope and safety
+
+- Annotations are learner-owned session notes, not medical labels, automated wave-boundary detection, diagnostic findings, or approved teaching content. The domain model reserves authored regions for an exact content ID/version and semantic role; none are currently registered.
+- A storage-neutral version-1 snapshot exists, but it is not written to browser storage and cannot restore the simulator yet. Playback restore awaits a tested clock seek operation. The local source export has no `.git`; CP8 has not been committed or pushed from this workspace. It does not change `main`, deploy the app, or establish clinical validation/patient-monitor suitability.
+
 ## ECG-CP7 — moving-strip measurements and review readiness
 
 ### Local verification (2026-10-20)
@@ -12,13 +45,12 @@ Date: 2026-10-20. This report records checks actually run against the local sour
 - Production build passed using Vite 8.3.4: 125 modules transformed.
 - Playwright Chromium: 13/13 scenarios passed. New cases place and edit markers, verify timestamp/duration invariance across speed, gain, lead, layout and sweep motion, check window boundaries/exit states, pause/resume/reset, and check keyboard focus and marker-label visibility at the left edge of 12-lead rows.
 - The integrated axe scenario passed across its tested light/dark, single/multi-lead and mobile states without suppressed rules. This is supporting evidence, not a full WCAG evaluation.
-- Manual visual inspection at `http://localhost:5173/` covered the dark single-lead and 12-lead views. It found a start-badge collision with the lead label near the left edge; a label-safe inset was implemented and the browser regression asserts both text labels remain visible.
 - Focused marker Playwright scenarios also passed 2/2 before the final full run.
-- Remote Actions for implementation commit `bb0ff3b61679293db28da1eca97236c4d30b7054` (run [39344393711](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39344393711)) failed only the marker viewport-entry/exit E2E: the narrow viewport assertion raced with the default End timestamp leaving the window. CI unit tests, both type checks, build, and the other 12 browser scenarios passed. The E2E now explicitly puts both timestamps inside the visible window before asserting both labels. The post-fix full local suite passed again (59/59 Vitest, application/E2E type checks, build and 13/13 Chromium); remote follow-up is pending.
+- Remote Actions for implementation commit `bb0ff3b61679293db28da1eca97236c4d30b7054` (run [39344393711](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39344393711)) failed only the marker viewport-entry/exit E2E: the narrow viewport assertion raced with the default End timestamp leaving the window. The E2E explicitly places both timestamps inside the visible window before asserting both labels. The correction commit `e266dfbe276172888ff04ca39e9c45e5425983d9` passed follow-up [Actions 39344966547](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39344966547).
 
 ### Remote baseline before this checkpoint
 
-- GitHub API at resume reported `codex/accessibility-content-governance` at `bb0ff3b61679293db28da1eca97236c4d30b7054`; run `39344393711` failed the single browser assertion described above. Remote `main` remains `9544b96d87a44fce4334691145f5c53870871fa5`. The local source export has no `.git` directory. The deterministic test fix passed locally; refresh the feature branch before a non-forced follow-up update and verify its Actions run.
+- GitHub API at the CP7 resume reported `codex/accessibility-content-governance` at `bb0ff3b61679293db28da1eca97236c4d30b7054`; run `39344393711` failed the single browser assertion described above. The later correction commit `e266dfbe276172888ff04ca39e9c45e5425983d9` passed Actions `39344966547`. Remote `main` remained `9544b96d87a44fce4334691145f5c53870871fa5`. The local source export has no `.git` directory.
 - The local source export has no `.git` directory. The local working-tree branch/status cannot be asserted; these remote facts are separate from local tests.
 - Changes in this checkpoint do not establish clinical validation, patient-monitor performance, hospital deployment readiness, source/licence approval, lesson review, or publication approval.
 
@@ -137,5 +169,4 @@ The synthetic traces are simplified educational illustrations. They are not pati
 ## Remote state
 
 Before implementation, GitHub showed feature branch `codex/accessibility-content-governance` at `2cd31e1a864f7ead8286f07aa6587f9cd4f46e6d` with successful Actions run `39324432585`; `main` was `9544b96d87a44fce4334691145f5c53870871fa5`. The implementation was committed as [`0dce61202093d5f0c08d9186fe027f31ec13494e`](https://github.com/zammucanva/KYP-ECG-SIM/commit/0dce61202093d5f0c08d9186fe027f31ec13494e) on the existing feature branch using a non-forced expected-head update. GitHub Actions run [39340233374](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39340233374) completed successfully for that commit. `main` remains unchanged at `9544b96d87a44fce4334691145f5c53870871fa5`. The local source export has no Git metadata.
-
 

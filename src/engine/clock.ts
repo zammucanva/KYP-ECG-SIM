@@ -13,6 +13,13 @@ export type ClockSnapshot = {
 
 /** Long visible-tab stalls are discarded instead of causing a giant paper jump. */
 export const MAX_FRAME_DELTA_MS = 100;
+/** Bounds a learner experiment to one simulated day while preserving deterministic window generation. */
+export const MAX_SIMULATION_TIME_MS = 86_400_000;
+
+export type ClockRestoreState = {
+  elapsedMs: number;
+  isPlaying: boolean;
+};
 
 export class SimulationClock {
   private elapsedMs = 0;
@@ -60,6 +67,25 @@ export class SimulationClock {
     this.lastTimestampMs = null;
     this.emit();
     this.schedule();
+  }
+
+  /** Moves to an absolute simulated timestamp without changing paused/running state. */
+  seek(elapsedMs: number): void {
+    this.assertSeekTime(elapsedMs);
+    this.elapsedMs = elapsedMs;
+    // A pre-seek animation timestamp must never be used to advance the restored timeline.
+    this.lastTimestampMs = null;
+    this.emit();
+    this.schedule();
+  }
+
+  /** Restores a validated clock state. Callers can intentionally request a paused restore. */
+  restore(state: ClockRestoreState): void {
+    this.assertSeekTime(state.elapsedMs);
+    if (typeof state.isPlaying !== 'boolean') throw new TypeError('Clock restore state requires a boolean isPlaying value');
+    this.seek(state.elapsedMs);
+    if (state.isPlaying) this.play();
+    else this.pause();
   }
 
   suspend(): void {
@@ -118,5 +144,10 @@ export class SimulationClock {
     this.scheduler.cancel(this.frameHandle);
     this.frameHandle = null;
   }
-}
 
+  private assertSeekTime(elapsedMs: number): void {
+    if (!Number.isFinite(elapsedMs) || elapsedMs < 0 || elapsedMs > MAX_SIMULATION_TIME_MS) {
+      throw new RangeError(`Simulation time must be finite and between 0 and ${MAX_SIMULATION_TIME_MS} milliseconds`);
+    }
+  }
+}
