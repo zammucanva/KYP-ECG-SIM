@@ -2,6 +2,9 @@
 
 Date: 2026-10-20. This report records checks actually run against the local source. It is not a clinical-validation report.
 
+## ECG-CP11 result - CI verified (2026-10-21)
+
+- GitHub Actions run [39507495800](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39507495800), workflow "Verify ECG Lab", commit `6e3bce2` on `codex/guided-exercises-local`: completed / success. Every step passed: install (frozen lockfile), Playwright browser install, `pnpm test` (13 files / 118 tests), `pnpm typecheck`, `pnpm build`, `pnpm test:e2e` (32 passed). This is Linux CI evidence for the branch only; `main` is unchanged and no PR, merge or deployment exists.
 ## ECG-CP11 - first CI run and layout fix (2026-10-21)
 
 - GitHub Actions run 39506872717 (workflow "Verify ECG Lab", commit `dd66714`): failed at `pnpm test:e2e`, 24 of 26 scenarios passed. Failing: the saved-experiment panel overflow assertion and the guided-exercise overflow assertion (both received 2 px horizontal overflow on Linux).

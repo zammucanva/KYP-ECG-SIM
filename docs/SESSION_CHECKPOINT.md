@@ -1,3 +1,6 @@
+## CI result for the fix (added after the run finished)
+
+- Run [39507495800](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39507495800) on `6e3bce2`: completed / success; 118 unit tests and 32 Chromium scenarios passed. `codex/guided-exercises-local` is pushed; `main` and other branches unchanged; no PR opened.
 # Current session checkpoint - ECG-CP11 first CI run of the recovered work
 
 Date: 2026-10-21
