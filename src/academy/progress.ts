@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { getRhythmCase, rhythmCases } from '../rhythm/cases';
+import { patientCases, type PatientCase } from '../patients/cases';
+import { getRhythmCase, rhythmCases, type AnswerEvaluation, type RhythmCase } from '../rhythm/cases';
 import { rhythmCategories } from '../rhythm/rhythms';
 import { summarise, type SessionState } from '../rhythm/session';
 import type { ProgressStorage } from '../learn/progress';
@@ -23,6 +24,8 @@ export const XP_RULES = {
   maxRepeatAwardsPerCase: 3,
   correctedAfterMiss: 5,
   sessionCompleted: 15,
+  caseStudyCompleted: 15,
+  caseStudyCorrectRhythm: 10,
 } as const;
 
 const isoDate = z.iso.datetime({ offset: true });
@@ -42,6 +45,8 @@ export const academyProgressSchema = z.strictObject({
   awards: z.record(z.string().min(1).max(160), z.strictObject({ xp: z.number().int().min(0).max(1000), label: z.string().min(1).max(200), at: isoDate })),
   cases: z.record(z.string().regex(/^rhythm\.[a-z0-9-]+\.\d{2}$/), caseStatsSchema),
   exercises: z.record(z.string().regex(/^[a-z][a-z0-9-]{2,60}$/), z.string().regex(/^\d+\.\d+\.\d+$/)),
+  /** Completed fictional case studies. Optional in stored data so earlier version-1 records still load. */
+  patients: z.record(z.string().regex(/^patient\.[a-z0-9-]+\.\d{2}$/), z.string().regex(/^\d+\.\d+\.\d+$/)).default({}),
   achievements: z.record(z.string().min(1).max(100), z.strictObject({ at: isoDate })),
   bests: z.strictObject({
     timedScore: z.number().int().min(0).max(1_000_000),
@@ -60,6 +65,7 @@ export const emptyAcademyProgress = (): AcademyProgress => ({
   awards: {},
   cases: {},
   exercises: {},
+  patients: {},
   achievements: {},
   bests: { timedScore: 0, timedAccuracyPercent: 0, bestStreak: 0, sessionsCompleted: 0 },
   recent: [],
@@ -113,6 +119,8 @@ export const achievementDefinitions: readonly AchievementDefinition[] = Object.f
   { id: 'ten-cases', title: 'Ten cases', description: 'Correctly identify ten different rhythm cases.' },
   { id: 'accurate-heart-rate', title: 'Rate estimator', description: 'Give five heart-rate estimates inside the accepted range.' },
   { id: 'corrected-after-review', title: 'Learning from mistakes', description: 'Correctly identify a strip you previously missed.' },
+  { id: 'first-case-study', title: 'First case study', description: 'Complete a fictional patient case.' },
+  { id: 'all-case-studies', title: 'Every case study', description: 'Complete every available fictional patient case.' },
   ...rhythmCategories.map(category => ({ id: `category-complete.${category.id}`, title: `${category.label}: complete`, description: `Correctly identify every ${category.label} case.` })),
 ]);
 
@@ -135,6 +143,8 @@ export function awardAchievements(progress: AcademyProgress, now: string): { pro
     'ten-cases': correctCases.length >= 10,
     'accurate-heart-rate': stats.reduce((sum, value) => sum + value.rateCorrect, 0) >= 5,
     'corrected-after-review': Object.keys(progress.awards).some(key => key.startsWith('corrected:')),
+    'first-case-study': Object.keys(progress.patients).length >= 1,
+    'all-case-studies': patientCases.length > 0 && patientCases.every(item => progress.patients[item.id] === item.version),
   };
   for (const category of rhythmCategories) {
     const ids = rhythmCases.filter(item => item.categoryId === category.id).map(item => item.id);
@@ -162,6 +172,58 @@ export function recordExerciseCompleted(progress: AcademyProgress, exerciseId: s
 const blankStats = (version: string): CaseStats => ({ version, attempts: 0, correct: 0, rateAttempts: 0, rateCorrect: 0, everCorrect: false, missedBefore: false, repeatAwards: 0 });
 
 /**
+ * Credits one first attempt on a rhythm case. The Rhythm Challenge and the fictional patient cases
+ * both go through here, so a case is scored and rewarded the same way wherever it appears.
+ */
+function recordRhythmAttempt(progress: AcademyProgress, definition: RhythmCase, first: AnswerEvaluation, now: string): AcademyProgress {
+  const existing = progress.cases[definition.id];
+  const stats: CaseStats = existing?.version === definition.version ? { ...existing } : blankStats(definition.version);
+  const wasMissedBefore = stats.missedBefore;
+  stats.attempts += 1;
+  if (first.rateStatus === 'correct' || first.rateStatus === 'incorrect') stats.rateAttempts += 1;
+  if (first.rateStatus === 'correct') stats.rateCorrect += 1;
+
+  let next = progress;
+  const tag = `${definition.id}@${definition.version}`;
+  const categoryLabel = rhythmCategories.find(category => category.id === definition.categoryId)?.label ?? definition.categoryId;
+  if (first.rhythmCorrect) {
+    stats.correct += 1;
+    if (!stats.everCorrect) {
+      stats.everCorrect = true;
+      next = recordAward(next, `rhythm-first:${tag}`, XP_RULES.firstCorrectRhythm, `First correct: ${categoryLabel}`, now);
+      if (wasMissedBefore) next = recordAward(next, `corrected:${tag}`, XP_RULES.correctedAfterMiss, 'Corrected a previously missed strip', now);
+    } else if (stats.repeatAwards < XP_RULES.maxRepeatAwardsPerCase) {
+      stats.repeatAwards += 1;
+      next = recordAward(next, `rhythm-repeat:${tag}:${stats.repeatAwards}`, XP_RULES.repeatCorrectRhythm, `Practised: ${categoryLabel}`, now);
+    }
+  } else {
+    stats.missedBefore = true;
+  }
+  if (first.rateStatus === 'correct') next = recordAward(next, `rate-first:${tag}`, XP_RULES.firstCorrectRate, `Rate estimate: ${categoryLabel}`, now);
+  return { ...next, cases: { ...next.cases, [definition.id]: stats } };
+}
+
+/**
+ * Records a completed fictional patient case. Awarded once per case id and version. The rhythm
+ * answer is credited through the same path as a challenge question; completion earns a flat reward
+ * so reading the debrief matters more than being right first time, plus a bonus for a correct rhythm.
+ */
+export function applyPatientCase(progress: AcademyProgress, patient: PatientCase, evaluation: AnswerEvaluation, now: string): ApplyResult {
+  const rhythm = getRhythmCase(patient.rhythmCaseId);
+  const key = `patient:${patient.id}@${patient.version}`;
+  if (progress.awards[key] || progress.patients[patient.id] === patient.version) return { progress, xpGained: 0, achievements: [], alreadyApplied: true };
+  if (!rhythm || evaluation.caseId !== rhythm.id || evaluation.caseVersion !== rhythm.version) return { progress, xpGained: 0, achievements: [], alreadyApplied: false };
+
+  const xpBefore = totalXp(progress);
+  let next = recordRhythmAttempt(progress, rhythm, evaluation, now);
+  next = { ...next, patients: { ...next.patients, [patient.id]: patient.version } };
+  next = recordAward(next, key, XP_RULES.caseStudyCompleted, `Completed case study: ${patient.title}`, now);
+  if (evaluation.rhythmCorrect) next = recordAward(next, `patient-correct:${patient.id}@${patient.version}`, XP_RULES.caseStudyCorrectRhythm, `Rhythm identified in case study: ${patient.title}`, now);
+  const unlocked = awardAchievements(next, now);
+  return { progress: unlocked.progress, xpGained: totalXp(unlocked.progress) - xpBefore, achievements: unlocked.awarded, alreadyApplied: false };
+}
+
+/**
  * Applies a finished session. Only first attempts count. The session id makes the whole operation
  * idempotent, so a double click or a re-render cannot award twice. Sessions that were never ended
  * or that had no answers earn nothing.
@@ -174,36 +236,11 @@ export function applySession(progress: AcademyProgress, state: SessionState, now
 
   let next = progress;
   const xpBefore = totalXp(progress);
-  const cases = { ...next.cases };
   for (const answer of state.answers) {
     if (!answer) continue;
     const definition = getRhythmCase(answer.caseId);
     if (!definition) continue;
-    const first = answer.firstEvaluation;
-    const stats: CaseStats = cases[definition.id]?.version === definition.version ? { ...cases[definition.id] } : blankStats(definition.version);
-    const wasMissedBefore = stats.missedBefore;
-    stats.attempts += 1;
-    if (first.rateStatus === 'correct' || first.rateStatus === 'incorrect') stats.rateAttempts += 1;
-    if (first.rateStatus === 'correct') stats.rateCorrect += 1;
-    cases[definition.id] = stats;
-    next = { ...next, cases };
-
-    const tag = `${definition.id}@${definition.version}`;
-    const categoryLabel = rhythmCategories.find(category => category.id === definition.categoryId)?.label ?? definition.categoryId;
-    if (first.rhythmCorrect) {
-      stats.correct += 1;
-      if (!stats.everCorrect) {
-        stats.everCorrect = true;
-        next = recordAward(next, `rhythm-first:${tag}`, XP_RULES.firstCorrectRhythm, `First correct: ${categoryLabel}`, now);
-        if (wasMissedBefore) next = recordAward(next, `corrected:${tag}`, XP_RULES.correctedAfterMiss, 'Corrected a previously missed strip', now);
-      } else if (stats.repeatAwards < XP_RULES.maxRepeatAwardsPerCase) {
-        stats.repeatAwards += 1;
-        next = recordAward(next, `rhythm-repeat:${tag}:${stats.repeatAwards}`, XP_RULES.repeatCorrectRhythm, `Practised: ${categoryLabel}`, now);
-      }
-    } else {
-      stats.missedBefore = true;
-    }
-    if (first.rateStatus === 'correct') next = recordAward(next, `rate-first:${tag}`, XP_RULES.firstCorrectRate, `Rate estimate: ${categoryLabel}`, now);
+    next = recordRhythmAttempt(next, definition, answer.firstEvaluation, now);
   }
 
   if (summary.rewardEligible) next = recordAward(next, sessionKey, XP_RULES.sessionCompleted, `Completed a ${state.config.mode} session`, now);
@@ -243,6 +280,8 @@ export function dashboardStats(progress: AcademyProgress) {
     xpIntoLevel: xp - xpForLevel(level),
     xpForNextLevel: xpForLevel(level + 1) - xpForLevel(level),
     exercisesCompleted: Object.keys(progress.exercises).length,
+    caseStudiesCompleted: Object.keys(progress.patients).length,
+    caseStudiesAvailable: patientCases.length,
     rhythmAttempts: attempts,
     rhythmAccuracyPercent: attempts === 0 ? null : Math.round((correct / attempts) * 100),
     rateAttempts,

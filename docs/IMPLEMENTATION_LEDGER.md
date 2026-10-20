@@ -1,5 +1,17 @@
 # Implementation ledger
 
+## Current checkpoint - ECG-CP14 Milestone 5: Virtual Patients (2026-10-21)
+
+### ECG-PATIENT-14 - Fictional patient cases on the shared case engine (local; not pushed, not CI-verified)
+
+- Authored data: `src/patients/cases.ts` holds six fictional cases (`patientCaseSchema`, strict). Each points at an existing rhythm case by id, so the ECG is the same waveform definition, rate expectation and scoring the Rhythm Challenge uses (`buildCase` returns the identical object; asserted in unit and browser tests). No heart rate is stored (the schema rejects an observation labelled heart rate or pulse); it is withheld during the case and shown after answering as the rate measured from the strip. `escalation` is a literal `null`, so unreviewed urgency or escalation text cannot be added without a deliberate schema change; the debrief says no guidance has been written or reviewed. All six are `draft` / `unreviewed`. `resolvePatientCase` fails safely for an unknown id, an invalid record or a missing ECG.
+- UI: `src/patients/VirtualPatient.tsx`. A case list with completion state, then four steps (presentation, ECG and rate, interpretation, debrief) with a persistent "fictional patient, simulated observations, not a clinical tool" banner, the calibrated `RhythmStrip` with a lead choice (I, II, V1, V5), the shared answer options including "cannot be determined", and a debrief with the measured rate, the explanation, skills practised, caveats and distractor rationales. Focus moves to each step heading. The section stays mounted while hidden so a case in progress survives navigation.
+- Academy: one shared `recordRhythmAttempt` now credits a first attempt on a rhythm case, used by challenge sessions and patient cases alike. `applyPatientCase` awards 15 XP once per case version for completing it, 10 more for a correct rhythm, plus the normal rhythm and rate credit; it is idempotent and ignores an evaluation for a different case or version. New achievements `first-case-study` and `all-case-studies`; the dashboard shows "Case studies completed X of Y". Stored progress gained an optional `patients` map inside version 1 (default empty), so earlier version-1 records still load; tested.
+- Tests added: 8 (patient library), 6 (Academy credit and compatibility), 7 (component flow incl. withheld rate, focus, unavailable content), 13 Chromium scenarios (full flow to Academy and persistence, withheld rate, replay pays nothing, shared waveform with the Rhythm Challenge, keyboard, lead switching, navigation, axe at 1280/768/375 px and dark theme, no overflow with three stress fonts). The drift guard now also checks the patient packet and matrix.
+- Content governance: packet 10 (exact case text, questions P1-P4), matrix rows, inventory row, decision D6 (whether cases may be used without urgency guidance). No source, reviewer or approval exists for any case.
+- Limits: the patient ECG is shown in the case viewer, not the full simulator (the simulator only supports its four presets). Only low-risk rhythm cases were authored; no high-risk (VT, VF, complete block) case exists until escalation framing is reviewed.
+- Next: Milestone 6 (Medication Center) or a Home dashboard; push for CI first.
+
 ## Current checkpoint - ECG-CP13 product build: Guided Lab, Rhythm Challenge and Academy (2026-10-21)
 
 ### ECG-PRODUCT-13 - Milestones 1-4 delivered (pushed as `c526ffd`; CI success, run 39516977813)

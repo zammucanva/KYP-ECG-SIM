@@ -166,4 +166,18 @@ Each category explanation is a class C medical statement shown to learners. **No
 
 Additional rows needing specific attention: `avb-2to1` (the "cannot be determined" handling, R4), `vt` and `vf` (high-risk framing, R5), `idioventricular` and `third-degree-avb` (distinguishability, R6).
 
+
+## Virtual Patient cases — release 1 (added 2026-10-21)
+
+Six fictional cases, all `draft` / `unreviewed`, none with sources, and none able to carry escalation text (the schema holds only `null`). Exact text, observations, reviewer questions P1–P4, decision D6 and recommended revisions are in packet 10 of [LESSON_REVIEW_PACKETS.md](LESSON_REVIEW_PACKETS.md). Software evidence that each case points at a real rhythm case and shares its waveform, that no heart rate is stored, and that the answer is not leaked before answering is `src/patients/cases.test.ts`; it is not medical evidence.
+
+| Case ID | ECG (rhythm case) | Story and observations | Source status | Reviewer action |
+|---|---|---|---|---|
+| `patient.awareness-after-exercise.01` | `rhythm.nsr.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
+| `patient.irregular-heartbeat.01` | `rhythm.atrial-fibrillation.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
+| `patient.sudden-fast-heartbeat.01` | `rhythm.svt.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
+| `patient.routine-ecg-before-sport.01` | `rhythm.first-degree-avb.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
+| `patient.skipped-beats.01` | `rhythm.pvc.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
+| `patient.unwell-with-fast-pulse.01` | `rhythm.sinus-tachycardia.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
+
 Rights for all five exercises and the Rhythm Challenge: they reproduce no third-party text or figure that was identified; the synthetic signal's declared rights are unknown (no repository licence).

@@ -1,6 +1,18 @@
 ## CI result for the fix (added after the run finished)
 
 - Run [39507495800](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39507495800) on `6e3bce2`: completed / success; 118 unit tests and 32 Chromium scenarios passed. `codex/guided-exercises-local` is pushed; `main` and other branches unchanged; no PR opened.
+# Current session checkpoint - ECG-CP14 Milestone 5: Virtual Patients
+
+Date: 2026-10-21
+
+- Checkout `ecg-lab-git`, branch `codex/guided-exercises-local`. Last pushed and CI-verified commit: `c526ffd` (run 39516977813, success). Local commits ahead of the remote: `64be9d4` (docs only) and the Milestone 5 commit. Nothing pushed, merged or deployed in this task; production KYP untouched.
+- Delivered: Virtual Patients (6 fictional cases on the shared case engine), Academy credit for case studies, new navigation section. See `IMPLEMENTATION_LEDGER.md` ECG-PATIENT-14.
+- Local verification: Vitest 21 files / 237 tests; app and E2E type checks exit 0; build OK (145 modules); Chromium 63/63 on a full run. Visually checked in the browser pane: case list, presentation, interpretation and debrief (+40 XP = 15 completion + 10 correct rhythm + 10 first correct + 5 in-range rate).
+- Not done: Medication Center, Home dashboard, any high-risk patient case, escalation guidance (deliberately absent; needs review), CI for this milestone, screen-reader and real-device checks.
+- Next: push for CI when authorized, then Milestone 6 (Medication Center) with a validated record schema, publication gating and real source mapping, or the Home dashboard.
+
+---
+
 # Current session checkpoint - ECG-CP13 product build (Guided Lab, Rhythm Challenge, Academy)
 
 Date: 2026-10-21

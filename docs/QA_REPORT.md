@@ -5,6 +5,13 @@ Date: 2026-10-20. This report records checks actually run against the local sour
 ## ECG-CP11 result - CI verified (2026-10-21)
 
 - GitHub Actions run [39507495800](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39507495800), workflow "Verify ECG Lab", commit `6e3bce2` on `codex/guided-exercises-local`: completed / success. Every step passed: install (frozen lockfile), Playwright browser install, `pnpm test` (13 files / 118 tests), `pnpm typecheck`, `pnpm build`, `pnpm test:e2e` (32 passed). This is Linux CI evidence for the branch only; `main` is unchanged and no PR, merge or deployment exists.
+## ECG-CP14 - Virtual Patients (2026-10-21)
+
+- Local only (not pushed; CI not run for this work): Vitest 21 files / 237/237 tests; `tsc --noEmit` and the E2E `tsc` exit 0; `tsc -b` + Vite build OK (145 modules); Playwright 63/63 Chromium on a full run.
+- New unit coverage: patient library, schema refusals (escalation text, publication, stored heart rate, unknown fields), shared waveform with the challenge, no answer leak before answering, safe resolution of unavailable content (`src/patients/cases.test.ts`, 8); Academy credit, idempotency, wrong-rhythm and rate-only cases, mismatched evaluations, "every case study", compatibility of earlier version-1 records (`src/academy/patients.test.ts`, 6); component flow, withheld heart rate, focus, unavailable and empty states (`src/patients/VirtualPatient.test.tsx`, 7); drift guard extended to the patient packet (`review-packet.test.ts`).
+- New browser coverage (`virtual-patient.spec.ts`, 13): full case to debrief to Academy and persistence after reload; heart rate withheld until answered; replay pays nothing more and a wrong answer still completes once; the case ECG equals a Rhythm Challenge strip; keyboard stepping with focus on each heading; lead switching and keeping the step across navigation; axe (WCAG 2 A/AA, 2.1 A/AA) on every step at 1280, 768 and 375 px and in the dark theme; no horizontal overflow on any step with Verdana, Courier New and Georgia at 375 px.
+- Not covered: CI, screen readers, real devices, any medical or educational review of the case text.
+
 ## ECG-CP13 - Guided Lab, Rhythm Challenge and Academy (2026-10-21)
 
 - CI verified: [run 39516977813](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39516977813) on `c526ffd`: completed / success; 18 unit-test files (215 tests) and 50 Chromium scenarios passed on Linux. Local runs before the push: Vitest 18 files / 215/215 tests; `tsc --noEmit` and the E2E `tsc` exit 0; `tsc -b` + Vite build OK (143 modules); Playwright 50/50 Chromium on two consecutive full runs.

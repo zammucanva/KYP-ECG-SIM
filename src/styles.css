@@ -462,3 +462,39 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .cta.danger { background: var(--surface); border-color: var(--marker); color: var(--marker); }
 .cta:disabled { opacity: .5; cursor: not-allowed; }
 .cta:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/* ── Virtual Patients ──────────────────────────────────────────────────── */
+.patients { display: grid; gap: 14px; max-width: 980px; margin: 0 auto; padding: 28px 0 40px; min-width: 0; }
+.patients h2 { margin: 0; color: var(--text); font-size: 26px; line-height: 1.2; }
+.patients h3 { margin: 0; color: var(--text); font-size: 15px; }
+.patients h4 { margin: 10px 0 4px; color: var(--text); font-size: 12px; }
+.patients .lede { max-width: 720px; margin: 0; }
+.patients ul, .patients ol { margin: 0; padding-left: 20px; color: var(--text); font-size: 12px; line-height: 1.6; }
+.patient-list { display: grid; gap: 10px; padding: 0 !important; list-style: none; }
+.patient-card { display: flex; align-items: center; justify-content: space-between; gap: 14px; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; background: var(--surface); min-width: 0; }
+.patient-card > div { display: grid; gap: 3px; min-width: 0; }
+.patient-card strong { color: var(--text); font-size: 13px; }
+.patient-card span, .patient-card small { color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+.patient-banner { margin: 0; border-left: 3px solid var(--marker); padding: 8px 11px; background: var(--surface-muted); color: var(--text); font-size: 12px; font-weight: 600; }
+.patient-steps { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 0 !important; list-style: none; }
+.patient-steps li { color: var(--muted); font-size: 12px; }
+.patient-steps li.current { color: var(--primary-ink); font-weight: 700; border-bottom: 2px solid var(--primary); }
+.patient-steps li.done { color: var(--text); }
+.patient-panel { display: grid; gap: 10px; border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: var(--surface); min-width: 0; }
+.patient-panel p { margin: 0; color: var(--text); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.patient-panel h3:focus { outline: none; }
+.patient-panel h3:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.patient-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.patient-observations { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; margin: 0; }
+.patient-observations div { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; background: var(--surface-soft); min-width: 0; }
+.patient-observations dt { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+.patient-observations dd { margin: 3px 0 0; color: var(--text); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.patient-leads { display: flex; flex-wrap: wrap; gap: 8px; }
+.patient-leads .cta[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+@media (max-width: 760px) {
+  .patient-columns { grid-template-columns: minmax(0, 1fr); }
+  .patient-card { align-items: flex-start; flex-direction: column; }
+  .patients h2 { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .patients * { transition: none !important; animation: none !important; }
+}

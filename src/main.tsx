@@ -36,6 +36,7 @@ import { GuidedExercises } from './exercises/GuidedExercises';
 import { AcademyDashboard } from './academy/AcademyDashboard';
 import { useAcademy } from './academy/useAcademy';
 import { RhythmChallenge } from './rhythm/RhythmChallenge';
+import { VirtualPatient } from './patients/VirtualPatient';
 import './styles.css';
 
 const leads = allLeads();
@@ -84,7 +85,7 @@ function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(readThemePreference);
   const [config, setConfig] = useState<MachineConfig>({ lead: 'V3', paperSpeed: 25, gain: 20, showGrid: true, preset: 'sinus' });
   const [view, setView] = useState<'single' | 'multi'>('single');
-  const [activeSection, setActiveSection] = useState<'simulator' | 'challenge' | 'academy' | 'learn'>('simulator');
+  const [activeSection, setActiveSection] = useState<'simulator' | 'challenge' | 'patients' | 'academy' | 'learn'>('simulator');
   const academy = useAcademy();
   const missedCaseIds = useMemo(
     () => Object.entries(academy.progress.cases).filter(([, stats]) => stats.missedBefore && !stats.everCorrect).map(([id]) => id),
@@ -284,6 +285,7 @@ function App() {
       <nav className="module-nav" aria-label="Main sections">
         <button type="button" aria-current={activeSection === 'simulator' ? 'page' : undefined} onClick={() => setActiveSection('simulator')}>ECG simulator</button>
         <button type="button" aria-current={activeSection === 'challenge' ? 'page' : undefined} onClick={() => setActiveSection('challenge')}>Rhythm Challenge</button>
+        <button type="button" aria-current={activeSection === 'patients' ? 'page' : undefined} onClick={() => setActiveSection('patients')}>Virtual Patients</button>
         <button type="button" aria-current={activeSection === 'academy' ? 'page' : undefined} onClick={() => setActiveSection('academy')}>Academy</button>
         <button type="button" aria-current={activeSection === 'learn' ? 'page' : undefined} onClick={() => setActiveSection('learn')}>Learn</button>
       </nav>
@@ -495,6 +497,14 @@ function App() {
           onSessionEnded={academy.recordSession}
           onOpenAcademy={() => setActiveSection('academy')}
           timedBestScore={academy.progress.bests.timedScore}
+        />
+      </div>
+      <div hidden={activeSection !== 'patients'}>
+        <VirtualPatient
+          completed={academy.progress.patients}
+          onCompleted={academy.recordPatientCase}
+          onOpenAcademy={() => setActiveSection('academy')}
+          onOpenChallenge={() => setActiveSection('challenge')}
         />
       </div>
 

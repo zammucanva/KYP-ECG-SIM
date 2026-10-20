@@ -1,6 +1,6 @@
 # ECG Lab — lesson review packets
 
-**Purpose:** reviewer intake for the three current draft lessons, their linked formative checks, the five draft guided exercises (packets 4–8) and the draft Rhythm Challenge categories and cases (packet 9), all added 2026-10-21. These packets expose answer keys to reviewers and are not learner-facing content. They do not assert that any medical, source, licensing, or publication review has occurred.
+**Purpose:** reviewer intake for the three current draft lessons, their linked formative checks, the five draft guided exercises (packets 4–8) the draft Rhythm Challenge categories and cases (packet 9) and the draft Virtual Patient cases (packet 10), all added 2026-10-21. These packets expose answer keys to reviewers and are not learner-facing content. They do not assert that any medical, source, licensing, or publication review has occurred.
 
 **Current release state (2026-10-20):** lessons/questions 1 and 2 remain at version `0.3.0`; lesson 3 and its linked question are version `0.4.0` after a scope correction. All six records remain `draft`, have zero review records, and are excluded from the Learn catalog. `lastReviewedAt` is absent. Candidate Becker and Kligfield reference records remain `verificationStatus: unverified`; the revised lesson 3 and question have no attached external references because their remaining claims describe simulator behavior only. No genuine educational review, qualified medical review, source/licensing approval, or publication approval exists.
 
@@ -30,6 +30,7 @@ One list covers every learner-facing item that needs review. Lessons and questio
 | Exercise 4 | `paper-speed-and-grid` | 0.1.0 | draft / unreviewed | 2 class B, 1 class A, 1 class D | none | same | No release path exists yet (D1) |
 | Exercise 5 | `grid-and-calibration` | 0.1.0 | draft / unreviewed | 2 class A (+B), 1 class A, 1 class D | none | same | No release path exists yet (D1) |
 | Rhythm Challenge | 36 cases, 18 categories (`rhythm.<category>.NN`) | 0.1.0 | draft / unreviewed | 18 category explanations, class C | none | educational; source; qualified medical (R1–R6) | No release path exists yet (D1, D5) |
+| Virtual Patients | 6 fictional cases (`patient.<slug>.NN`) | 0.1.0 | draft / unreviewed | story and observation text, class C; ECG mapping, class A | none | educational; qualified medical (P1–P4) | No release path exists yet (D1, D6) |
 
 The published Learn catalog is empty and stays empty. Every lesson and question still has `reviewRecords: []` and no `lastReviewedAt`; every external reference still has `verificationStatus: unverified`.
 
@@ -481,6 +482,113 @@ The Rhythm Challenge (`src/rhythm/`) generates every strip from a validated case
 - Consider withholding VT and VF from Practice and Timed modes until R5 is answered.
 - Record, with the reviewer, which morphology simplifications must be labelled to learners.
 
+## Packet 10 — Virtual Patient cases (draft, unreviewed)
+
+The Virtual Patient feature (`src/patients/`) has 6 fictional cases. Each is a validated record (`patientCaseSchema`) that points at an existing Rhythm Challenge case by id, so the ECG is the same waveform definition, rate expectation and scoring used elsewhere (asserted in `src/patients/cases.test.ts` and a browser test). No heart rate is stored in a case: it is withheld while the learner works and then shown as the rate measured from the strip. All records are `draft` / `unreviewed`, and `escalation` can only be `null`, so no urgency or escalation advice exists in release 1; the debrief says so. Everything is invented teaching material with simulated observations; no patient data or prescribing content is present. The stories and observation values are class C text awaiting qualified review; the waveform mapping is class A and test-verified.
+
+### Case `patient.awareness-after-exercise.01` / `0.1.0` — Awareness of the heartbeat after exercise
+
+| Field | Current record (exact) |
+|---|---|
+| Status | `draft` / `unreviewed`; escalation guidance: none; not published |
+| ECG | `rhythm.nsr.01` (Normal sinus rhythm) |
+| Age range | 18–30 years |
+| Presentation | A fictional patient attends a routine appointment. They describe becoming aware of their heartbeat for a few minutes after climbing stairs. They feel well today. |
+| Symptoms | Awareness of the heartbeat after exertion; No chest pain; No fainting |
+| History | No known heart condition (fictional); Does not smoke (fictional) |
+| Simulated observations | Blood pressure: 118/74 mmHg; Oxygen saturation: 99% on room air; Respiratory rate: 14 per minute; Temperature: 36.7 °C |
+| Learning objectives | Estimate the heart rate from a six-second strip. / Decide whether the R–R intervals are regular. / Check for a P wave before each QRS complex. |
+| Caveats | A single resting strip cannot show what happens during symptoms. |
+
+### Case `patient.irregular-heartbeat.01` / `0.1.0` — An irregular heartbeat for several days
+
+| Field | Current record (exact) |
+|---|---|
+| Status | `draft` / `unreviewed`; escalation guidance: none; not published |
+| ECG | `rhythm.atrial-fibrillation.01` (Atrial fibrillation) |
+| Age range | 61–75 years |
+| Presentation | A fictional patient describes an irregular heartbeat, on and off for several days, with some tiredness. They have not fainted. |
+| Symptoms | Irregular heartbeat; Tiredness; No fainting |
+| History | No previous ECG available (fictional) |
+| Simulated observations | Blood pressure: 134/82 mmHg; Oxygen saturation: 97% on room air; Respiratory rate: 16 per minute; Temperature: 36.6 °C |
+| Learning objectives | Estimate the rate of an irregular rhythm by counting QRS complexes in six seconds. / Recognise irregular R–R intervals. / Look for organised P waves. |
+| Caveats | For an irregular rhythm the six-second count is only an estimate of the rate. / A single strip cannot establish a cause. |
+
+### Case `patient.sudden-fast-heartbeat.01` / `0.1.0` — A sudden, fast, regular heartbeat
+
+| Field | Current record (exact) |
+|---|---|
+| Status | `draft` / `unreviewed`; escalation guidance: none; not published |
+| ECG | `rhythm.svt.01` (Supraventricular tachycardia) |
+| Age range | 31–45 years |
+| Presentation | A fictional patient describes a very fast, regular heartbeat that began while sitting at a desk. They feel lightheaded and anxious. |
+| Symptoms | Fast, regular heartbeat; Lightheadedness; Anxiety |
+| History | No known heart condition (fictional) |
+| Simulated observations | Blood pressure: 112/70 mmHg; Oxygen saturation: 98% on room air; Respiratory rate: 18 per minute; Temperature: 36.8 °C |
+| Learning objectives | Count a fast rate from a six-second strip. / Decide whether the rhythm is regular. / Describe the QRS width and whether P waves are visible. |
+| Caveats | Very fast rates are hard to count; the R–R interval method can help. / A single strip cannot establish a cause. |
+
+### Case `patient.routine-ecg-before-sport.01` / `0.1.0` — A routine ECG before joining a sports programme
+
+| Field | Current record (exact) |
+|---|---|
+| Status | `draft` / `unreviewed`; escalation guidance: none; not published |
+| ECG | `rhythm.first-degree-avb.01` (First-degree AV block) |
+| Age range | 18–30 years |
+| Presentation | A fictional patient has a routine ECG recorded before joining a new sports programme. They have no symptoms. |
+| Symptoms | No symptoms |
+| History | Regular exercise (fictional) |
+| Simulated observations | Blood pressure: 116/72 mmHg; Oxygen saturation: 99% on room air; Respiratory rate: 12 per minute |
+| Learning objectives | Check that every P wave is followed by a QRS complex. / Compare the gap between P wave and QRS across beats. / Estimate the rate. |
+| Caveats | An incidental finding on one strip needs clinical context; this exercise only practises recognising the pattern. |
+
+### Case `patient.skipped-beats.01` / `0.1.0` — Occasional skipped beats
+
+| Field | Current record (exact) |
+|---|---|
+| Status | `draft` / `unreviewed`; escalation guidance: none; not published |
+| ECG | `rhythm.pvc.01` (Premature ventricular contraction) |
+| Age range | 46–60 years |
+| Presentation | A fictional patient describes occasional skipped or thumping beats lasting a few seconds, mostly when resting. They have not fainted. |
+| Symptoms | Occasional skipped or thumping beats; No fainting |
+| History | Drinks several cups of coffee a day (fictional) |
+| Simulated observations | Blood pressure: 126/80 mmHg; Oxygen saturation: 98% on room air; Respiratory rate: 15 per minute; Temperature: 36.6 °C |
+| Learning objectives | Find the beat that comes early. / Describe its width and whether a P wave precedes it. / Notice the pause after it. |
+| Caveats | A short strip may not capture every symptom. / A single strip cannot establish a cause. |
+
+### Case `patient.unwell-with-fast-pulse.01` / `0.1.0` — Feeling unwell with a fast heartbeat
+
+| Field | Current record (exact) |
+|---|---|
+| Status | `draft` / `unreviewed`; escalation guidance: none; not published |
+| ECG | `rhythm.sinus-tachycardia.01` (Sinus tachycardia) |
+| Age range | 31–45 years |
+| Presentation | A fictional patient feels hot and tired and has had a fast heartbeat since the morning. They have a raised temperature. |
+| Symptoms | Fast heartbeat; Feeling hot and tired |
+| History | Symptoms started this morning (fictional) |
+| Simulated observations | Blood pressure: 124/76 mmHg; Oxygen saturation: 97% on room air; Respiratory rate: 20 per minute; Temperature: 38.6 °C |
+| Learning objectives | Estimate the rate from the strip. / Check that each QRS has a P wave before it. / Separate what the strip shows from what it cannot show. |
+| Caveats | The strip shows the rhythm, not why the rate is fast. |
+
+**Questions for the educational reviewer**
+
+- Is each story clear, plausible and free of leading wording, and is the order presentation, ECG, rate, interpretation, debrief the right sequence?
+- Are the learning objectives skills a learner can actually practise on one strip?
+- Is withholding the heart rate until after answering the right choice?
+
+**Questions requiring qualified medical review**
+
+- P1: Does each presentation, with its symptoms and simulated observations, make a clinically sensible fictional picture without implying a diagnosis or a causal link between a symptom and the rhythm?
+- P2: Are the simulated observation values plausible for each story and not misleading (for example the temperature in the case with a fast regular rhythm, or blood pressure in the case with a fast regular narrow-complex rhythm)?
+- P3: Is it acceptable to give no urgency or escalation guidance for these cases in release 1, or must reviewed framing exist first (decision D6)? Every case currently says that none is given.
+- P4: Is "cannot be determined from this strip" appropriately framed, and are the "keep in mind" caveats accurate?
+
+**Recommended revisions before any release**
+
+- Have a reviewer approve or rewrite each story and its observations before any wider use.
+- Add reviewed escalation guidance only through a schema change (the current schema refuses free text there), with its own claim inventory and sources.
+- Keep the fictional-patient banner and the "not a clinical tool" wording visible on every step.
+
 ## Candidate reference register — additions for the exercises (all UNVERIFIED)
 
 Nothing below has been opened, read or confirmed in this pass. Only title/author information a reviewer can search for is listed; do not treat any of it as a citation until a reviewer records edition, chapter/page, access and rights.
@@ -532,7 +640,7 @@ Nothing below has been opened, read or confirmed in this pass. Only title/author
 - Decide whether exercise wording must match lesson 3's "In this simulator" scoping (recommended).
 
 ### 4. Qualified medical review
-- M1 regular-R–R caveat for the simplified atrial-fibrillation preset; M2–M6 in packets 4–8; R1–R6 for the Rhythm Challenge categories in packet 9.
+- M1 regular-R–R caveat for the simplified atrial-fibrillation preset; M2–M6 in packets 4–8; R1–R6 for the Rhythm Challenge categories in packet 9; P1–P4 for the Virtual Patient cases in packet 10.
 - Lessons 1–2 definition accuracy and the "more lead views than electrodes" statement.
 - Whether lesson 3/check 3 truly need medical review under their current `clinical-education` domain (D2). Do not reclassify without a version bump and a reviewer's advice; the `non-clinical-education` value exists but changing it relaxes a gate.
 
@@ -545,7 +653,8 @@ Nothing below has been opened, read or confirmed in this pass. Only title/author
 | Exercise workflows, keyboard use, axe, no overflow, exercises absent from Learn | `tests/e2e/ecg-lab.spec.ts` (guided ECG exercises), `tests/e2e/layout-stress.spec.ts` |
 | Rhythm strips match their category descriptions; rate expectations come from the displayed signal; scoring, options, hints, ambiguity handling | `src/rhythm/cases.test.ts` |
 | Challenge sessions: selection, duplicate-submission prevention, retry, timer, pause, expiry | `src/rhythm/session.test.ts`, `src/rhythm/RhythmChallenge.test.tsx` |
-| XP, achievements, personal bests, persistence, corrupt storage | `src/academy/progress.test.ts` |
+| XP, achievements, personal bests, persistence, corrupt storage | `src/academy/progress.test.ts`, `src/academy/patients.test.ts` |
+| Patient cases validate, point at real ECGs, share the challenge waveform, withhold the heart rate, refuse stored escalation text; the flow, focus, unavailable content, accessibility and layout | `src/patients/cases.test.ts`, `src/patients/VirtualPatient.test.tsx`, `tests/e2e/virtual-patient.spec.ts` |
 | Review packets and matrix stay in step with the code | `src/exercises/review-packet.test.ts` (added 2026-10-21) |
 No class-A claim is currently untested. Class-A tests say nothing about whether the synthetic morphology is medically sound.
 
@@ -555,6 +664,7 @@ No class-A claim is currently untested. Class-A tests say nothing about whether 
 - **D3** Declare licence and signal usage rights (VT8).
 - **D4** Decide whether exercise text is narrowed to "In this simulator" or sourced for general statements.
 - **D5** Decide whether ventricular tachycardia and fibrillation strips stay in Practice and Timed modes before escalation-oriented framing is reviewed (R5).
+- **D6** Decide whether the Virtual Patient cases may be used with no urgency or escalation guidance (P3), or must wait for reviewed framing. The schema currently refuses escalation text.
 
 ## Reviewer checklist (blank; to be completed only by a real reviewer)
 
@@ -575,7 +685,7 @@ Do not tick on anyone's behalf. Bind every record you submit to the exact conten
 
 **Qualified medical reviewer**
 - [ ] I supplied my own name and qualifications for the record (not copied from this document).
-- [ ] I answered M1–M6, R1–R6 and the lesson 1–2 definition questions.
+- [ ] I answered M1–M6, R1–R6, P1–P4 and the lesson 1–2 definition questions.
 - [ ] I confirmed or corrected the limitation statements about synthetic, unvalidated morphology.
 
 **Publication approver**

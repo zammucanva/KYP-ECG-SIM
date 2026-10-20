@@ -1,7 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
 import type { ProgressStorage } from '../learn/progress';
+import type { PatientCase } from '../patients/cases';
+import type { AnswerEvaluation } from '../rhythm/cases';
 import type { SessionState } from '../rhythm/session';
 import {
+  applyPatientCase,
   applySession,
   emptyAcademyProgress,
   readAcademyProgress,
@@ -45,6 +48,7 @@ export function useAcademy(storage: ProgressStorage | null | undefined = undefin
   }, [commit]);
 
   const recordSession = useCallback((state: SessionState) => apply((current, now) => applySession(current, state, now)), [apply]);
+  const recordPatientCase = useCallback((patient: PatientCase, evaluation: AnswerEvaluation) => apply((current, now) => applyPatientCase(current, patient, evaluation, now)), [apply]);
   const recordExercise = useCallback((id: string, version: string, title: string) => apply((current, now) => recordExerciseCompleted(current, id, version, title, now)), [apply]);
   const reset = useCallback(() => {
     commit(emptyAcademyProgress());
@@ -52,5 +56,5 @@ export function useAcademy(storage: ProgressStorage | null | undefined = undefin
     try { handle?.removeItem('ecg-lab-academy-v1'); } catch { /* storage may be read-only */ }
   }, [commit]);
 
-  return { progress, notice, recordSession, recordExercise, reset };
+  return { progress, notice, recordSession, recordPatientCase, recordExercise, reset };
 }

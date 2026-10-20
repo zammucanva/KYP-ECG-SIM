@@ -4,6 +4,7 @@ import matrixRaw from '../../docs/CLAIM_SOURCE_MATRIX.md?raw';
 import workflowRaw from '../../docs/CONTENT_REVIEW_WORKFLOW.md?raw';
 import { introductoryLearnDrafts } from '../content/learn/records';
 import { learnRegistry, publishedLearnLessons } from '../content/learn/registry';
+import { patientCases } from '../patients/cases';
 import { rhythmCases } from '../rhythm/cases';
 import { rhythmCategories } from '../rhythm/rhythms';
 import { exerciseRegistry } from './definitions';
@@ -40,6 +41,18 @@ describe('review packet stays in step with the code', () => {
       expect(matrix, `${category.id} in matrix`).toContain(`\`${category.id}\``);
     }
     expect(rhythmCases.every(item => item.publicationStatus === 'draft' && item.reviewStatus === 'unreviewed')).toBe(true);
+  });
+
+  it('documents every Virtual Patient case with its exact text and keeps them draft with no escalation text', () => {
+    expect(packetText).toContain(`has ${patientCases.length} fictional cases`);
+    for (const patient of patientCases) {
+      expect(packetText, `${patient.id} id/version`).toContain(`\`${patient.id}\` / \`${patient.version}\``);
+      for (const text of [patient.title, patient.presentation, ...patient.symptoms, ...patient.history, ...patient.learningObjectives, ...patient.caveats, ...patient.observations.map(item => item.value)]) {
+        expect(packetText, `${patient.id}: "${text.slice(0, 40)}"`).toContain(text);
+      }
+      expect(matrix, `${patient.id} in matrix`).toContain(`\`${patient.id}\``);
+      expect(patient.publicationStatus === 'draft' && patient.reviewStatus === 'unreviewed' && patient.escalation === null).toBe(true);
+    }
   });
 
   it('lists every lesson and question with its current id and version, and every recorded claim in the matrix', () => {

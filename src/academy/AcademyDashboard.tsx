@@ -24,7 +24,7 @@ export function AcademyDashboard({ progress, notice, onReset, onOpenChallenge, o
 
       {stats.isEmpty ? (
         <div className="academy-empty">
-          <p>Nothing recorded yet. Progress here comes only from what you actually do: finishing a guided exercise in the ECG simulator, or answering strips in the Rhythm Challenge.</p>
+          <p>Nothing recorded yet. Progress here comes only from what you actually do: finishing a guided exercise in the ECG simulator, answering strips in the Rhythm Challenge, or completing a Virtual Patient case.</p>
           <div className="challenge-actions">
             <button type="button" className="cta" onClick={onOpenChallenge}>Start a Rhythm Challenge</button>
             <button type="button" className="cta secondary" onClick={onOpenSimulator}>Open the ECG simulator</button>
@@ -39,6 +39,7 @@ export function AcademyDashboard({ progress, notice, onReset, onOpenChallenge, o
           </div>
           <dl className="challenge-stats">
             <div><dt>Exercises completed</dt><dd>{stats.exercisesCompleted}</dd></div>
+            <div><dt>Case studies completed</dt><dd>{stats.caseStudiesCompleted} of {stats.caseStudiesAvailable}</dd></div>
             <div><dt>Rhythm accuracy</dt><dd>{percent(stats.rhythmAccuracyPercent)}</dd></div>
             <div><dt>Rate estimates in range</dt><dd>{percent(stats.rateAccuracyPercent)}</dd></div>
             <div><dt>Sessions completed</dt><dd>{stats.bests.sessionsCompleted}</dd></div>
@@ -78,7 +79,7 @@ export function AcademyDashboard({ progress, notice, onReset, onOpenChallenge, o
           );
         })}
       </ul>
-      <p className="challenge-note">Category-completion achievements appear here once earned. How XP works: {XP_RULES.firstCorrectRhythm} for a first correct rhythm, {XP_RULES.firstCorrectRate} for a first in-range rate, {XP_RULES.exerciseCompleted} for a completed exercise, {XP_RULES.sessionCompleted} for completing a session, {XP_RULES.correctedAfterMiss} for correcting a missed strip, and at most {XP_RULES.maxRepeatAwardsPerCase} small repeat awards per strip. Speed never earns XP.</p>
+      <p className="challenge-note">Category-completion achievements appear here once earned. How XP works: {XP_RULES.firstCorrectRhythm} for a first correct rhythm, {XP_RULES.firstCorrectRate} for a first in-range rate, {XP_RULES.exerciseCompleted} for a completed exercise, {XP_RULES.sessionCompleted} for completing a session, {XP_RULES.caseStudyCompleted} (plus {XP_RULES.caseStudyCorrectRhythm} for a correct rhythm) for a case study, {XP_RULES.correctedAfterMiss} for correcting a missed strip, and at most {XP_RULES.maxRepeatAwardsPerCase} small repeat awards per strip. Speed never earns XP.</p>
 
       <div className="academy-reset">
         {confirmReset ? (

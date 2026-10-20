@@ -6,6 +6,7 @@ Standalone React/TypeScript educational module for future KYP integration. The c
 
 - **ECG simulator**: calibrated moving paper, twelve leads, measurements, private annotations, local save/restore, and five guided exercises with hints.
 - **Rhythm Challenge**: six-second synthetic strips across 18 rhythm categories with Learn, Practice and Timed modes, rate estimation, and explanations. Draft content, not clinically reviewed.
+- **Virtual Patients**: six fictional cases with simulated observations and an ECG from the same case library; heart rate is measured from the strip, and no urgency advice is given. Draft content.
 - **Academy**: local XP, levels, achievements and personal bests derived only from what you actually do.
 - **Learn**: draft lessons behind review gates (the published catalog is intentionally empty).
 

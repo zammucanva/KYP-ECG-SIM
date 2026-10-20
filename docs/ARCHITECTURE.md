@@ -36,3 +36,8 @@ Unit and React interaction tests for the engine, clock lifecycle, content model,
 - `src/rhythm/rhythms.ts` (categories, schedule builders, `analyseRhythm`) -> `cases.ts` (validated case definitions; `buildCase` is the single path to a waveform and its facts) -> `session.ts` (pure session engine) -> `RhythmChallenge.tsx` / `RhythmStrip.tsx` (UI).
 - `src/academy/progress.ts` is the only place XP and achievements are decided; `useAcademy.ts` is the only store. Exercises and sessions report to it through callbacks, so the simulator, the Guided Lab and the Challenge share one progress record (`ecg-lab-academy-v1`), separate from exercise progress (`ecg-lab-exercise-progress-v1`) and saved experiments (`ecg-lab-experiments-v1`).
 - Authored data (categories, cases, exercise definitions) is read-only and frozen; learner-owned data (answers, XP, attempts) is validated on load and never carries authored answers or review status.
+
+## Virtual Patient module (added 2026-10-21)
+
+- `src/patients/cases.ts` holds authored fictional cases that reference rhythm cases by id; `resolvePatientCase` validates the record and its ECG reference. Nothing about the waveform is duplicated.
+- `src/patients/VirtualPatient.tsx` reuses `RhythmStrip`, `answerOptions`, `evaluateAnswer` and `explanationFor`. Completion is reported to the Academy through `applyPatientCase`, which shares `recordRhythmAttempt` with challenge sessions.
