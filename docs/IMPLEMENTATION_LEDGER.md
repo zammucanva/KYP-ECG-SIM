@@ -1,5 +1,8 @@
 # Implementation ledger
 
+## Current checkpoint - ECG-CP11 CI findings (2026-10-21)
+
+- ECG-LAYOUT-11: the first CI run exposed a narrow-screen overflow in the measurement/annotation control grids that only appears with wider fallback fonts. Fixed with shrinkable grid columns; guarded by `tests/e2e/layout-stress.spec.ts`. Details and run URL in `QA_REPORT.md` and `SESSION_CHECKPOINT.md`. The CI result for the fix is not claimed until the run completes.
 ## Current checkpoint - ECG-CP10 guided ECG exercises, release 1 (2026-10-21)
 
 ### ECG-EXERCISE-10 - Typed draft exercise registry, signal-derived validation, versioned progress (tasks 027+)

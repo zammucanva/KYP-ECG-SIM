@@ -215,13 +215,15 @@ footer span:last-child { color: var(--subtle); }
   .hint { width: 100%; margin: 8px 0 0; text-align: left; }
   .measurement-result { display: block; }
 .measurement-result-note { margin-top: 8px; }
-  .measure-controls { display: grid; grid-template-columns: 1fr 1fr; }
+  .measure-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .measure-controls label, .annotation-controls label { min-width: 0; }
+  .measure-controls select, .measure-controls input, .annotation-controls input { width: 100%; min-width: 0; }
   .measure-controls label:first-child { grid-column: 1 / -1; }
   .measurement-point-choice { grid-column: 1 / -1; }
   .measurement-workspace-heading { align-items: flex-start; flex-direction: column; gap: 10px; }
   .measurement-set-select { align-items: flex-start; flex-direction: column; gap: 3px; }
   .annotation-select { align-items: flex-start; flex-direction: column; gap: 3px; }
-  .annotation-controls { display: grid; grid-template-columns: 1fr 1fr; }
+  .annotation-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .annotation-controls label:first-child { grid-column: 1 / -1; }
   .saved-experiment-list li { align-items: flex-start; flex-direction: column; }
   .measurement-window-status { align-items: flex-start; flex-direction: column; gap: 4px; }

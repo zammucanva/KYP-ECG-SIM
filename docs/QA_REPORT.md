@@ -2,6 +2,11 @@
 
 Date: 2026-10-20. This report records checks actually run against the local source. It is not a clinical-validation report.
 
+## ECG-CP11 - first CI run and layout fix (2026-10-21)
+
+- GitHub Actions run 39506872717 (workflow "Verify ECG Lab", commit `dd66714`): failed at `pnpm test:e2e`, 24 of 26 scenarios passed. Failing: the saved-experiment panel overflow assertion and the guided-exercise overflow assertion (both received 2 px horizontal overflow on Linux).
+- Root cause reproduced locally with wide fonts (24 px overflow at 375 px in the measurement controls grid); fixed in CSS; regression test `layout-stress.spec.ts` added (6 scenarios) and shown to fail without the fix.
+- Local after fix: Vitest 118/118; type checks exit 0; build OK; Chromium 32/32. CI for the fix: see the next entry once the run completes.
 ## ECG-CP10 - guided ECG exercises, release 1 (2026-10-21)
 
 - Ran locally via `node_modules/.bin` (pnpm unavailable): Vitest 13 files / 118/118 tests; app and E2E `tsc` exit 0; `tsc -b` and Vite build OK (134 modules); Playwright 26/26 Chromium scenarios.

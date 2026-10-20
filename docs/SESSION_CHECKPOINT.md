@@ -1,3 +1,14 @@
+# Current session checkpoint - ECG-CP11 first CI run of the recovered work
+
+Date: 2026-10-21
+
+- Checkout: `ecg-lab-git` (clone of `zammucanva/KYP-ECG-SIM`), branch `codex/guided-exercises-local`, based on `e266dfb`. Commit `dd66714` was pushed as a new branch only (explicit refspec, no force). `main` (`9544b96`) and all other remote branches were unchanged. Original `ecg-lab` and `ecg-lab-backup-20261021` untouched.
+- First CI run [39506872717](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39506872717) on `dd66714`: FAILED. Install, `pnpm test`, `pnpm typecheck` and `pnpm build` passed; `pnpm test:e2e` ran 26 scenarios: 24 passed, 2 failed.
+- Cause: both failures were the horizontal-overflow assertion (2 px) in my new tests on the Linux runner. Reproduced locally by forcing wide fallback fonts: at 375 px the existing measurement-controls grid (`1fr 1fr` columns with 120 px minimum field widths) overflowed by up to 24 px. This was a latent layout bug in existing CSS that Windows fonts hid; it was not caused by the new panels.
+- Fix: `minmax(0, 1fr)` columns, `min-width: 0` and full-width fields in the narrow-screen measurement and annotation control grids (`src/styles.css`). Added permanent regression test `tests/e2e/layout-stress.spec.ts` (Verdana, Courier New, Georgia at 1280 px and 375 px, panels open); it fails without the CSS change and passes with it.
+- Local verification after the fix: Vitest 13 files / 118 tests; app and E2E type checks exit 0; build OK (134 modules); Chromium 32/32. The CI result for the fix commit is recorded in the QA report once it has actually finished.
+
+---
 # Current session checkpoint - ECG-CP10 guided ECG exercises, release 1
 
 Date: 2026-10-21
