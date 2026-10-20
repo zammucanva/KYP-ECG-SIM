@@ -5,7 +5,7 @@
 
 Date: 2026-10-21
 
-- Checkout `ecg-lab-git`, branch `codex/guided-exercises-local`. Last pushed and CI-verified commit: `685fba5` (run 39510886866, success). Local commits ahead of the remote: `3c905f0` (docs only) and the commit(s) for this milestone. Nothing was pushed, merged or deployed in this task; production KYP untouched.
+- Checkout `ecg-lab-git`, branch `codex/guided-exercises-local`. Pushed to `codex/guided-exercises-local` only (commit `c526ffd`; no force, no PR, no merge; `main` unchanged; production KYP untouched). CI: [run 39516977813](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39516977813) on `c526ffd`: completed / success; 18 unit-test files (215 tests) and 50 Chromium scenarios passed on Linux. `3c905f0` (docs only) was included in that push.
 - Delivered: Milestones 2-4 (see `IMPLEMENTATION_LEDGER.md`, ECG-PRODUCT-13). 18 rhythm categories, 36 cases, three challenge modes, a fifth guided exercise, hints, and the Academy (XP, levels, achievements, personal bests, honest empty state, confirm-before-reset).
 - Local verification: Vitest 18 files / 215 tests; app and E2E type checks exit 0; build OK (143 modules); Chromium 50/50 on two consecutive full runs. One earlier full run had 1 failure in an existing animation test (`live sweep moves...`) that passed 3/3 alone and in the two later full runs: treated as a load-sensitive flake, not a regression, and recorded as such.
 - Visually checked in the browser pane: setup screen, a full question with hints and feedback, and strips for all 18 categories (regular and irregular rhythms, sawtooth, fibrillatory baseline, dropped beats, independent P waves, wide complexes, VF, pacing). Not checked: real devices, screen readers, forced-colours mode.

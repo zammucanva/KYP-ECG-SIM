@@ -2,7 +2,7 @@
 
 ## Current checkpoint - ECG-CP13 product build: Guided Lab, Rhythm Challenge and Academy (2026-10-21)
 
-### ECG-PRODUCT-13 - Milestones 1-4 delivered locally (not pushed, not CI-verified)
+### ECG-PRODUCT-13 - Milestones 1-4 delivered (pushed as `c526ffd`; CI success, run 39516977813)
 
 - Milestone 1 (simulator integrity): verified, not rebuilt. Clock seek/restore, snapshots, local save/restore, measurement sets and annotations were already present and tested (ECG-STATE-09, CI-verified earlier on `6e3bce2`/`685fba5`).
 - Milestone 2 (Guided Lab): a fifth exercise `grid-and-calibration` (reads the calibration pulse at two settings; expected size comes from `calibrationPulseHeightUnits` / `calibrationPulseWidthUnits`, now with shared `CALIBRATION_PULSE_*` constants), progressive hints on every exercise, a next-step panel after completion, a link on to the Rhythm Challenge, and an `onCompleted` callback that feeds the Academy. Definitions stay draft/unreviewed.
