@@ -89,3 +89,6 @@ The registry contains three lesson drafts and their three linked formative-quest
 
 No reviewer identity, qualification, date, medical approval, rights clearance, or publication approval has been entered. Do not render clinical review badges from schema-valid metadata alone.
 
+## Exercises and the content schema
+
+The four guided exercises (`src/exercises/definitions.ts`) are draft/unreviewed by construction: their schema accepts only `publicationStatus: 'draft'` and `reviewStatus: 'unreviewed'`, and they are not in the content registry, so they cannot appear in the Learn catalog and **cannot be published through any current path**. That is deliberate. Before any exercise can be released it must first become a content-schema record (a new content type with a claim inventory, source references and review records bound to its ID and version) so that the same four review tracks and gates apply. That schema work has not been done and is not part of the review packet. Packets 4–7 in [LESSON_REVIEW_PACKETS.md](LESSON_REVIEW_PACKETS.md) use documentation-only claim IDs (`ex-…`) until then; reviewers should cite those IDs and the exercise version, and the IDs must be migrated into the schema when it exists.

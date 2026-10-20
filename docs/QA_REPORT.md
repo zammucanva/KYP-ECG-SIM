@@ -5,6 +5,11 @@ Date: 2026-10-20. This report records checks actually run against the local sour
 ## ECG-CP11 result - CI verified (2026-10-21)
 
 - GitHub Actions run [39507495800](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39507495800), workflow "Verify ECG Lab", commit `6e3bce2` on `codex/guided-exercises-local`: completed / success. Every step passed: install (frozen lockfile), Playwright browser install, `pnpm test` (13 files / 118 tests), `pnpm typecheck`, `pnpm build`, `pnpm test:e2e` (32 passed). This is Linux CI evidence for the branch only; `main` is unchanged and no PR, merge or deployment exists.
+## ECG-CP12 - content review-input packet (2026-10-21)
+
+- Local only (not pushed, not CI-verified): Vitest 14 files / 122/122 tests; app and E2E `tsc` exit 0; `tsc -b` + Vite build OK (134 modules); Playwright 32/32 Chromium scenarios. Last CI-verified commit remains `2ca2b28` (run 39507721638).
+- New test `src/exercises/review-packet.test.ts` (4): exercise text/ids/versions/tolerances match the packet; every lesson/question id, version and recorded claim ID appears in the packet/matrix; all items remain draft, unreviewed, unverified and unpublished; checklist unticked. Negative check performed: an edited packet sentence made it fail.
+- Not done and not claimed: any source verification, licence check, educational or medical review, or publication approval.
 ## ECG-CP11 - first CI run and layout fix (2026-10-21)
 
 - GitHub Actions run 39506872717 (workflow "Verify ECG Lab", commit `dd66714`): failed at `pnpm test:e2e`, 24 of 26 scenarios passed. Failing: the saved-experiment panel overflow assertion and the guided-exercise overflow assertion (both received 2 px horizontal overflow on Linux).

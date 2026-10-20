@@ -1,5 +1,16 @@
 # Implementation ledger
 
+## Current checkpoint - ECG-CP12 content review-input packet (2026-10-21)
+
+### ECG-REVIEW-12 - Review-ready packet for lessons, checks and guided exercises
+
+- Status: documentation and one drift test, locally tested. Not pushed; not CI-verified (the last CI-verified commit is `2ca2b28`, run 39507721638, success, checked at the start of this task). No content status, review record, source status or publication gate was changed.
+- Inventory and classification: one inventory table (3 lessons, 3 checks, 4 exercises) with version, status, claim counts, references, required reviewers and eligibility is in `docs/LESSON_REVIEW_PACKETS.md`. Claims are classed A (software, test-verifiable), B (basic measurement principle needing an authoritative source), C (medical, qualified review), D (wording/licensing). No competing registry was created.
+- Packets 4-7 (new): exact current exercise text generated from the registry, documentation-only claim IDs (`ex-...`), educational questions, medical questions M1-M5, recommended revisions, candidate references (all UNVERIFIED), eight targeted verification tasks, an outstanding-work list in the five requested categories, decisions D1-D4, and a blank reviewer checklist. `docs/CLAIM_SOURCE_MATRIX.md` gained the exercise rows; `docs/CONTENT_REVIEW_WORKFLOW.md` documents that exercises have no release path until they become content-schema records.
+- Findings recorded: (1) exercise principle text states general gain and paper-speed rules that lesson 3 v0.4.0 deliberately narrowed to "in this simulator"; (2) the simplified atrial-fibrillation preset has perfectly regular R-R intervals, so "rate = 60 000 / R-R" there is unrepresentative; (3) the blood-flow claim (lesson 1, check 1) remains unmapped; (4) repository has no licence file and signal `usageRights` are `unknown`; (5) all six records use the `clinical-education` domain, which requires medical review even for the simulator-only lesson 3.
+- Guard: `src/exercises/review-packet.test.ts` (4 tests) checks exact exercise text, ids/versions, every recorded claim ID in the matrix, draft/unreviewed/unverified/unpublished state, and an unticked checklist. A deliberately stale packet made it fail, then it passed when restored. It guards drift only, not truth.
+- No reviewer, qualification, review date, approval or `source-verified` status was created. No external source was opened in this pass; every verification gap is recorded as a task.
+- Next: a person completes VT1-VT8 and the checklist; owner decides D1-D4; then, and only then, narrow or source the exercise text and (if approved) add an exercise content type.
 ## Current checkpoint - ECG-CP11 CI findings (2026-10-21)
 
 - ECG-LAYOUT-11: the first CI run exposed a narrow-screen overflow in the measurement/annotation control grids that only appears with wider fallback fonts. Fixed with shrinkable grid columns; guarded by `tests/e2e/layout-stress.spec.ts`. Details and run URL in `QA_REPORT.md` and `SESSION_CHECKPOINT.md`. The CI result for the fix is not claimed until the run completes.

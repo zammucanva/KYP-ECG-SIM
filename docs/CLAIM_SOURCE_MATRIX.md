@@ -88,3 +88,46 @@ Parent: `learn.paper-speed-and-gain`.
 ## Required reviewer disposition for each row
 
 For every external-source row, record the source edition/version actually inspected and exact page/section/recommendation or mark it unavailable. Decide whether the passage supports the wording, whether a newer authoritative source supersedes it, and whether the claim should be narrowed or removed. For project-behavior rows, link an implementation/test result. An unresolved row remains a publication blocker. Do not change a reference to `source-verified` solely because its citation metadata was found.
+
+## Guided exercises — release 1 (added 2026-10-21)
+
+The four exercises are **draft/unreviewed and are not content-schema records** (see [CONTENT_REVIEW_WORKFLOW.md](CONTENT_REVIEW_WORKFLOW.md), "Exercises and the content schema"). The IDs below are documentation IDs. Full exact text, questions for reviewers and recommended revisions are in packets 4–7 of [LESSON_REVIEW_PACKETS.md](LESSON_REVIEW_PACKETS.md). A candidate is a source to inspect, not evidence. Class A rows cite software tests, which evidence behavior only, never medical correctness.
+
+### `rr-interval-measurement` — version `0.1.0`
+
+| Claim ID | Class | Candidate source or evidence | Status / reviewer action |
+|---|---|---|---|
+| `ex-rr.interval-is-time-difference` | A | `src/exercises/evaluate.ts`; `src/exercises/exercises.test.ts` (R–R exercise) | Verified by tests; wording check only. |
+| `ex-rr.rr-is-peak-to-peak` | B | Becker "ECG Paper"/"The ECG Tracing" (unchecked); basic-ECG textbook candidates in the packets register | **No source verified.** Task VT1. |
+| `ex-rr.rate-from-rr` | B | Same as above | **No source verified; needs a regular-rhythm qualifier.** Task VT1, question M1. |
+| `ex-rr.target-is-signal-model-event` | A | `qrsEventTimesMs` in `src/engine/signal.ts`; per-preset and tolerance-boundary tests | Verified by tests. The 40 ms tolerance is a pedagogical choice, not a standard. |
+| `ex-rr.synthetic-and-not-clinical` | A | Panel disclaimer; `src/exercises/GuidedExercises.test.tsx` | Verified by tests; provenance rights unknown. |
+
+### `gain-measurement-invariance` — version `0.1.0`
+
+| Claim ID | Class | Candidate source or evidence | Status / reviewer action |
+|---|---|---|---|
+| `ex-gain.gain-definition` | B | Kligfield (no gain passage located); textbook candidates | **No source verified. Lesson 3 v0.4.0 narrowed the equivalent claim to the simulator; align this text.** VT2, D4. |
+| `ex-gain.timing-unchanged` | A (+B) | `src/exercises/exercises.test.ts` gain section; `src/engine/calibration.test.ts` | Software part verified; general statement needs a source. |
+| `ex-gain.amplitude-scales-with-gain` | A | `voltageMvToSvgUnits`; exercise gain tests | Verified by tests; logical mm only. |
+| `ex-gain.largest-deflection-statement` | A/D | `evaluate.ts` (`peakDeflection`) | Verified by tests; reviewer to confirm wording is not mistaken for a patient amplitude. |
+
+### `cross-lead-beat-matching` — version `0.1.0`
+
+| Claim ID | Class | Candidate source or evidence | Status / reviewer action |
+|---|---|---|---|
+| `ex-lead.shared-timeline` | A | `src/engine/signal-window.test.ts` | Verified by tests. |
+| `ex-lead.single-beat-one-time` | B | Kligfield "Simultaneous Lead Presentation" (indexed excerpt p. 1315, **not inspected**) | **No source verified.** VT3, M4. |
+| `ex-lead.shapes-differ` | A (+B) | Exercise test compares lead II and V1 samples; morphology table in `signal.ts` is invented and unvalidated | Software part verified; real-ECG statement needs a source and medical review. |
+| `ex-lead.qrs-event-target` | A | `qrsEventTimesMs`; V1 S-wave offset is 15–30 ms by preset, inside the 40 ms tolerance | Verified by tests; not a clinical definition of QRS timing. |
+
+### `paper-speed-and-grid` — version `0.1.0`
+
+| Claim ID | Class | Candidate source or evidence | Status / reviewer action |
+|---|---|---|---|
+| `ex-speed.mm-equals-seconds-times-speed` | B | `timeToMm` in `src/engine/calibration.ts` (software); textbook/Kligfield candidates for the general statement | Software part verified; **general statement unsourced and conflicts with lesson 3 scoping.** VT2, D4. |
+| `ex-speed.doubling-doubles-width` | A (+B) | Exercise tests (25 vs 50 mm/s) | Software part verified. |
+| `ex-speed.expected-width-feedback` | A | `evaluate.ts` width check; logical-mm note in `calibration.ts` | Verified by tests; logical mm only. |
+| `ex-speed.grid-unit-label` | D | UI label "Interval width on paper (mm)" | Reviewer to confirm or rename to avoid implying physical paper. |
+
+Rights for all four exercises: they reproduce no third-party text or figure that was identified; the synthetic signal's declared rights are unknown (no repository licence).

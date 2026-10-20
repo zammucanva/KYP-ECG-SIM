@@ -1,6 +1,17 @@
 ## CI result for the fix (added after the run finished)
 
 - Run [39507495800](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39507495800) on `6e3bce2`: completed / success; 118 unit tests and 32 Chromium scenarios passed. `codex/guided-exercises-local` is pushed; `main` and other branches unchanged; no PR opened.
+# Current session checkpoint - ECG-CP12 content review-input packet
+
+Date: 2026-10-21
+
+- Checkout `ecg-lab-git`, branch `codex/guided-exercises-local`, based on pushed `2ca2b28` (remote branch at the same commit; all three Actions runs checked at start: `dd66714` failure, `6e3bce2` success, `2ca2b28` success). The packet work below is uncommitted-then-committed locally only: not pushed, no PR, not CI-verified.
+- Delivered: review packet in existing docs (`LESSON_REVIEW_PACKETS.md`, `CLAIM_SOURCE_MATRIX.md`, `CONTENT_REVIEW_WORKFLOW.md`) and `src/exercises/review-packet.test.ts`; details in `IMPLEMENTATION_LEDGER.md` (ECG-REVIEW-12).
+- Local verification: Vitest 14 files / 122 tests; app and E2E type checks exit 0; build OK (134 modules); Chromium 32/32. No publication gate, status or review record changed.
+- Awaiting evidence: sources for B-class claims (VT1-VT3), blood-flow claim (VT4), currentness (VT5), India alignment (VT6), rights (VT7), owner licence decision (VT8/D3). Awaiting people: educational reviewer, qualified medical reviewer, publication approver, owner decisions D1-D4.
+- Next: a real reviewer works through the checklist; push only when you authorize it.
+
+---
 # Current session checkpoint - ECG-CP11 first CI run of the recovered work
 
 Date: 2026-10-21
