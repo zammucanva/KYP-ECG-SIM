@@ -5,11 +5,11 @@
 
 Date: 2026-10-21
 
-- Checkout `ecg-lab-git`, branch `codex/guided-exercises-local`. Last pushed and CI-verified commit: `c526ffd` (run 39516977813, success). Local commits ahead of the remote: `64be9d4` (docs only) and the Milestone 5 commit. Nothing pushed, merged or deployed in this task; production KYP untouched.
+- Checkout `ecg-lab-git`, branch `codex/guided-exercises-local`. Pushed to `codex/guided-exercises-local` only (commit `59cd5e4`; no force, no PR, no merge; `main` unchanged; production KYP untouched). CI: [run 39519523726](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39519523726) on `59cd5e4`: completed / success; 21 unit-test files (237 tests) and 63 Chromium scenarios passed on Linux. `64be9d4` (docs only) was included in that push.
 - Delivered: Virtual Patients (6 fictional cases on the shared case engine), Academy credit for case studies, new navigation section. See `IMPLEMENTATION_LEDGER.md` ECG-PATIENT-14.
 - Local verification: Vitest 21 files / 237 tests; app and E2E type checks exit 0; build OK (145 modules); Chromium 63/63 on a full run. Visually checked in the browser pane: case list, presentation, interpretation and debrief (+40 XP = 15 completion + 10 correct rhythm + 10 first correct + 5 in-range rate).
-- Not done: Medication Center, Home dashboard, any high-risk patient case, escalation guidance (deliberately absent; needs review), CI for this milestone, screen-reader and real-device checks.
-- Next: push for CI when authorized, then Milestone 6 (Medication Center) with a validated record schema, publication gating and real source mapping, or the Home dashboard.
+- Not done: Medication Center, Home dashboard, any high-risk patient case, escalation guidance (deliberately absent; needs review), screen-reader and real-device checks.
+- Next: Milestone 6 (Medication Center) with a validated record schema, publication gating and real source mapping, or the Home dashboard.
 
 ---
 
