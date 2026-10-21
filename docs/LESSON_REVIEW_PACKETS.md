@@ -1,6 +1,6 @@
 # ECG Lab — lesson review packets
 
-**Purpose:** reviewer intake for the three current draft lessons, their linked formative checks, the five draft guided exercises (packets 4–8) the draft Rhythm Challenge categories and cases (packet 9) and the draft Virtual Patient cases (packet 10), all added 2026-10-21. These packets expose answer keys to reviewers and are not learner-facing content. They do not assert that any medical, source, licensing, or publication review has occurred.
+**Purpose:** reviewer intake for the three current draft lessons, their linked formative checks, the five draft guided exercises (packets 4–8) the draft Rhythm Challenge categories and cases (packet 9) the draft Virtual Patient cases (packet 10) and the draft Medication Center profiles (packet 11), all added 2026-10-21. These packets expose answer keys to reviewers and are not learner-facing content. They do not assert that any medical, source, licensing, or publication review has occurred.
 
 **Current release state (2026-10-20):** lessons/questions 1 and 2 remain at version `0.3.0`; lesson 3 and its linked question are version `0.4.0` after a scope correction. All six records remain `draft`, have zero review records, and are excluded from the Learn catalog. `lastReviewedAt` is absent. Candidate Becker and Kligfield reference records remain `verificationStatus: unverified`; the revised lesson 3 and question have no attached external references because their remaining claims describe simulator behavior only. No genuine educational review, qualified medical review, source/licensing approval, or publication approval exists.
 
@@ -31,6 +31,7 @@ One list covers every learner-facing item that needs review. Lessons and questio
 | Exercise 5 | `grid-and-calibration` | 0.1.0 | draft / unreviewed | 2 class A (+B), 1 class A, 1 class D | none | same | No release path exists yet (D1) |
 | Rhythm Challenge | 36 cases, 18 categories (`rhythm.<category>.NN`) | 0.1.0 | draft / unreviewed | 18 category explanations, class C | none | educational; source; qualified medical (R1–R6) | No release path exists yet (D1, D5) |
 | Virtual Patients | 6 fictional cases (`patient.<slug>.NN`) | 0.1.0 | draft / unreviewed | story and observation text, class C; ECG mapping, class A | none | educational; qualified medical (P1–P4) | No release path exists yet (D1, D6) |
+| Medication Center | 5 profiles (`med.<name>`, content type `medication`) | 0.1.0 | draft, 0 reviews, 0 sources | 21 externally sourced claims, class C | none | source/licensing; educational; qualified medical (MD1–MD5); publication | Not eligible; no profile may be shown to learners |
 
 The published Learn catalog is empty and stays empty. Every lesson and question still has `reviewRecords: []` and no `lastReviewedAt`; every external reference still has `verificationStatus: unverified`.
 
@@ -589,6 +590,105 @@ The Virtual Patient feature (`src/patients/`) has 6 fictional cases. Each is a v
 - Add reviewed escalation guidance only through a schema change (the current schema refuses free text there), with its own claim inventory and sources.
 - Keep the fictional-patient banner and the "not a clinical tool" wording visible on every step.
 
+## Packet 11 — Medication Center profiles (draft, unreviewed)
+
+The Medication Center (`src/medication/`) uses a new `medication` content type in the existing content schema, so it inherits every gate that lessons have: claim-to-source mapping, source and licensing review, educational review, qualified medical review and publication approval, each bound to the exact content version. There are 5 draft profiles. **None is published**: no claim has a source, no review record exists, and learners see no medicine content at all (the screen explains why). Authors can inspect the drafts only through the documented URL flag `?medication-preview=drafts`, which labels every list entry and profile as an unreviewed draft. Rules enforced by the schema and covered by tests: every claim must be externally sourced and cited by a section (the inventory equals what learners would read); safety, interaction and ECG-effect sections need a claim of their own and cannot rest on a mechanism claim alone; doses, quantities with units and prescribing language are rejected. Safety considerations and interactions are **deliberately not written** for any profile because they need specific sourced evidence. All statements below are class C (medical) and are class-level only.
+
+### Profile `med.metoprolol` / `0.1.0` — Metoprolol
+
+| Field | Current record (exact) |
+|---|---|
+| Status | `draft`; 0 review records; 0 source references; not published |
+| Drug group / class | Beta-blockers / Beta-adrenergic blocker (relatively beta-1 selective) |
+| Search terms | beta blocker; beta-blocker; adrenergic |
+| Summary | A beta-adrenergic blocker. This profile covers only how the class can change rate and conduction on an ECG. |
+| Learning objective | Describe how a beta-adrenergic blocker can change the heart rate and AV conduction seen on an ECG. |
+| Mechanism of action — How it works (claims: `metoprolol-mechanism`) | Metoprolol blocks beta-adrenergic receptors, with relative selectivity for beta-1 receptors. |
+| Educational uses — Where it is used (claims: `metoprolol-use`) | Beta-blockers such as metoprolol are used to control the heart rate in some atrial tachyarrhythmias. |
+| Potential ECG effects — What can change on the ECG (claims: `beta-blocker-sinus-rate`, `beta-blocker-av-conduction`) | Beta-adrenergic blockers can slow the sinus rate. They can also slow conduction through the atrioventricular node, which can lengthen the PR interval. |
+| Not yet written | Relevant pharmacology; Safety considerations; Interactions |
+
+### Profile `med.diltiazem` / `0.1.0` — Diltiazem
+
+| Field | Current record (exact) |
+|---|---|
+| Status | `draft`; 0 review records; 0 source references; not published |
+| Drug group / class | Calcium channel blockers / Non-dihydropyridine calcium channel blocker |
+| Search terms | calcium channel blocker; CCB; non-dihydropyridine |
+| Summary | A calcium channel blocker with effects on the cardiac nodes. This profile covers only rate and conduction effects relevant to the ECG. |
+| Learning objective | Describe how a non-dihydropyridine calcium channel blocker can change the heart rate and AV conduction seen on an ECG. |
+| Mechanism of action — How it works (claims: `diltiazem-mechanism`) | Diltiazem blocks L-type calcium channels, with effects on the sinoatrial and atrioventricular nodes. |
+| Educational uses — Where it is used (claims: `diltiazem-use`) | Diltiazem is used to control the ventricular rate in some atrial tachyarrhythmias. |
+| Potential ECG effects — What can change on the ECG (claims: `diltiazem-sinus-rate`, `diltiazem-av-conduction`) | Diltiazem can slow the sinus rate. It can also slow conduction through the atrioventricular node, which can lengthen the PR interval. |
+| Not yet written | Relevant pharmacology; Safety considerations; Interactions |
+
+### Profile `med.digoxin` / `0.1.0` — Digoxin
+
+| Field | Current record (exact) |
+|---|---|
+| Status | `draft`; 0 review records; 0 source references; not published |
+| Drug group / class | Cardiac glycosides / Cardiac glycoside |
+| Search terms | digitalis; cardiac glycoside |
+| Summary | A cardiac glycoside. This profile covers only the AV-node and ST-segment effects relevant to reading an ECG. |
+| Learning objective | Describe how a cardiac glycoside can change AV conduction and the ST segment on an ECG. |
+| Mechanism of action — How it works (claims: `digoxin-mechanism`) | Digoxin inhibits the sodium–potassium ATPase pump in cardiac cells. |
+| Relevant pharmacology — Effect at the AV node (claims: `digoxin-vagal`) | Digoxin increases vagal tone at the atrioventricular node. |
+| Educational uses — Where it is used (claims: `digoxin-use`) | Digoxin is used to control the ventricular rate in some atrial tachyarrhythmias. |
+| Potential ECG effects — What can change on the ECG (claims: `digoxin-av-conduction`, `digoxin-st-changes`) | Digoxin can slow conduction through the atrioventricular node, which can lengthen the PR interval. It can also cause characteristic ST-segment changes on the ECG. |
+| Not yet written | Safety considerations; Interactions |
+
+### Profile `med.amiodarone` / `0.1.0` — Amiodarone
+
+| Field | Current record (exact) |
+|---|---|
+| Status | `draft`; 0 review records; 0 source references; not published |
+| Drug group / class | Antiarrhythmics / Class III antiarrhythmic with effects on several ion channels |
+| Search terms | antiarrhythmic; class III |
+| Summary | An antiarrhythmic. This profile covers only the repolarisation and rate effects relevant to reading an ECG. |
+| Learning objective | Describe how a class III antiarrhythmic can change the QT interval and heart rate on an ECG. |
+| Mechanism of action — How it works (claims: `amiodarone-mechanism`) | Amiodarone blocks potassium channels and prolongs cardiac repolarisation, and also affects sodium and calcium channels and adrenergic receptors. |
+| Educational uses — Where it is used (claims: `amiodarone-use`) | Amiodarone is used to treat and prevent some atrial and ventricular arrhythmias. |
+| Potential ECG effects — What can change on the ECG (claims: `amiodarone-qt`, `amiodarone-rate`) | Amiodarone can prolong the QT interval. It can also slow the heart rate. |
+| Not yet written | Relevant pharmacology; Safety considerations; Interactions |
+
+### Profile `med.adenosine` / `0.1.0` — Adenosine
+
+| Field | Current record (exact) |
+|---|---|
+| Status | `draft`; 0 review records; 0 source references; not published |
+| Drug group / class | Other / Purine nucleoside used as an antiarrhythmic |
+| Search terms | antiarrhythmic; SVT; nucleoside |
+| Summary | A short-acting agent that acts at the AV node. This profile covers only its mechanism, use and the pause it can cause on an ECG. |
+| Learning objective | Recognise that adenosine acts at the AV node and can cause a brief pause or block on an ECG. |
+| Mechanism of action — How it works (claims: `adenosine-mechanism`) | Adenosine acts on adenosine receptors in the atrioventricular node, causing transient slowing of conduction. |
+| Relevant pharmacology — Duration of action (claims: `adenosine-duration`) | Adenosine has a very short duration of action. |
+| Educational uses — Where it is used (claims: `adenosine-use`) | Adenosine is used to terminate some supraventricular tachycardias that depend on the atrioventricular node. |
+| Potential ECG effects — What can change on the ECG (claims: `adenosine-pause`) | Adenosine can cause a brief period of atrioventricular block or a pause on the ECG. |
+| Not yet written | Safety considerations; Interactions |
+
+**Candidate sources (types only; none opened, none verified):** regulator-approved product information for each medicine; a national formulary; a standard pharmacology or cardiology textbook. Edition, section and page, access and rights for every claim are open (tasks VT9 and VT10). Formulary and labelling content is often licensed, so access is not permission to reproduce it.
+
+**Questions for the educational reviewer**
+
+- Is the profile structure (mechanism, use, pharmacology, ECG effects, safety, interactions) useful, and is showing "not yet written" better than hiding an empty section?
+- Is the evidence line under each section clear to a learner?
+- Are the search terms and drug groups sensible?
+
+**Questions requiring qualified medical review**
+
+- MD1: Is each statement accurate, correctly qualified ("can", "some") and suitable for introductory learners?
+- MD2: Are the "where it is used" statements acceptable at this level of generality, or should any be removed or narrowed?
+- MD3: What safety considerations and interactions, if any, must a profile contain before it may be published, and who supplies the sourced evidence?
+- MD4: Is it appropriate to include adenosine (a specialist, short-acting agent) with no escalation or setting framing, or should it wait (see D5 and D6)?
+- MD5: Do the ECG-effect statements describe effects that learners could mistakenly read as expected in every patient?
+
+**Recommended revisions before any release**
+
+- Attach a verified source and exact location to every claim, or remove the claim.
+- Write safety and interaction sections only from sourced evidence.
+- Keep the "no doses, not prescribing" notice on every screen (currently shown).
+- Decide whether the authoring-preview flag should exist in production builds (D7).
+
 ## Candidate reference register — additions for the exercises (all UNVERIFIED)
 
 Nothing below has been opened, read or confirmed in this pass. Only title/author information a reviewer can search for is listed; do not treat any of it as a citation until a reviewer records edition, chapter/page, access and rights.
@@ -611,6 +711,8 @@ Nothing below has been opened, read or confirmed in this pass. Only title/author
 - **VT5** Check whether Becker and Kligfield are still the best available sources, or whether a newer or India-appropriate one replaces them; record currentness.
 - **VT6** Find the official NMC curriculum document for the intended audience and record any competency codes actually present.
 - **VT7** Obtain the rights position for any text or figure to be reproduced; none is currently reproduced.
+- **VT9** For each medication claim, locate regulator-approved product information, a national formulary entry or a textbook passage, and record the edition, section or page, access and whether the wording supports the claim. Supports every `med.*` claim.
+- **VT10** Record the reuse rights of any medicines reference used; formulary and labelling content is often licensed and must not be copied without permission.
 - **VT8** Project owner: choose a licence for the repository and decide the declared rights for generated synthetic signals (`usageRights` is `unknown` for all three modes today).
 ## Shared publication blockers
 
@@ -640,7 +742,7 @@ Nothing below has been opened, read or confirmed in this pass. Only title/author
 - Decide whether exercise wording must match lesson 3's "In this simulator" scoping (recommended).
 
 ### 4. Qualified medical review
-- M1 regular-R–R caveat for the simplified atrial-fibrillation preset; M2–M6 in packets 4–8; R1–R6 for the Rhythm Challenge categories in packet 9; P1–P4 for the Virtual Patient cases in packet 10.
+- M1 regular-R–R caveat for the simplified atrial-fibrillation preset; M2–M6 in packets 4–8; R1–R6 for the Rhythm Challenge categories in packet 9; P1–P4 for the Virtual Patient cases in packet 10; MD1–MD5 for the Medication Center profiles in packet 11.
 - Lessons 1–2 definition accuracy and the "more lead views than electrodes" statement.
 - Whether lesson 3/check 3 truly need medical review under their current `clinical-education` domain (D2). Do not reclassify without a version bump and a reviewer's advice; the `non-clinical-education` value exists but changing it relaxes a gate.
 
@@ -654,6 +756,7 @@ Nothing below has been opened, read or confirmed in this pass. Only title/author
 | Rhythm strips match their category descriptions; rate expectations come from the displayed signal; scoring, options, hints, ambiguity handling | `src/rhythm/cases.test.ts` |
 | Challenge sessions: selection, duplicate-submission prevention, retry, timer, pause, expiry | `src/rhythm/session.test.ts`, `src/rhythm/RhythmChallenge.test.tsx` |
 | XP, achievements, personal bests, persistence, corrupt storage | `src/academy/progress.test.ts`, `src/academy/patients.test.ts` |
+| Medication records validate; nothing is published; every gate blocks publication; dosing language and mechanism-only safety claims are rejected; search, filters and empty states; the screens, preview flag, keyboard, accessibility and layout | `src/medication/medication.test.ts`, `src/medication/MedicationCenter.test.tsx`, `tests/e2e/medication-center.spec.ts` |
 | Patient cases validate, point at real ECGs, share the challenge waveform, withhold the heart rate, refuse stored escalation text; the flow, focus, unavailable content, accessibility and layout | `src/patients/cases.test.ts`, `src/patients/VirtualPatient.test.tsx`, `tests/e2e/virtual-patient.spec.ts` |
 | Review packets and matrix stay in step with the code | `src/exercises/review-packet.test.ts` (added 2026-10-21) |
 No class-A claim is currently untested. Class-A tests say nothing about whether the synthetic morphology is medically sound.
@@ -664,6 +767,8 @@ No class-A claim is currently untested. Class-A tests say nothing about whether 
 - **D3** Declare licence and signal usage rights (VT8).
 - **D4** Decide whether exercise text is narrowed to "In this simulator" or sourced for general statements.
 - **D5** Decide whether ventricular tachycardia and fibrillation strips stay in Practice and Timed modes before escalation-oriented framing is reviewed (R5).
+- **D7** Decide whether the draft-preview URL flag (`?medication-preview=drafts`) should exist in production builds, or be limited to development.
+- **D8** Decide who writes and sources the safety and interaction content, and the minimum safety content a profile needs before it can be published (MD3).
 - **D6** Decide whether the Virtual Patient cases may be used with no urgency or escalation guidance (P3), or must wait for reviewed framing. The schema currently refuses escalation text.
 
 ## Reviewer checklist (blank; to be completed only by a real reviewer)
@@ -685,7 +790,7 @@ Do not tick on anyone's behalf. Bind every record you submit to the exact conten
 
 **Qualified medical reviewer**
 - [ ] I supplied my own name and qualifications for the record (not copied from this document).
-- [ ] I answered M1–M6, R1–R6, P1–P4 and the lesson 1–2 definition questions.
+- [ ] I answered M1–M6, R1–R6, P1–P4, MD1–MD5 and the lesson 1–2 definition questions.
 - [ ] I confirmed or corrected the limitation statements about synthetic, unvalidated morphology.
 
 **Publication approver**

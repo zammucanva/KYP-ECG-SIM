@@ -41,3 +41,8 @@ Unit and React interaction tests for the engine, clock lifecycle, content model,
 
 - `src/patients/cases.ts` holds authored fictional cases that reference rhythm cases by id; `resolvePatientCase` validates the record and its ECG reference. Nothing about the waveform is duplicated.
 - `src/patients/VirtualPatient.tsx` reuses `RhythmStrip`, `answerOptions`, `evaluateAnswer` and `explanationFor`. Completion is reported to the Academy through `applyPatientCase`, which shares `recordRhythmAttempt` with challenge sessions.
+
+## Medication Center module (added 2026-10-21)
+
+- `medication` is a content type in `src/content/schema.ts`, so profiles use the same registry, validation and publication gates as lessons. `src/medication/registry.ts` loads `records.ts` through `loadContentRegistry`; `publishedMedications` is what learners see, `visibleMedications(registry, preview)` adds drafts only for the labelled authoring preview.
+- `search.ts` is pure (search, filters, evidence reporting, related-content resolution); `MedicationCenter.tsx` is the screen. `fixtures.ts` is test-only and a test fails if application code imports it.

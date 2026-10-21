@@ -325,6 +325,102 @@ const waveformContentSchema = z.strictObject({
   message: 'Waveform examples require an explicit ECG signal provenance and technical metadata record.',
 });
 
+
+export const medicationSectionKinds = ['mechanism', 'educational-use', 'pharmacology', 'ecg-effect', 'safety', 'interaction'] as const;
+export const medicationGroups = ['beta-blocker', 'calcium-channel-blocker', 'cardiac-glycoside', 'antiarrhythmic', 'other'] as const;
+/** Kinds whose statements must stand on their own evidence, never on a mechanism claim alone. */
+const evidenceDependentSectionKinds: readonly (typeof medicationSectionKinds)[number][] = ['ecg-effect', 'safety', 'interaction'];
+
+/**
+ * Educational medication content must not read as prescribing: no quantities with units, and none of
+ * the vocabulary of dosing or instructions to a patient. Applied to every learner-visible field.
+ */
+const DOSE_QUANTITY = /\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|ug|g|kg|ml|mL|l|units?|iu|mmol|meq)\b/i;
+const PRESCRIBING_WORDS = /\b(?:dose|doses|dosing|dosage|prescrib\w*|regimen|titrat\w*|loading|twice daily|once daily|per day|every \d+ hours?|you should take|patients should take)\b/i;
+export const looksLikeDosingOrPrescribing = (value: string) => DOSE_QUANTITY.test(value) || PRESCRIBING_WORDS.test(value);
+
+const medicationSectionSchema = z.strictObject({
+  id: contentIdSchema,
+  kind: z.enum(medicationSectionKinds),
+  title: shortText,
+  body: text,
+  claimIds: z.array(contentIdSchema).min(1).max(20),
+});
+
+const medicationPayloadSchema = z.strictObject({
+  genericName: shortText,
+  drugGroup: z.enum(medicationGroups),
+  drugClass: shortText,
+  searchTerms: z.array(shortText).max(10),
+  sections: z.array(medicationSectionSchema).min(1).max(12),
+  /** Other content (for example lessons) shown as related only while it is published and eligible. */
+  relatedContentIds: z.array(contentIdSchema).max(10),
+});
+
+const medicationContentSchema = z.strictObject({
+  ...commonFields,
+  type: z.literal('medication'),
+  contentDomain: z.literal('clinical-education'),
+  claims: z.array(claimSchema).min(1).max(200),
+  medication: medicationPayloadSchema,
+}).superRefine((record, context) => {
+  const { sections } = record.medication;
+  const claimsById = new Map(record.claims.map(claim => [claim.id, claim]));
+  const sectionIds = sections.map(section => section.id);
+  if (new Set(sectionIds).size !== sectionIds.length) {
+    context.addIssue({ code: 'custom', path: ['medication', 'sections'], message: 'Medication section IDs must be unique.' });
+  }
+  const cited = new Set<string>();
+  sections.forEach((section, index) => {
+    if (new Set(section.claimIds).size !== section.claimIds.length) {
+      context.addIssue({ code: 'custom', path: ['medication', 'sections', index, 'claimIds'], message: 'A section may cite each claim only once.' });
+    }
+    section.claimIds.forEach(id => {
+      cited.add(id);
+      if (!claimsById.has(id)) {
+        context.addIssue({ code: 'custom', path: ['medication', 'sections', index, 'claimIds'], message: `Section cites unknown claim "${id}".` });
+      }
+    });
+  });
+  record.claims.forEach((claim, index) => {
+    if (claim.basis !== 'external-source') {
+      context.addIssue({ code: 'custom', path: ['claims', index, 'basis'], message: 'Every medication claim must be externally sourced; project behavior is not evidence about a medicine.' });
+    }
+    if (!cited.has(claim.id)) {
+      context.addIssue({ code: 'custom', path: ['claims', index], message: `Claim "${claim.id}" is not cited by any section, so the claim inventory would not match what learners read.` });
+    }
+  });
+  const mechanismClaims = new Set(sections.filter(section => section.kind === 'mechanism').flatMap(section => section.claimIds));
+  sections.forEach((section, index) => {
+    if (evidenceDependentSectionKinds.includes(section.kind) && section.claimIds.every(id => mechanismClaims.has(id))) {
+      context.addIssue({
+        code: 'custom',
+        path: ['medication', 'sections', index, 'claimIds'],
+        message: `A ${section.kind} section needs a claim of its own; it cannot rest on mechanism claims alone.`,
+      });
+    }
+  });
+  const related = record.medication.relatedContentIds;
+  if (new Set(related).size !== related.length || related.includes(record.id)) {
+    context.addIssue({ code: 'custom', path: ['medication', 'relatedContentIds'], message: 'Related content IDs must be unique and must not include the record itself.' });
+  }
+  const learnerVisible: [string, string][] = [
+    ['title', record.title],
+    ['summary', record.summary],
+    ...record.learningObjectives.map((objective, index): [string, string] => [`learningObjectives.${index}`, objective.statement]),
+    ...record.claims.map((claim, index): [string, string] => [`claims.${index}.statement`, claim.statement]),
+    ...sections.flatMap((section, index): [string, string][] => [[`medication.sections.${index}.title`, section.title], [`medication.sections.${index}.body`, section.body]]),
+    ['medication.genericName', record.medication.genericName],
+    ['medication.drugClass', record.medication.drugClass],
+    ...record.medication.searchTerms.map((term, index): [string, string] => [`medication.searchTerms.${index}`, term]),
+  ];
+  learnerVisible.forEach(([path, value]) => {
+    if (looksLikeDosingOrPrescribing(value)) {
+      context.addIssue({ code: 'custom', path: path.split('.').map(part => (/^\d+$/.test(part) ? Number(part) : part)), message: 'Educational medication content must not contain doses, quantities with units or prescribing language.' });
+    }
+  });
+});
+
 const lessonRecordSchema = z.strictObject(commonContentSchema);
 
 export const contentRecordSchema = z.discriminatedUnion('type', [
@@ -332,6 +428,7 @@ export const contentRecordSchema = z.discriminatedUnion('type', [
   questionContentSchema,
   caseContentSchema,
   waveformContentSchema,
+  medicationContentSchema,
 ]).superRefine((record, context) => {
   const created = Date.parse(record.createdAt);
   const updated = Date.parse(record.updatedAt);

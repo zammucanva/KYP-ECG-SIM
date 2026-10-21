@@ -4,6 +4,7 @@ import matrixRaw from '../../docs/CLAIM_SOURCE_MATRIX.md?raw';
 import workflowRaw from '../../docs/CONTENT_REVIEW_WORKFLOW.md?raw';
 import { introductoryLearnDrafts } from '../content/learn/records';
 import { learnRegistry, publishedLearnLessons } from '../content/learn/registry';
+import { medicationDrafts } from '../medication/records';
 import { patientCases } from '../patients/cases';
 import { rhythmCases } from '../rhythm/cases';
 import { rhythmCategories } from '../rhythm/rhythms';
@@ -52,6 +53,21 @@ describe('review packet stays in step with the code', () => {
       }
       expect(matrix, `${patient.id} in matrix`).toContain(`\`${patient.id}\``);
       expect(patient.publicationStatus === 'draft' && patient.reviewStatus === 'unreviewed' && patient.escalation === null).toBe(true);
+    }
+  });
+
+  it('documents every Medication Center profile with its exact text, claims and gate state, and keeps them unpublished', () => {
+    expect(packetText).toContain(`There are ${medicationDrafts.length} draft profiles`);
+    expect(packetText).toContain(`${medicationDrafts.reduce((sum, record) => sum + (record.claims?.length ?? 0), 0)} externally sourced claims`);
+    for (const record of medicationDrafts) {
+      expect(packetText, `${record.id} id/version`).toContain(`\`${record.id}\` / \`${record.version}\``);
+      for (const text of [record.medication.genericName, record.medication.drugClass, record.summary, ...record.medication.sections.map(section => section.body)]) {
+        expect(packetText, `${record.id}: "${text.slice(0, 40)}"`).toContain(text);
+      }
+      for (const claim of record.claims ?? []) expect(matrix, `${record.id} claim ${claim.id}`).toContain(`\`${claim.id}\``);
+      expect(record.publicationStatus).toBe('draft');
+      expect(record.sourceReferences).toEqual([]);
+      expect(record.reviewRecords).toEqual([]);
     }
   });
 

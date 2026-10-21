@@ -37,6 +37,9 @@ import { AcademyDashboard } from './academy/AcademyDashboard';
 import { useAcademy } from './academy/useAcademy';
 import { RhythmChallenge } from './rhythm/RhythmChallenge';
 import { VirtualPatient } from './patients/VirtualPatient';
+import { MedicationCenter } from './medication/MedicationCenter';
+import { isPreviewRequested, medicationRegistry, visibleMedications } from './medication/registry';
+import { publishedLearnLessons } from './content/learn/registry';
 import './styles.css';
 
 const leads = allLeads();
@@ -85,7 +88,11 @@ function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(readThemePreference);
   const [config, setConfig] = useState<MachineConfig>({ lead: 'V3', paperSpeed: 25, gain: 20, showGrid: true, preset: 'sinus' });
   const [view, setView] = useState<'single' | 'multi'>('single');
-  const [activeSection, setActiveSection] = useState<'simulator' | 'challenge' | 'patients' | 'academy' | 'learn'>('simulator');
+  const [activeSection, setActiveSection] = useState<'simulator' | 'challenge' | 'patients' | 'medication' | 'academy' | 'learn'>('simulator');
+  // Drafts are visible only through the documented authoring flag, and the screen labels them everywhere.
+  const medicationPreview = useMemo(() => isPreviewRequested(window.location.search), []);
+  const medications = useMemo(() => visibleMedications(medicationRegistry, medicationPreview), [medicationPreview]);
+  const relatedLessons = useMemo(() => publishedLearnLessons.map(lesson => ({ id: lesson.id, title: lesson.title })), []);
   const academy = useAcademy();
   const missedCaseIds = useMemo(
     () => Object.entries(academy.progress.cases).filter(([, stats]) => stats.missedBefore && !stats.everCorrect).map(([id]) => id),
@@ -286,6 +293,7 @@ function App() {
         <button type="button" aria-current={activeSection === 'simulator' ? 'page' : undefined} onClick={() => setActiveSection('simulator')}>ECG simulator</button>
         <button type="button" aria-current={activeSection === 'challenge' ? 'page' : undefined} onClick={() => setActiveSection('challenge')}>Rhythm Challenge</button>
         <button type="button" aria-current={activeSection === 'patients' ? 'page' : undefined} onClick={() => setActiveSection('patients')}>Virtual Patients</button>
+        <button type="button" aria-current={activeSection === 'medication' ? 'page' : undefined} onClick={() => setActiveSection('medication')}>Medication Center</button>
         <button type="button" aria-current={activeSection === 'academy' ? 'page' : undefined} onClick={() => setActiveSection('academy')}>Academy</button>
         <button type="button" aria-current={activeSection === 'learn' ? 'page' : undefined} onClick={() => setActiveSection('learn')}>Learn</button>
       </nav>
@@ -506,6 +514,9 @@ function App() {
           onOpenAcademy={() => setActiveSection('academy')}
           onOpenChallenge={() => setActiveSection('challenge')}
         />
+      </div>
+      <div hidden={activeSection !== 'medication'}>
+        <MedicationCenter records={medications} preview={medicationPreview} publishedLessons={relatedLessons} onOpenLearn={() => setActiveSection('learn')} />
       </div>
 
       <footer><span>ECG LAB v0.3 · LEARN CHECKPOINT</span><span>Educational simulation only.</span></footer>

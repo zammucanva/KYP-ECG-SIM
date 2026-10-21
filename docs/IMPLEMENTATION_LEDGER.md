@@ -1,5 +1,18 @@
 # Implementation ledger
 
+## Current checkpoint - ECG-CP15 Milestone 6: Medication Center (2026-10-21)
+
+### ECG-MEDICATION-15 - Gated medication education on the existing content governance (local; not pushed, not CI-verified)
+
+- Design: medication profiles are a new `medication` content type in `src/content/schema.ts`, always `clinical-education`, so they inherit every existing gate with no parallel system: claim-to-source mapping, source and licensing review, educational review, qualified medical review, publication approval, all bound to the exact version. `loadContentRegistry` withholds any record that fails; a status flip alone cannot publish a draft.
+- Schema rules specific to medicines (all tested): every claim is externally sourced and cited by a section, so the claim inventory equals what learners read; safety, interaction and ECG-effect sections need a claim of their own and cannot rest on mechanism claims alone; doses, quantities with units and prescribing language are refused in every learner-visible field; related-content ids are unique and not self-referential.
+- Content: five draft profiles (metoprolol, diltiazem, digoxin, amiodarone, adenosine), 21 class-level claims (mechanism, general use, general ECG effect). No sources, no reviews, nothing published. Safety considerations and interactions are deliberately not written for any profile (they need specific sourced evidence) and appear as "not yet written". No doses, no prescribing or patient-specific content.
+- Learner behaviour: learners see no medicine content, only an explanation of why. Drafts are visible only through the documented flag `?medication-preview=drafts` (look-alike values do not unlock it), which labels the screen and every entry as an unreviewed draft and states per-section evidence (for example "no source attached"). Related lessons are linked only when published.
+- Search: `src/medication/search.ts` (pure): every query word must match, ranked by name, term, class and tag, accent/case/punctuation-insensitive, length-capped, safe with hostile input, group filter, and distinct empty states (nothing available versus no match). `MedicationCenter.tsx` adds a labelled search, group filter, status line, profile view with focus on the heading, and Back.
+- Tests added: 38 unit/component (`medication.test.ts`, `MedicationCenter.test.tsx`; includes a fully reviewed TEST FIXTURE proving the publish path and eight ways of breaking a gate, and a guard that application code never imports the fixture), 16 Chromium scenarios (`medication-center.spec.ts`), drift-guard extension. Packet 11, matrix rows, inventory row, tasks VT9-VT10 and decisions D7-D8 added.
+- Not done: any real sourcing or review; safety and interaction content; a Home dashboard; a decision on whether the preview flag may exist in production (D7).
+- Next: push for CI, then the Home dashboard or sourcing work with a reviewer.
+
 ## Current checkpoint - ECG-CP14 Milestone 5: Virtual Patients (2026-10-21)
 
 ### ECG-PATIENT-14 - Fictional patient cases on the shared case engine (pushed as `59cd5e4`; CI success, run 39519523726)

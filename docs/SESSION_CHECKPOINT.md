@@ -1,6 +1,19 @@
 ## CI result for the fix (added after the run finished)
 
 - Run [39507495800](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39507495800) on `6e3bce2`: completed / success; 118 unit tests and 32 Chromium scenarios passed. `codex/guided-exercises-local` is pushed; `main` and other branches unchanged; no PR opened.
+# Current session checkpoint - ECG-CP15 Milestone 6: Medication Center
+
+Date: 2026-10-21
+
+- Checkout `ecg-lab-git`, branch `codex/guided-exercises-local`. Last pushed and CI-verified commit: `59cd5e4` (run 39519523726, success). Local commits ahead of the remote: `bfaa039` (docs only) and the Milestone 6 commit. Nothing pushed, merged or deployed in this task; production KYP untouched.
+- Delivered: Medication Center on the existing content governance (see `IMPLEMENTATION_LEDGER.md` ECG-MEDICATION-15). Learners see no medicine content until a profile passes every gate; five unsourced drafts exist and are inspectable only through the labelled preview flag.
+- Local verification: Vitest 23 files / 276 tests; app and E2E type checks exit 0; build OK (149 modules); Chromium 79/79 with `--workers=1`. With the default two workers on this machine two consecutive full runs each had two failures that differed every time (a wall-clock assertion in the existing live-sweep test, a 375 px layout test that passes alone, and one Chromium worker crash with code 3221226505); every one passed in isolation and in the single-worker run. Treated as load on this machine, not as regressions, but CI at two workers is the real check and the live-sweep test remains timing-sensitive.
+- Visually checked in the browser pane: the learner empty state, the labelled preview list and a full profile with unwritten sections.
+- Not done: sources and reviews for every profile, safety and interaction content, Home dashboard, real-device and screen-reader checks.
+- Next: push for CI when authorized; then the Home dashboard, or sourcing work with a real reviewer.
+
+---
+
 # Current session checkpoint - ECG-CP14 Milestone 5: Virtual Patients
 
 Date: 2026-10-21

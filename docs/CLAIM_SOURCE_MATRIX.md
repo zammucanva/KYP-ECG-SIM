@@ -180,4 +180,35 @@ Six fictional cases, all `draft` / `unreviewed`, none with sources, and none abl
 | `patient.skipped-beats.01` | `rhythm.pvc.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
 | `patient.unwell-with-fast-pulse.01` | `rhythm.sinus-tachycardia.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
 
+
+## Medication Center profiles — release 1 (added 2026-10-21)
+
+Five draft profiles in the content schema (`type: medication`). Every claim below has `basis: external-source`, **no source reference, no review record**, and is class C. Gate state per record: draft, not eligible (claim-source mapping, source and licensing, educational review, medical review and publication approval all unmet). Exact text, reviewer questions MD1–MD5, tasks VT9–VT10 and decisions D7–D8 are in packet 11 of [LESSON_REVIEW_PACKETS.md](LESSON_REVIEW_PACKETS.md). Software evidence (nothing is published, each gate blocks publication, dosing wording is refused) is `src/medication/medication.test.ts`; it is not medical evidence.
+
+| Profile | Claim ID | Candidate source | Status / reviewer action |
+|---|---|---|---|
+| `med.metoprolol` | `metoprolol-mechanism` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.metoprolol` | `metoprolol-use` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.metoprolol` | `beta-blocker-sinus-rate` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.metoprolol` | `beta-blocker-av-conduction` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.diltiazem` | `diltiazem-mechanism` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.diltiazem` | `diltiazem-use` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.diltiazem` | `diltiazem-sinus-rate` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.diltiazem` | `diltiazem-av-conduction` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.digoxin` | `digoxin-mechanism` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.digoxin` | `digoxin-vagal` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.digoxin` | `digoxin-use` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.digoxin` | `digoxin-av-conduction` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.digoxin` | `digoxin-st-changes` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.amiodarone` | `amiodarone-mechanism` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.amiodarone` | `amiodarone-use` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.amiodarone` | `amiodarone-qt` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.amiodarone` | `amiodarone-rate` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.adenosine` | `adenosine-mechanism` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.adenosine` | `adenosine-duration` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.adenosine` | `adenosine-use` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.adenosine` | `adenosine-pause` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+
+Safety considerations and interactions are not written for any profile, so no claim exists for them; writing them is gated on sourced evidence (MD3, D8).
+
 Rights for all five exercises and the Rhythm Challenge: they reproduce no third-party text or figure that was identified; the synthetic signal's declared rights are unknown (no repository licence).

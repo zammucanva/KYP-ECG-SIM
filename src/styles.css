@@ -498,3 +498,33 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 @media (prefers-reduced-motion: reduce) {
   .patients * { transition: none !important; animation: none !important; }
 }
+
+/* ── Medication Center ─────────────────────────────────────────────────── */
+.medication { display: grid; gap: 14px; max-width: 980px; margin: 0 auto; padding: 28px 0 40px; min-width: 0; }
+.medication h2 { margin: 0; color: var(--text); font-size: 26px; line-height: 1.2; }
+.medication h2:focus { outline: none; }
+.medication h2:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.medication h3 { margin: 8px 0 0; color: var(--text); font-size: 14px; }
+.medication h4 { margin: 8px 0 2px; color: var(--text); font-size: 12px; }
+.medication p { margin: 0; color: var(--text); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.medication .lede { max-width: 720px; }
+.medication ul { margin: 0; padding-left: 20px; color: var(--text); font-size: 12px; line-height: 1.6; }
+.medication-notice { border-left: 3px solid var(--primary); padding: 8px 11px; background: var(--primary-soft); color: var(--primary-ink) !important; font-weight: 600; }
+.medication-preview { border-left: 3px solid var(--marker); padding: 8px 11px; background: var(--surface-muted); font-weight: 600; }
+.medication-status.draft { border-left: 3px solid var(--marker); padding: 6px 10px; background: var(--surface-muted); }
+.medication-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; margin: 0; }
+.medication-facts div { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; background: var(--surface); min-width: 0; }
+.medication-facts dt { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+.medication-facts dd { margin: 3px 0 0; color: var(--text); font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+.medication-section { border-top: 1px solid var(--border); padding-top: 4px; }
+.medication-search { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 10px; }
+.medication-search label { display: grid; gap: 6px; color: var(--muted); font-size: 11px; min-width: 0; }
+.medication-search input, .medication-search select { width: 100%; min-width: 0; border: 1px solid var(--border-strong); border-radius: 5px; padding: 9px 10px; background: var(--surface); color: var(--text); }
+.medication-list { display: grid; gap: 10px; padding: 0 !important; list-style: none; }
+.medication-empty { display: grid; gap: 8px; border: 1px dashed var(--border-strong); border-radius: 8px; padding: 16px; color: var(--muted); }
+.medication-empty p { color: var(--text); }
+@media (max-width: 760px) {
+  .medication-search { grid-template-columns: minmax(0, 1fr); }
+  .medication h2 { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { .medication * { transition: none !important; animation: none !important; } }
