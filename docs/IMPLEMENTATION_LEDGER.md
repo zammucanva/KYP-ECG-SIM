@@ -1,5 +1,14 @@
 # Implementation ledger
 
+## Current checkpoint - ECG-CP16 Home dashboard (2026-10-21)
+
+### ECG-HOME-16 - Home dashboard from real saved state (local; not pushed, not CI-verified)
+
+- `src/home/summary.ts` derives everything from stored state only (Academy progress, exercise progress, saved experiments); `HomeDashboard.tsx` renders it with an honest empty state. Cards: continue learning (in-progress exercise, else next unstarted, else none-available/all-done), resume the latest saved experiment, exercise list with real states, Rhythm Challenge with missed-strip review, virtual patients, progress. Home is the first tab; the simulator remains the landing page because making Home the landing page would change the entry point that most existing browser tests assume (open decision).
+- Request hooks: Home can open a chosen exercise (once per token, focus on its title), open the saved-experiment restore confirmation (nothing applied until confirmed), and start the missed-strip review (never replaces a session in progress).
+- Tests added: 12 summary, 6 component, 1 exercise-request, 3 review-request unit/component tests; 20 Chromium scenarios in `tests/e2e/home-dashboard.spec.ts` (all passed on one worker locally). Populated Home was viewed at desktop width.
+- NOT done: the full unit and browser suites were not rerun after the Home change, so the earlier totals do not cover it; phone-width screenshot not viewed; records beyond this entry (QA report, checkpoint, README) not updated; not pushed, CI not run.
+
 ## Current checkpoint - ECG-CP15 Milestone 6: Medication Center (2026-10-21)
 
 ### ECG-MEDICATION-15 - Gated medication education on the existing content governance (pushed as `c0610a6`; CI success, run 39526224903)

@@ -38,6 +38,9 @@ import { useAcademy } from './academy/useAcademy';
 import { RhythmChallenge } from './rhythm/RhythmChallenge';
 import { VirtualPatient } from './patients/VirtualPatient';
 import { MedicationCenter } from './medication/MedicationCenter';
+import { HomeDashboard } from './home/HomeDashboard';
+import { buildHomeSummary } from './home/summary';
+import { emptyExerciseProgress, readExerciseProgress, type ExerciseProgress } from './exercises/progress';
 import { isPreviewRequested, medicationRegistry, visibleMedications } from './medication/registry';
 import { publishedLearnLessons } from './content/learn/registry';
 import './styles.css';
@@ -88,12 +91,38 @@ function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(readThemePreference);
   const [config, setConfig] = useState<MachineConfig>({ lead: 'V3', paperSpeed: 25, gain: 20, showGrid: true, preset: 'sinus' });
   const [view, setView] = useState<'single' | 'multi'>('single');
-  const [activeSection, setActiveSection] = useState<'simulator' | 'challenge' | 'patients' | 'medication' | 'academy' | 'learn'>('simulator');
+  const [activeSection, setActiveSection] = useState<'home' | 'simulator' | 'challenge' | 'patients' | 'medication' | 'academy' | 'learn'>('simulator');
+  // Home reads stored exercise progress when it is shown; the exercise panel writes it as the learner works.
+  const [exerciseProgress, setExerciseProgress] = useState<ExerciseProgress>(emptyExerciseProgress);
+  const [exerciseRequest, setExerciseRequest] = useState<{ id: string; token: number }>();
+  const [reviewRequest, setReviewRequest] = useState(0);
+  const [experimentPanelRequest, setExperimentPanelRequest] = useState(0);
+  const experimentPanelRef = useRef<HTMLDetailsElement>(null);
   // Drafts are visible only through the documented authoring flag, and the screen labels them everywhere.
   const medicationPreview = useMemo(() => isPreviewRequested(window.location.search), []);
   const medications = useMemo(() => visibleMedications(medicationRegistry, medicationPreview), [medicationPreview]);
   const relatedLessons = useMemo(() => publishedLearnLessons.map(lesson => ({ id: lesson.id, title: lesson.title })), []);
   const academy = useAcademy();
+  useEffect(() => {
+    if (activeSection !== 'home') return;
+    try {
+      setExerciseProgress(readExerciseProgress(window.localStorage).progress);
+    } catch {
+      setExerciseProgress(emptyExerciseProgress());
+    }
+  }, [activeSection]);
+  // Resuming from Home: once the simulator is showing, open the saved-experiments panel (once per request)
+  // and move focus to the restore confirmation so keyboard and screen-reader users land on it.
+  const handledPanelRequest = useRef(0);
+  useEffect(() => {
+    if (experimentPanelRequest === 0 || experimentPanelRequest === handledPanelRequest.current || activeSection !== 'simulator') return;
+    handledPanelRequest.current = experimentPanelRequest;
+    if (experimentPanelRef.current) {
+      experimentPanelRef.current.open = true;
+      experimentPanelRef.current.scrollIntoView?.({ block: 'start' });
+    }
+    window.setTimeout(() => experimentPanelRef.current?.querySelector<HTMLButtonElement>('.experiment-confirmation button')?.focus(), 0);
+  }, [experimentPanelRequest, activeSection]);
   const missedCaseIds = useMemo(
     () => Object.entries(academy.progress.cases).filter(([, stats]) => stats.missedBefore && !stats.everCorrect).map(([id]) => id),
     [academy.progress.cases],
@@ -119,6 +148,10 @@ function App() {
   const [pendingRestore, setPendingRestore] = useState<ExperimentState | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ExperimentState | null>(null);
   const [restoreRequest, setRestoreRequest] = useState<{ id: number; elapsedMs: number } | undefined>();
+  const homeSummary = useMemo(
+    () => buildHomeSummary({ academy: academy.progress, exerciseProgress, savedExperiments }),
+    [academy.progress, exerciseProgress, savedExperiments],
+  );
   const patch = (next: Partial<MachineConfig>) => setConfig(current => ({ ...current, ...next }));
   const signals = useMemo(() => generateLeadSignals(config.preset), [config.preset]);
   const maxAbsVoltageMv = useMemo(() => Math.max(...Object.values(signals).flatMap(leadSamples => leadSamples.map(sample => Math.abs(sample.voltageMv))), 0), [signals]);
@@ -290,6 +323,7 @@ function App() {
       </header>
 
       <nav className="module-nav" aria-label="Main sections">
+        <button type="button" aria-current={activeSection === 'home' ? 'page' : undefined} onClick={() => setActiveSection('home')}>Home</button>
         <button type="button" aria-current={activeSection === 'simulator' ? 'page' : undefined} onClick={() => setActiveSection('simulator')}>ECG simulator</button>
         <button type="button" aria-current={activeSection === 'challenge' ? 'page' : undefined} onClick={() => setActiveSection('challenge')}>Rhythm Challenge</button>
         <button type="button" aria-current={activeSection === 'patients' ? 'page' : undefined} onClick={() => setActiveSection('patients')}>Virtual Patients</button>
@@ -298,7 +332,22 @@ function App() {
         <button type="button" aria-current={activeSection === 'learn' ? 'page' : undefined} onClick={() => setActiveSection('learn')}>Learn</button>
       </nav>
 
-      {activeSection === 'simulator' ? <>
+      {activeSection === 'home' ? <HomeDashboard
+        summary={homeSummary}
+        onStartExercise={id => { setExerciseRequest(current => ({ id, token: (current?.token ?? 0) + 1 })); setActiveSection('simulator'); }}
+        onResumeExperiment={id => {
+          const snapshot = savedExperiments.find(item => item.snapshotId === id);
+          if (!snapshot) return;
+          setPendingRestore(snapshot);
+          setExperimentPanelRequest(current => current + 1);
+          setActiveSection('simulator');
+        }}
+        onBeginChallenge={() => setActiveSection('challenge')}
+        onReviewMissed={() => { setReviewRequest(current => current + 1); setActiveSection('challenge'); }}
+        onOpenPatients={() => setActiveSection('patients')}
+        onOpenAcademy={() => setActiveSection('academy')}
+        onOpenSimulator={() => setActiveSection('simulator')}
+      /> : activeSection === 'simulator' ? <>
       <section className="intro">
         <div>
           <p className="eyebrow">CALIBRATED EXPLORATION</p>
@@ -448,7 +497,7 @@ function App() {
                 </label>
               </div>
             </details>
-            <details className="experiment-workspace">
+            <details className="experiment-workspace" ref={experimentPanelRef}>
               <summary>Saved experiments <small>local to this browser</small></summary>
               <p>Save machine settings, the paused/running time position, named measurements and private learner notes. Restoring always pauses playback and replaces the current local workspace only after the selected snapshot validates.</p>
               <div className="experiment-save-controls">
@@ -480,7 +529,7 @@ function App() {
                 <button type="button" className="measurement-set-select" onClick={() => setPendingDelete(null)}>Cancel delete</button>
               </div>}
             </details>
-            <GuidedExercises config={config} measurement={selectedMeasurement} onCompleted={definition => academy.recordExercise(definition.id, definition.version, definition.title)} onOpenChallenge={() => setActiveSection('challenge')} />
+            <GuidedExercises config={config} measurement={selectedMeasurement} onCompleted={definition => academy.recordExercise(definition.id, definition.version, definition.title)} onOpenChallenge={() => setActiveSection('challenge')} request={exerciseRequest} />
           </div>
 
           <div className="measure-row">
@@ -505,6 +554,7 @@ function App() {
           onSessionEnded={academy.recordSession}
           onOpenAcademy={() => setActiveSection('academy')}
           timedBestScore={academy.progress.bests.timedScore}
+          reviewRequest={reviewRequest}
         />
       </div>
       <div hidden={activeSection !== 'patients'}>

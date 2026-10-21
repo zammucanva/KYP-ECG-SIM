@@ -146,6 +146,40 @@ describe('Rhythm Challenge', () => {
   });
 });
 
+describe('review requests from elsewhere', () => {
+  const missed = ['rhythm.svt.01', 'rhythm.vf.02'];
+  const baseProps = { active: true, onSessionEnded: () => rewards(), onOpenAcademy: () => undefined, timedBestScore: 0 };
+
+  it('starts a review of the missed strips once per request', () => {
+    const { rerender } = render(<RhythmChallenge {...baseProps} missedCaseIds={missed} reviewRequest={0} />);
+    expect(screen.getByRole('heading', { name: 'Read the strip, name the rhythm' })).toBeTruthy();
+    rerender(<RhythmChallenge {...baseProps} missedCaseIds={missed} reviewRequest={1} />);
+    expect(screen.getByRole('heading', { name: 'Question 1 of 2' })).toBeTruthy();
+    expect(screen.getByText('PRACTICE')).toBeTruthy();
+    // The same request again changes nothing.
+    rerender(<RhythmChallenge {...baseProps} missedCaseIds={missed} reviewRequest={1} />);
+    expect(screen.getByRole('heading', { name: 'Question 1 of 2' })).toBeTruthy();
+  });
+
+  it('does nothing when nothing is missed', () => {
+    const { rerender } = render(<RhythmChallenge {...baseProps} missedCaseIds={[]} reviewRequest={0} />);
+    rerender(<RhythmChallenge {...baseProps} missedCaseIds={[]} reviewRequest={1} />);
+    expect(screen.getByRole('heading', { name: 'Read the strip, name the rhythm' })).toBeTruthy();
+  });
+
+  it('never replaces a session that is in progress', async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<RhythmChallenge {...baseProps} missedCaseIds={missed} reviewRequest={0} />);
+    await user.selectOptions(screen.getByLabelText('Category'), 'nsr');
+    await user.click(screen.getByRole('button', { name: /^Start/ }));
+    expect(screen.getByRole('heading', { name: 'Question 1 of 2' })).toBeTruthy();
+    await user.click(screen.getByRole('radio', { name: 'Normal sinus rhythm' }));
+    rerender(<RhythmChallenge {...baseProps} missedCaseIds={missed} reviewRequest={1} />);
+    expect(screen.getByRole('radio', { name: 'Normal sinus rhythm' })).toBeTruthy();
+    expect((screen.getByRole('radio', { name: 'Normal sinus rhythm' }) as HTMLInputElement).checked).toBe(true);
+  });
+});
+
 describe('Academy dashboard', () => {
   const baseProps = { notice: undefined, onReset: vi.fn(), onOpenChallenge: vi.fn(), onOpenSimulator: vi.fn() };
 

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ManualMeasurementSet } from '../engine/measurement-sets';
@@ -178,6 +178,30 @@ describe('GuidedExercises', () => {
     await user.click(screen.getByRole('button', { name: 'Check answer' }));
     expect(screen.getByRole('status').textContent).toContain('Passed');
     expect(completed).toEqual(['grid-and-calibration']);
+  });
+
+  it('opens on a requested exercise once per request, ignores unknown ids, and moves focus to its title', async () => {
+    const user = userEvent.setup();
+    const props = { config, measurement: onBeats, storage: memoryStorage() };
+    const { rerender, container } = render(<GuidedExercises {...props} />);
+    const details = container.querySelector('details') as HTMLDetailsElement;
+    expect(details.open).toBe(false);
+
+    rerender(<GuidedExercises {...props} request={{ id: 'paper-speed-and-grid', token: 1 }} />);
+    expect(details.open).toBe(true);
+    expect(screen.getByRole('heading', { name: 'One interval, two paper speeds' })).toBeTruthy();
+    await vi.waitFor(() => expect(document.activeElement?.textContent).toBe('One interval, two paper speeds'));
+
+    // The learner moves on; re-rendering with the same token must not drag them back.
+    await user.click(screen.getByRole('button', { name: /Measure an R–R interval/ }));
+    rerender(<GuidedExercises {...props} request={{ id: 'paper-speed-and-grid', token: 1 }} />);
+    expect(screen.getByRole('heading', { name: 'Measure an R–R interval' })).toBeTruthy();
+
+    rerender(<GuidedExercises {...props} request={{ id: 'no-such-exercise', token: 2 }} />);
+    expect(screen.getByRole('heading', { name: 'Measure an R–R interval' })).toBeTruthy();
+
+    rerender(<GuidedExercises {...props} request={{ id: 'grid-and-calibration', token: 3 }} />);
+    expect(screen.getByRole('heading', { name: 'Read the calibration pulse' })).toBeTruthy();
   });
 });
 

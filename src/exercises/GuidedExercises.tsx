@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ManualMeasurementSet } from '../engine/measurement-sets';
 import type { MachineConfig } from '../engine/types';
 import { exerciseRegistry, type ExerciseDefinition } from './definitions';
@@ -24,6 +24,8 @@ type GuidedExercisesProps = {
   onCompleted?: (definition: ExerciseDefinition) => void;
   /** Lets a finished exercise lead on to the Rhythm Challenge. */
   onOpenChallenge?: () => void;
+  /** Asks the panel to open and show one exercise (for example from the Home dashboard). Each new token is handled once. */
+  request?: { id: string; token: number };
 };
 
 function localStorageOrNull(): ProgressStorage | null {
@@ -34,7 +36,10 @@ function localStorageOrNull(): ProgressStorage | null {
   }
 }
 
-export function GuidedExercises({ config, measurement, storage, onCompleted, onOpenChallenge }: GuidedExercisesProps) {
+export function GuidedExercises({ config, measurement, storage, onCompleted, onOpenChallenge, request }: GuidedExercisesProps) {
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const handledToken = useRef(0);
   const storageRef = useRef<ProgressStorage | null>(storage === undefined ? localStorageOrNull() : storage);
   const initial = useMemo(() => (storageRef.current ? readExerciseProgress(storageRef.current) : { progress: { version: 1 as const, exercises: {} } }), []);
   const [progress, setProgress] = useState<ExerciseProgress>(initial.progress);
@@ -68,6 +73,17 @@ export function GuidedExercises({ config, measurement, storage, onCompleted, onO
     setHintCount(0);
     setStatus('');
   };
+
+  // A request from elsewhere opens the panel on that exercise, once per token, and moves focus to it.
+  useEffect(() => {
+    if (!request || request.token === handledToken.current) return;
+    handledToken.current = request.token;
+    if (!exerciseRegistry.some(item => item.id === request.id)) return;
+    select(request.id);
+    if (detailsRef.current) detailsRef.current.open = true;
+    detailsRef.current?.scrollIntoView?.({ block: 'start' });
+    window.setTimeout(() => titleRef.current?.focus(), 0);
+  }, [request]);
 
   const record = () => {
     if (!measurement) {
@@ -128,7 +144,7 @@ export function GuidedExercises({ config, measurement, storage, onCompleted, onO
   };
 
   return (
-    <details className="guided-exercises">
+    <details className="guided-exercises" ref={detailsRef}>
       <summary>Guided exercises <small>draft · unreviewed · synthetic signal</small></summary>
       <p>Short practice tasks that use the markers and controls above. Checks compare your marker times with the simulator’s own event times; they are not clinical interpretation. These exercises are drafts and have not been reviewed.</p>
       <div className="exercise-picker" role="group" aria-label="Choose an exercise">
@@ -143,7 +159,7 @@ export function GuidedExercises({ config, measurement, storage, onCompleted, onO
       </div>
 
       <section className="exercise-detail" aria-labelledby="exercise-title">
-        <h3 id="exercise-title">{definition.title}</h3>
+        <h3 id="exercise-title" ref={titleRef} tabIndex={-1}>{definition.title}</h3>
         <p>{definition.objective}</p>
         <p className="exercise-progress">Step {stepIndex + 1} of {definition.steps.length} · Readings {entry.readings.length} of {definition.requiredReadings} · Attempts {entry.attempts}{entry.passed ? ' · Completed' : ''}</p>
         <ol className="exercise-steps" aria-label="Exercise steps">

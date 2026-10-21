@@ -19,6 +19,8 @@ type RhythmChallengeProps = {
   onOpenAcademy: () => void;
   /** Personal best so a new one can be called out. */
   timedBestScore: number;
+  /** Each new value asks for a review of missed strips (for example from the Home dashboard). Handled once. */
+  reviewRequest?: number;
 };
 
 const modeLabels: Record<SessionMode, { title: string; blurb: string }> = {
@@ -32,7 +34,7 @@ const formatClock = (ms: number) => {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 };
 
-export function RhythmChallenge({ active, missedCaseIds, onSessionEnded, onOpenAcademy, timedBestScore }: RhythmChallengeProps) {
+export function RhythmChallenge({ active, missedCaseIds, onSessionEnded, onOpenAcademy, timedBestScore, reviewRequest }: RhythmChallengeProps) {
   const [mode, setMode] = useState<SessionMode>('learn');
   const [category, setCategory] = useState<'all' | RhythmCategoryId>('all');
   const [difficulty, setDifficulty] = useState<'all' | '1' | '2' | '3'>('all');
@@ -76,6 +78,16 @@ export function RhythmChallenge({ active, missedCaseIds, onSessionEnded, onOpenA
   useEffect(() => {
     if (!active) setSession(current => (current ? pauseSession(current) : current));
   }, [active]);
+
+  // A review request starts a review of missed strips, unless the learner already has a session in progress.
+  const handledReview = useRef(0);
+  useEffect(() => {
+    if (!reviewRequest || reviewRequest === handledReview.current) return;
+    handledReview.current = reviewRequest;
+    if (missedCaseIds.length === 0) return;
+    if (session && session.status !== 'complete' && session.status !== 'expired') return;
+    start({ mode: 'practice', caseIds: missedCaseIds, categoryIds: null, difficulties: null, questionCount: Math.min(MAX_QUESTIONS, missedCaseIds.length) });
+  }, [reviewRequest]);
 
   // Timed countdown: measured wall time per tick, clamped inside tickSession, paused with the session.
   const running = session !== null && session.config.mode === 'timed' && session.status === 'in-progress';
