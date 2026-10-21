@@ -5,12 +5,12 @@
 
 Date: 2026-10-21
 
-- Checkout `ecg-lab-git`, branch `codex/guided-exercises-local`. Last pushed and CI-verified commit: `59cd5e4` (run 39519523726, success). Local commits ahead of the remote: `bfaa039` (docs only) and the Milestone 6 commit. Nothing pushed, merged or deployed in this task; production KYP untouched.
+- Checkout `ecg-lab-git`, branch `codex/guided-exercises-local`. Pushed to `codex/guided-exercises-local` only (commit `c0610a6`; no force, no PR, no merge; `main` unchanged; production KYP untouched). CI: [run 39526224903](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39526224903) on `c0610a6`: completed / success; 23 unit-test files (276 tests) and 79 Chromium scenarios passed on Linux at the default two workers, with no failures. `bfaa039` (docs only) was included in that push.
 - Delivered: Medication Center on the existing content governance (see `IMPLEMENTATION_LEDGER.md` ECG-MEDICATION-15). Learners see no medicine content until a profile passes every gate; five unsourced drafts exist and are inspectable only through the labelled preview flag.
-- Local verification: Vitest 23 files / 276 tests; app and E2E type checks exit 0; build OK (149 modules); Chromium 79/79 with `--workers=1`. With the default two workers on this machine two consecutive full runs each had two failures that differed every time (a wall-clock assertion in the existing live-sweep test, a 375 px layout test that passes alone, and one Chromium worker crash with code 3221226505); every one passed in isolation and in the single-worker run. Treated as load on this machine, not as regressions, but CI at two workers is the real check and the live-sweep test remains timing-sensitive.
+- Local verification: Vitest 23 files / 276 tests; app and E2E type checks exit 0; build OK (149 modules); Chromium 79/79 with `--workers=1`. With the default two workers on this machine two consecutive full runs each had two failures that differed every time (a wall-clock assertion in the existing live-sweep test, a 375 px layout test that passes alone, and one Chromium worker crash with code 3221226505); every one passed in isolation and in the single-worker run. Treated as load on this machine, not as regressions, and CI at two workers then passed 79/79, which supports that reading; the live-sweep test remains timing-sensitive.
 - Visually checked in the browser pane: the learner empty state, the labelled preview list and a full profile with unwritten sections.
 - Not done: sources and reviews for every profile, safety and interaction content, Home dashboard, real-device and screen-reader checks.
-- Next: push for CI when authorized; then the Home dashboard, or sourcing work with a real reviewer.
+- Next: the Home dashboard, or sourcing work with a real reviewer.
 
 ---
 
