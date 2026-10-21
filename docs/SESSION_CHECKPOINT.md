@@ -1,6 +1,17 @@
 ## CI result for the fix (added after the run finished)
 
 - Run [39507495800](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39507495800) on `6e3bce2`: completed / success; 118 unit tests and 32 Chromium scenarios passed. `codex/guided-exercises-local` is pushed; `main` and other branches unchanged; no PR opened.
+# Current session checkpoint - ECG-CP16 Home dashboard
+
+Date: 2026-10-21
+
+- Checkout `ecg-lab-git`, branch `codex/guided-exercises-local`. Last CI-verified commit before this push: `c0610a6` (run 39526224903, success). This push adds `4e967f1` (docs), `69c500a` (Home dashboard) and the records commit that follows; the CI result for them is recorded in `QA_REPORT.md` once the run finishes.
+- Delivered: Home dashboard from real saved state (see `IMPLEMENTATION_LEDGER.md` ECG-HOME-16). Home is the first tab; the simulator remains the landing page (open decision: making Home the landing page would change the entry point most browser tests assume).
+- Local verification on `69c500a`: Vitest 25 files / 298 tests; app and E2E type checks exit 0; build OK (151 modules); Chromium 99/99 at the default two workers.
+- Not done: sources and reviews for any drafted content, safety and interaction content, real-device and screen-reader checks, a decision on the landing page.
+
+---
+
 # Current session checkpoint - ECG-CP15 Milestone 6: Medication Center
 
 Date: 2026-10-21

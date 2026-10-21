@@ -5,6 +5,13 @@ Date: 2026-10-20. This report records checks actually run against the local sour
 ## ECG-CP11 result - CI verified (2026-10-21)
 
 - GitHub Actions run [39507495800](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39507495800), workflow "Verify ECG Lab", commit `6e3bce2` on `codex/guided-exercises-local`: completed / success. Every step passed: install (frozen lockfile), Playwright browser install, `pnpm test` (13 files / 118 tests), `pnpm typecheck`, `pnpm build`, `pnpm test:e2e` (32 passed). This is Linux CI evidence for the branch only; `main` is unchanged and no PR, merge or deployment exists.
+## ECG-CP16 - Home dashboard (2026-10-21)
+
+- Local, on `69c500a`: Vitest 25 files / 298/298 tests; `tsc --noEmit` and the E2E `tsc` exit 0; `tsc -b` + Vite build OK (151 modules); Playwright 99/99 Chromium at the default two workers, no failures or flakes in that run.
+- New unit and component coverage: summary logic from real stores (empty, in progress, completed, stale versions, latest experiment, missed strips, case studies, what counts as activity), the dashboard component with and without saved state, the exercise-request hook (once per token, unknown ids ignored, focus) and the review-request hook (once per request, nothing missed, never replaces a session in progress).
+- New browser coverage (`home-dashboard.spec.ts`, 20): simulator stays the landing page; empty state invents no figures; corrupt stored state shows the empty state; Start opens the chosen exercise with focus on it; progress through an exercise is reflected; Resume goes through the restore confirmation (nothing applied until confirmed, cancel leaves settings alone); missed-strip review starts from Home and does not replace a session in progress; navigation to challenge, cases and progress; case-study completion; axe (WCAG 2 A/AA, 2.1 A/AA) on empty and populated Home at 1280, 768 and 375 px and in the dark theme; no overflow with three stress fonts at 375 px; keyboard and reduced motion.
+- Not covered: screen readers, real devices, any review of drafted content. CI result: see the entry added after the run.
+
 ## ECG-CP15 - Medication Center (2026-10-21)
 
 - CI verified: [run 39526224903](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39526224903) on `c0610a6`: completed / success; 23 unit-test files (276 tests) and 79 Chromium scenarios passed on Linux at the default two workers, with no failures. Local runs before the push: Vitest 23 files / 276/276 tests; `tsc --noEmit` and the E2E `tsc` exit 0; `tsc -b` + Vite build OK (149 modules); Playwright 79/79 Chromium with `--workers=1`.
