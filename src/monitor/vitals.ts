@@ -152,11 +152,13 @@ export function plethWindow(timeline: ScenarioTimeline, startMs: number, endMs: 
     const { phase } = phaseAt(timeline, timeMs);
     if (!phase.spo2 || phase.spo2.quality === 'off') { out.push(null); continue; }
     const amplitude = phase.spo2.perfusion === 'low' ? 0.45 : 1;
+    // The envelope of overlapping pulses, not their sum: at fast rates the trace gets smaller
+    // pulses that do not return to baseline, instead of being clipped flat.
     let value = 0;
     for (let pulse = Math.max(0, upperBound(pulses, timeMs - 1200) - 1); pulse < pulses.length && pulses[pulse] < timeMs + 400; pulse += 1) {
-      value += pulseShape(timeMs - pulses[pulse]);
+      value = Math.max(value, pulseShape(timeMs - pulses[pulse]));
     }
-    value = Math.min(1.25, value) * amplitude;
+    value *= amplitude;
     if (phase.spo2.quality === 'poor') value += hashNoise(index, 17) * 0.6;
     out.push({ timeMs, value });
   }

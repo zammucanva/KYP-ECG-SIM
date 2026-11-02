@@ -37,6 +37,7 @@ import { AcademyDashboard } from './academy/AcademyDashboard';
 import { useAcademy } from './academy/useAcademy';
 import { RhythmChallenge } from './rhythm/RhythmChallenge';
 import { VirtualPatient } from './patients/VirtualPatient';
+import { MonitorScenarios } from './monitor/MonitorScenario';
 import { MedicationCenter } from './medication/MedicationCenter';
 import { HomeDashboard } from './home/HomeDashboard';
 import { buildHomeSummary } from './home/summary';
@@ -91,7 +92,7 @@ function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(readThemePreference);
   const [config, setConfig] = useState<MachineConfig>({ lead: 'V3', paperSpeed: 25, gain: 20, showGrid: true, preset: 'sinus' });
   const [view, setView] = useState<'single' | 'multi'>('single');
-  const [activeSection, setActiveSection] = useState<'home' | 'simulator' | 'challenge' | 'patients' | 'medication' | 'academy' | 'learn'>('simulator');
+  const [activeSection, setActiveSection] = useState<'home' | 'simulator' | 'challenge' | 'patients' | 'monitor' | 'medication' | 'academy' | 'learn'>('simulator');
   // Home reads stored exercise progress when it is shown; the exercise panel writes it as the learner works.
   const [exerciseProgress, setExerciseProgress] = useState<ExerciseProgress>(emptyExerciseProgress);
   const [exerciseRequest, setExerciseRequest] = useState<{ id: string; token: number }>();
@@ -327,6 +328,7 @@ function App() {
         <button type="button" aria-current={activeSection === 'simulator' ? 'page' : undefined} onClick={() => setActiveSection('simulator')}>ECG simulator</button>
         <button type="button" aria-current={activeSection === 'challenge' ? 'page' : undefined} onClick={() => setActiveSection('challenge')}>Rhythm Challenge</button>
         <button type="button" aria-current={activeSection === 'patients' ? 'page' : undefined} onClick={() => setActiveSection('patients')}>Virtual Patients</button>
+        <button type="button" aria-current={activeSection === 'monitor' ? 'page' : undefined} onClick={() => setActiveSection('monitor')}>Bedside Monitor</button>
         <button type="button" aria-current={activeSection === 'medication' ? 'page' : undefined} onClick={() => setActiveSection('medication')}>Medication Center</button>
         <button type="button" aria-current={activeSection === 'academy' ? 'page' : undefined} onClick={() => setActiveSection('academy')}>Academy</button>
         <button type="button" aria-current={activeSection === 'learn' ? 'page' : undefined} onClick={() => setActiveSection('learn')}>Learn</button>
@@ -565,6 +567,15 @@ function App() {
           onOpenChallenge={() => setActiveSection('challenge')}
         />
       </div>
+      {/* Mounted only while open, so leaving the section stops its clock and releases its audio. */}
+      {activeSection === 'monitor' && (
+        <MonitorScenarios
+          completed={academy.progress.scenarios}
+          onCompleted={academy.recordScenario}
+          onOpenAcademy={() => setActiveSection('academy')}
+          onOpenChallenge={() => setActiveSection('challenge')}
+        />
+      )}
       <div hidden={activeSection !== 'medication'}>
         <MedicationCenter records={medications} preview={medicationPreview} publishedLessons={relatedLessons} onOpenLearn={() => setActiveSection('learn')} />
       </div>

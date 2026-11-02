@@ -551,3 +551,68 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
   .home h2 { font-size: 22px; }
 }
 @media (prefers-reduced-motion: reduce) { .home * { transition: none !important; animation: none !important; } }
+
+/* ───────── Bedside monitor (simulated) ─────────
+   The screen keeps a dark, high-contrast palette in both themes so waveforms and numbers stay
+   readable; channel colours follow familiar monitoring conventions without copying any device. */
+.scenario { max-width: 1180px; }
+.bedside { --mon-bg: oklch(13% .015 250); --mon-panel: oklch(17% .02 250); --mon-line: oklch(100% 0 0 / .1); --mon-text: oklch(96% .005 220); --mon-muted: oklch(76% .015 220);
+  --ch-ecg: oklch(84% .2 145); --ch-pleth: oklch(82% .13 215); --ch-resp: oklch(88% .15 95); --ch-nibp: oklch(90% .02 250); --ch-temp: oklch(85% .09 330);
+  --alarm-medium: oklch(85% .16 85); --alarm-high: oklch(68% .21 25); --alarm-low: oklch(82% .1 220);
+  display: grid; gap: 12px; min-width: 0; }
+.bedside-screen { border: 1px solid var(--border-strong); border-radius: 10px; background: var(--mon-bg); color: var(--mon-text); padding: 10px 12px 12px; box-shadow: var(--shadow); min-width: 0; }
+.bedside-head { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; justify-content: space-between; font-size: 12px; color: var(--mon-muted); }
+.bedside-bed { color: var(--mon-text); font-weight: 700; letter-spacing: .08em; }
+.bedside-sim { font-size: 11px; letter-spacing: .04em; }
+.bedside-clock { font-variant-numeric: tabular-nums; color: var(--mon-text); font-weight: 600; }
+.bedside-alarm-bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; margin: 8px 0; padding: 7px 10px; border-radius: 6px; background: var(--mon-panel); font-size: 13px; color: var(--mon-muted); min-height: 38px; }
+.bedside-alarm-bar ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; color: inherit; font-size: 13px; }
+/* Text colour is set per alarm state below; inherited list colours from page styles would fail contrast. */
+.bedside-alarm-bar small { color: inherit; margin-left: 6px; font-size: 11px; }
+.bedside-alarm-bar.active.priority-medium { background: var(--alarm-medium); color: oklch(18% .03 80); }
+.bedside-alarm-bar.active.priority-high { background: var(--alarm-high); color: oklch(99% 0 0); }
+.bedside-alarm-bar.active.priority-low { background: var(--alarm-low); color: oklch(18% .03 240); }
+.bedside-ack { border: 1px solid currentColor; border-radius: 6px; background: transparent; color: inherit; padding: 6px 10px; font-weight: 600; cursor: pointer; }
+.bedside-ack:disabled { opacity: .75; cursor: default; }
+.bedside-body { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 10px; }
+.bedside-waves { display: grid; gap: 4px; min-width: 0; }
+.bedside-trace { margin: 0; border-bottom: 1px solid var(--mon-line); padding-bottom: 2px; min-width: 0; }
+.bedside-trace figcaption { font-size: 11px; color: var(--mon-muted); }
+.bedside-trace figcaption strong { margin-right: 6px; }
+.bedside-trace svg { display: block; width: 100%; height: auto; }
+.bedside-trace.ecg figcaption strong, .bedside-trace.ecg path { color: var(--ch-ecg); stroke: var(--ch-ecg); }
+.bedside-trace.pleth figcaption strong, .bedside-trace.pleth path { color: var(--ch-pleth); stroke: var(--ch-pleth); }
+.bedside-trace.resp figcaption strong, .bedside-trace.resp path { color: var(--ch-resp); stroke: var(--ch-resp); }
+.bedside-trace-empty { fill: var(--mon-muted); font-size: 14px; }
+.bedside-numerics { display: grid; gap: 6px; align-content: start; }
+.bedside-tile { border: 1px solid var(--mon-line); border-radius: 6px; background: var(--mon-panel); padding: 6px 9px; color: var(--tile, var(--mon-text)); }
+.bedside-tile.ecg { --tile: var(--ch-ecg); } .bedside-tile.pleth { --tile: var(--ch-pleth); } .bedside-tile.resp { --tile: var(--ch-resp); }
+.bedside-tile.nibp { --tile: var(--ch-nibp); } .bedside-tile.temp { --tile: var(--ch-temp); }
+.bedside-tile header { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; letter-spacing: .06em; }
+.bedside-tile header small { color: var(--mon-muted); font-weight: 400; letter-spacing: 0; }
+.bedside-value { display: block; font: 600 34px/1.05 ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.bedside-tile.ecg .bedside-value { font-size: 44px; }
+.bedside-tile.alarmed { border-color: var(--alarm-medium); box-shadow: inset 0 0 0 2px var(--alarm-medium); }
+.bedside-status, .bedside-sub { margin: 2px 0 0; font-size: 12px; color: var(--mon-muted); }
+.bedside-sub { color: var(--tile); }
+.bedside-sub small { color: var(--mon-muted); }
+.bedside-tile details { margin-top: 3px; font-size: 11px; color: var(--mon-muted); }
+.bedside-tile summary { cursor: pointer; }
+.bedside-tile details p { margin: 4px 0; line-height: 1.45; }
+.bedside-controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+.bedside-group { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: 12px; color: var(--text); }
+.bedside-group label { display: inline-flex; gap: 6px; align-items: center; }
+.bedside-group select { border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface); color: var(--text); padding: 5px 6px; }
+.bedside-note { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.scenario-questions fieldset { display: grid; gap: 6px; }
+.scenario-results { list-style: none; padding: 0 !important; display: grid; gap: 10px; }
+.scenario-results li { border-left: 3px solid var(--border-strong); padding-left: 10px; }
+.scenario-results li.correct { border-color: var(--primary); }
+.scenario-results li.incorrect { border-color: var(--marker); }
+.scenario-timeline { font-variant-numeric: tabular-nums; }
+@media (max-width: 860px) {
+  .bedside-body { grid-template-columns: minmax(0, 1fr); }
+  .bedside-numerics { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .bedside-value, .bedside-tile.ecg .bedside-value { font-size: 30px; }
+}
+@media (prefers-reduced-motion: reduce) { .bedside * { transition: none !important; animation: none !important; } }

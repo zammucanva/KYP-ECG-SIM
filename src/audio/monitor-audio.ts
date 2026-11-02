@@ -58,6 +58,7 @@ export class MonitorAudio {
   constructor(private readonly createContext: () => AudioContextLike | null = browserAudioContext) {}
 
   getStatus(): AudioStatus { return this.status; }
+  isDisposed(): boolean { return this.disposed; }
   isMuted(): boolean { return this.muted; }
   getVolume(): number { return this.volume; }
   /** Audio clock in seconds, or null when audio is not running. */
