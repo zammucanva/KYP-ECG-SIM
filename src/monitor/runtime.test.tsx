@@ -167,3 +167,28 @@ describe('runtime restore', () => {
     expect(run.view.result.current.alarms.active).toEqual([]);
   });
 });
+
+describe('audio follows the channel that produces it', () => {
+  it('the ECG beat tone stops while an ECG lead is off; the pulse-oximeter tone does not', async () => {
+    const leadOff = getMonitorScenario('scenario.awareness-after-exercise.01')!;
+    const off = leadOff.phases[1].startMs;
+    const ecg = harness(leadOff);
+    await act(async () => { await ecg.view.result.current.audio.enable(); });
+    act(() => ecg.view.result.current.play());
+    ecg.run(40_000);
+    const { timeline } = ecg.view.result.current;
+    const beatTones = ecg.tones.filter(tone => tone.frequency === 880);
+    const expected = timeline.ecgDetectedQrsTimesMs.filter(time => time > 16 && time <= 40_150);
+    expect(beatTones.length).toBe(expected.length);
+    expect(expected.every(time => time < off)).toBe(true);
+
+    const pleth = harness(leadOff);
+    await act(async () => { await pleth.view.result.current.audio.enable(); });
+    act(() => pleth.view.result.current.audio.setToneSource('pleth'));
+    act(() => pleth.view.result.current.play());
+    pleth.run(40_000);
+    const pulsesAfterOff = pleth.view.result.current.timeline.plethPulseTimesMs.filter(time => time > off && time <= 40_000);
+    expect(pulsesAfterOff.length).toBeGreaterThan(10);
+    expect(pleth.tones.filter(tone => tone.frequency !== 880 && tone.frequency > 600).length).toBeGreaterThanOrEqual(pulsesAfterOff.length);
+  });
+});

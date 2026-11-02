@@ -16,8 +16,10 @@ export type ScenarioTimeline = {
   /** Composite ECG schedule for the whole scenario; drawn with the existing rhythm generator. */
   schedule: RhythmSchedule;
   phases: PhaseSpan[];
-  /** Sorted R-peak times (ms). The heart-rate number and the QRS tone both read this list. */
+  /** Sorted R-peak times (ms) of the simulated heart, whether or not the ECG leads are attached. */
   qrsTimesMs: number[];
+  /** R peaks the monitor can detect: only while the ECG leads are connected. The QRS tone reads this. */
+  ecgDetectedQrsTimesMs: number[];
   /**
    * Sorted pulse-oximetry pulse peaks (ms). A simulated mechanical pulse follows each ventricular
    * beat after a fixed transit delay, only while the SpO2 sensor is on and the rhythm is pulsatile.
@@ -163,13 +165,16 @@ export function buildScenarioTimeline(input: MonitorScenario, taken: readonly Ta
   events.sort((x, y) => x.timeMs - y.timeMs);
   const qrsTimesMs = events.filter(isQrs).map(event => event.timeMs);
   const plethPulseTimesMs = qrsTimesMs
-    .map(time => ({ beat: time, pulse: time + PLETH_PULSE_DELAY_MS }))
-    .filter(({ beat }) => {
+    .map((time, index) => ({ beat: time, previous: qrsTimesMs[index - 1], pulse: time + PLETH_PULSE_DELAY_MS }))
+    .filter(({ beat, previous }) => {
       const span = phaseAt({ phases: spans }, beat);
-      return span.pulsatile && span.phase.spo2 !== null && span.phase.spo2.quality !== 'off';
+      const spo2 = span.phase.spo2;
+      if (!span.pulsatile || spo2 === null || spo2.quality === 'off') return false;
+      return spo2.pulseDeficitBelowRrMs === undefined || previous === undefined || beat - previous >= spo2.pulseDeficitBelowRrMs;
     })
     .map(({ pulse }) => pulse);
-  return { scenario, schedule: composite, phases: spans, qrsTimesMs, plethPulseTimesMs, actions: [...taken] };
+  const ecgDetectedQrsTimesMs = qrsTimesMs.filter(time => phaseAt({ phases: spans }, time).phase.ecg === 'connected');
+  return { scenario, schedule: composite, phases: spans, qrsTimesMs, ecgDetectedQrsTimesMs, plethPulseTimesMs, actions: [...taken] };
 }
 
 /** Index of the first value strictly greater than `timeMs` in a sorted list. */

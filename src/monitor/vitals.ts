@@ -41,13 +41,15 @@ export const NIBP_FIRST_MS = 5_000;
 
 /**
  * Average rate from the last few intervals in a sorted event list, or null when it cannot be
- * counted. Only events since monitoring started count: lead-in history drawn before time 0 is not
+ * counted (fewer than RATE_AVERAGE_INTERVALS intervals since monitoring started). Only events since monitoring started count: lead-in history drawn before time 0 is not
  * something the monitor could have measured.
  */
 export function rateFromEvents(sortedTimesMs: readonly number[], timeMs: number, monitoringStartMs = 0): number | null {
   const end = upperBound(sortedTimesMs, timeMs);
   const firstCounted = upperBound(sortedTimesMs, monitoringStartMs - 1e-9);
-  if (end - firstCounted < 2) return null;
+  // No number until a full averaging window has been counted: one short first interval (for
+  // example in an irregular rhythm) must not produce a spurious reading or alarm.
+  if (end - firstCounted < RATE_AVERAGE_INTERVALS + 1) return null;
   const last = sortedTimesMs[end - 1];
   if (timeMs - last > RATE_TIMEOUT_MS) return null;
   const start = Math.max(firstCounted, end - 1 - RATE_AVERAGE_INTERVALS);
@@ -90,7 +92,7 @@ export function readingsAt(timeline: ScenarioTimeline, timeMs: number): MonitorR
 
   const heartRate: NumericReading = phase.ecg === 'lead-off'
     ? { value: null, status: 'lead-off' }
-    : (() => { const value = rateFromEvents(timeline.qrsTimesMs, timeMs); return { value, status: value === null ? 'searching' : 'ok' }; })();
+    : (() => { const value = rateFromEvents(timeline.ecgDetectedQrsTimesMs, timeMs); return { value, status: value === null ? 'searching' : 'ok' }; })();
 
   let spo2: NumericReading;
   let pulseRate: NumericReading;

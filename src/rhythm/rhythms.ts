@@ -207,10 +207,13 @@ export function buildRhythmSchedule(categoryId: RhythmCategoryId, params: Rhythm
     case 'pvc': {
       const regular = regularRs(rr, offset + start - BUILD_START_MS, window);
       const ectopicIndex = regular.findIndex(time => time > 1500 + (params.seed % 3) * 400);
+      // The strip has one premature beat. A longer (monitoring) window repeats it every few beats.
+      const every = 6 + (params.seed % 3);
+      const isEctopic = (index: number) => isStripWindow ? index === ectopicIndex : index > 0 && index >= ectopicIndex && (index - ectopicIndex) % every === 0;
       const events: RhythmEvent[] = [];
       regular.forEach((time, index) => {
         events.push(p(time - 130));
-        if (index === ectopicIndex) events.push(qrs(regular[index - 1] + 0.58 * rr, { wide: true, ampScale: 1.1 }));
+        if (isEctopic(index)) events.push(qrs(regular[index - 1] + 0.58 * rr, { wide: true, ampScale: 1.1 }));
         else events.push(qrs(time));
       });
       return { events };

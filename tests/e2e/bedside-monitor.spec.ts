@@ -163,7 +163,7 @@ test.describe('Bedside monitor scenario', () => {
     await expect(submit).toBeDisabled();
     await page.getByRole('radio', { name: 'Heart rate above the high limit' }).check();
     await page.getByRole('radio', { name: /The ECG: intervals/ }).check();
-    await expect(page.getByText('Use “Record 6-second strip” on the monitor to capture the current rhythm first.')).toBeVisible();
+    await expect(page.getByText('Use “Record 6-second strip” on the monitor to capture the rhythm first.')).toBeVisible();
     await page.getByRole('button', { name: 'Record 6-second strip' }).click();
     await expect(page.locator('.scenario-questions .rhythm-strip svg path').first()).toHaveAttribute('d', /L/);
     await page.getByRole('radio', { name: 'Supraventricular tachycardia', exact: true }).check();

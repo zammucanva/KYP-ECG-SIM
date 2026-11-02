@@ -38,7 +38,8 @@ import { useAcademy } from './academy/useAcademy';
 import { RhythmChallenge } from './rhythm/RhythmChallenge';
 import { VirtualPatient } from './patients/VirtualPatient';
 import { MonitorScenarios } from './monitor/MonitorScenario';
-import { browserStorageOrNull, readScenarioRuns } from './monitor/run-storage';
+import { browserStorageOrNull, readScenarioRuns, resumableRun } from './monitor/run-storage';
+import { monitorScenarios } from './monitor/scenario';
 import { MedicationCenter } from './medication/MedicationCenter';
 import { HomeDashboard } from './home/HomeDashboard';
 import { buildHomeSummary } from './home/summary';
@@ -571,6 +572,14 @@ function App() {
           onCompleted={academy.recordPatientCase}
           onOpenAcademy={() => setActiveSection('academy')}
           onOpenChallenge={() => setActiveSection('challenge')}
+          monitoredCaseIds={monitorScenarios.flatMap(item => item.patientCaseId ? [item.patientCaseId] : [])}
+          onOpenMonitored={patientCaseId => {
+            const scenario = monitorScenarios.find(item => item.patientCaseId === patientCaseId);
+            if (!scenario) return;
+            const mode = resumableRun(readScenarioRuns(browserStorageOrNull()), scenario) && academy.progress.scenarios[scenario.id] !== scenario.version ? 'resume' : 'start';
+            setScenarioRequest(current => ({ scenarioId: scenario.id, mode, token: (current?.token ?? 0) + 1 }));
+            setActiveSection('monitor');
+          }}
         />
       </div>
       {/* Mounted only while open, so leaving the section stops its clock and releases its audio. */}

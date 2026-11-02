@@ -115,9 +115,14 @@ describe('vital-sign channels', () => {
   });
 
   it('withdraws a rate when beats stop arriving instead of showing a stale number', () => {
-    expect(rateFromEvents([0, 1000, 2000], 2500)).toBe(60);
-    expect(rateFromEvents([0, 1000, 2000], 8000)).toBeNull();
+    expect(rateFromEvents([0, 1000, 2000, 3000, 4000], 4500)).toBe(60);
+    expect(rateFromEvents([0, 1000, 2000, 3000, 4000], 10_000)).toBeNull();
     expect(rateFromEvents([1000], 1500)).toBeNull();
+  });
+
+  it('shows no rate until a full averaging window has been counted, so a short first interval cannot alarm', () => {
+    expect(rateFromEvents([0, 300, 1300, 2300], 2400)).toBeNull();
+    expect(rateFromEvents([0, 300, 1300, 2300, 3300], 3400)).toBe(Math.round(60_000 * 4 / 3300));
   });
 
   it('marks lead-off and poor pleth signal per channel', () => {

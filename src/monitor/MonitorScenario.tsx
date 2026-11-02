@@ -124,7 +124,16 @@ function ScenarioRun({ scenario, completed, onCompleted, onOpenAcademy, onOpenCh
   const choices = useMemo(() => alarmChoices(firstAlarm), [firstAlarm]);
   const done = completed[scenario.id] === scenario.version;
   const needsStrip = assessment.kind === 'rhythm';
-  const ready = Boolean(answers.alarm && answers.hrSource && (needsStrip ? answers.rhythm && recordedEndMs !== null : answers.decision));
+  // A strip is usable for the rhythm question only if it lies inside the assessed period and every
+  // part of it had an ECG signal (never a trace drawn while a lead was off).
+  const assessedEndMs = scenario.phases.find(phase => phase.startMs > assessedPhase.startMs)?.startMs ?? scenario.durationMs;
+  const strip = recordedEndMs === null ? null : (() => {
+    const startMs = recordedEndMs - STRIP_DURATION_MS;
+    const leadOff = timeline.phases.some(span => span.phase.ecg === 'lead-off' && span.startMs < recordedEndMs && span.endMs > startMs);
+    return { startMs, endMs: recordedEndMs, leadOff, inside: startMs >= assessedPhase.startMs && recordedEndMs <= assessedEndMs };
+  })();
+  const stripUsable = strip !== null && !strip.leadOff && strip.inside;
+  const ready = Boolean(answers.alarm && answers.hrSource && (needsStrip ? answers.rhythm && stripUsable : answers.decision));
 
   useEffect(() => { headingRef.current?.focus(); }, [step]);
 
@@ -195,7 +204,6 @@ function ScenarioRun({ scenario, completed, onCompleted, onOpenAcademy, onOpenCh
     setStep('debrief');
   };
 
-  const recordingCoversChange = recordedEndMs !== null && recordedEndMs - STRIP_DURATION_MS >= assessedPhase.startMs;
   const firstLabel = buildCase(getRhythmCase(scenario.phases[0].rhythmCaseId)!).category.label;
 
   return (
@@ -270,11 +278,16 @@ function ScenarioRun({ scenario, completed, onCompleted, onOpenAcademy, onOpenCh
                 </fieldset>
                 {assessment.kind === 'rhythm' ? (
                   <fieldset>
-                    <legend>2. Which rhythm is the monitor showing now?</legend>
-                    {recordedEndMs === null ? <p className="challenge-note">Use “Record 6-second strip” on the monitor to capture the current rhythm first.</p> : (
+                    <legend>2. Which rhythm does your strip show?</legend>
+                    <p className="challenge-note">Record a 6-second strip between {formatSimTime(assessedPhase.startMs)} and {formatSimTime(assessedEndMs)}{scenario.actions.length > 0 ? ', with every lead attached' : ''}.</p>
+                    {strip === null ? <p className="challenge-note">Use “Record 6-second strip” on the monitor to capture the rhythm first.</p> : strip.leadOff ? (
+                      <p className="challenge-note" role="status">Strip {formatSimTime(strip.startMs)}–{formatSimTime(strip.endMs)}: an ECG lead was off during part of it, so there is no complete trace to show. Restore the signal and record again.</p>
+                    ) : !strip.inside ? (
+                      <p className="challenge-note" role="status">Strip {formatSimTime(strip.startMs)}–{formatSimTime(strip.endMs)} is outside {formatSimTime(assessedPhase.startMs)}–{formatSimTime(assessedEndMs)}, the period this question asks about. Record again inside it.</p>
+                    ) : (
                       <>
-                        <p className="challenge-note">Strip recorded from {formatSimTime(recordedEndMs - STRIP_DURATION_MS)} to {formatSimTime(recordedEndMs)}.{!recordingCoversChange && ' Part of this strip is from before the change; you can record again.'}</p>
-                        <RhythmStrip recording={{ schedule: timeline.schedule, startMs: recordedEndMs - STRIP_DURATION_MS }} />
+                        <p className="challenge-note">Strip recorded from {formatSimTime(strip.startMs)} to {formatSimTime(strip.endMs)}.</p>
+                        <RhythmStrip recording={{ schedule: timeline.schedule, startMs: strip.startMs }} />
                         {options.map(option => (
                           <label key={option.id} className={answers.rhythm === option.id ? 'answer-option selected' : 'answer-option'}>
                             <input type="radio" name="scenario-rhythm" value={option.id} checked={answers.rhythm === option.id} onChange={() => setAnswers(current => ({ ...current, rhythm: option.id }))} />

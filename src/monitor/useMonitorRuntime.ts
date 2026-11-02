@@ -100,7 +100,7 @@ export function useMonitorRuntime(scenario: MonitorScenario, options: MonitorRun
         const actions = tones.update({
           snapshot: state,
           audioNowS: audioNow,
-          eventTimesMs: source === 'ecg' ? timeline.qrsTimesMs : timeline.plethPulseTimesMs,
+          eventTimesMs: source === 'ecg' ? timeline.ecgDetectedQrsTimesMs : timeline.plethPulseTimesMs,
           frequencyAt: source === 'ecg'
             ? () => BEAT_TONE_HZ
             : time => { const spo2 = displayedSpo2(timeline.phases, time); return spo2 === null ? null : spo2PitchHz(spo2); },

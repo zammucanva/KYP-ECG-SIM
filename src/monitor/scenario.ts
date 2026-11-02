@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { patientAgeRanges } from '../patients/cases';
+import { patientAgeRanges, patientCases } from '../patients/cases';
 import { getRhythmCase } from '../rhythm/cases';
 
 /**
@@ -20,6 +20,11 @@ const spo2ConfigSchema = z.strictObject({
   percent: z.number().int().min(50).max(100),
   quality: z.enum(channelQualities),
   perfusion: z.enum(['normal', 'low']),
+  /**
+   * Simplified pulse-deficit rule: a beat that follows an R–R interval shorter than this produces
+   * no detectable finger pulse (too little filling time). A teaching rule, not a measured threshold.
+   */
+  pulseDeficitBelowRrMs: z.number().int().min(200).max(1_200).optional(),
 });
 
 export const scenarioPhaseSchema = z.strictObject({
@@ -130,6 +135,7 @@ export const monitorScenarioSchema = z.strictObject({
   });
   if (new Set(value.phases.map(phase => phase.id)).size !== value.phases.length) context.addIssue({ code: 'custom', path: ['phases'], message: 'Phase ids must be unique.' });
   if (!value.phases.some(phase => phase.id === value.assessedPhaseId)) context.addIssue({ code: 'custom', path: ['assessedPhaseId'], message: 'The assessed phase must exist.' });
+  if (value.patientCaseId !== undefined && !patientCases.some(patient => patient.id === value.patientCaseId)) context.addIssue({ code: 'custom', path: ['patientCaseId'], message: 'Unknown patient case.' });
   if (new Set(value.actions.map(action => action.id)).size !== value.actions.length) context.addIssue({ code: 'custom', path: ['actions'], message: 'Action ids must be unique.' });
   if (value.assessment.kind === 'decision') {
     const { options, expectedActionId } = value.assessment;
@@ -263,6 +269,115 @@ rawScenarios.push({
   publicationStatus: 'draft',
   reviewStatus: 'unreviewed',
 });
+
+const MONITOR_CAVEAT = 'Monitor values are generated teaching data from a simplified simulation, not measurements from a patient; alarm limits are simulation defaults.';
+
+/**
+ * A Virtual Patient case on the bedside monitor. The story, objectives and caveats come from the
+ * patient case itself (one source of text); the scenario adds the monitor channels, events and one
+ * monitor-specific objective, caveat and sentence. Starting channel values are checked against the
+ * case's written observations by a unit test.
+ */
+function monitoredPatient(patientId: string, monitor: {
+  id: string; bedLabel: string; event: string; objective: string; caveat?: string;
+  phases: unknown[]; assessedPhaseId: string; actions?: unknown[];
+}): unknown {
+  const patient = patientCases.find(item => item.id === patientId);
+  if (!patient) throw new Error(`Unknown patient case ${patientId}`);
+  return {
+    id: monitor.id,
+    version: '0.1.0',
+    patientCaseId: patient.id,
+    title: `On the monitor: ${patient.title}`,
+    bedLabel: monitor.bedLabel,
+    ageRange: patient.ageRange,
+    presentation: `${patient.presentation} ${monitor.event}`,
+    symptoms: patient.symptoms,
+    history: patient.history,
+    learningObjectives: [...patient.learningObjectives.slice(0, 3), monitor.objective],
+    caveats: [...patient.caveats.slice(0, 2), monitor.caveat ?? MONITOR_CAVEAT],
+    durationMs: 90_000,
+    nibpIntervalMs: 30_000,
+    alarmLimits: SIMULATION_DEFAULT_ALARM_LIMITS,
+    phases: monitor.phases,
+    assessedPhaseId: monitor.assessedPhaseId,
+    assessment: { kind: 'rhythm' },
+    actions: monitor.actions ?? [],
+    publicationStatus: 'draft',
+    reviewStatus: 'unreviewed',
+  };
+}
+
+const good = (percent: number, extra: Record<string, unknown> = {}) => ({ percent, quality: 'good', perfusion: 'normal', ...extra });
+
+rawScenarios.push(
+  monitoredPatient('patient.awareness-after-exercise.01', {
+    id: 'scenario.awareness-after-exercise.01',
+    bedLabel: 'SIM-BED-01',
+    event: 'They are monitored briefly while resting; part way through, one ECG electrode comes loose when they reach for their bag.',
+    objective: 'Tell an equipment alarm (an ECG lead off) from a change in the patient, and restore the signal before recording a strip.',
+    phases: [
+      { id: 'resting', startMs: 0, rhythmCaseId: 'rhythm.nsr.01', ecg: 'connected', spo2: good(99), respiratoryRatePerMin: 14, nibp: { systolic: 118, diastolic: 74 }, temperatureC: 36.7 },
+      { id: 'electrode-loose', startMs: 25_000, rhythmCaseId: 'rhythm.nsr.01', ecg: 'lead-off', spo2: good(99), respiratoryRatePerMin: 14, nibp: { systolic: 118, diastolic: 74 }, temperatureC: 36.7 },
+    ],
+    assessedPhaseId: 'electrode-loose',
+    actions: [{ id: 'reattach-electrode', label: 'Reattach the loose ECG electrode', description: 'A bedside check of the ECG leads. In this simulation the trace returns a few seconds later.', delayMs: 3_000, effect: { ecg: 'connected' } }],
+  }),
+  monitoredPatient('patient.irregular-heartbeat.01', {
+    id: 'scenario.irregular-heartbeat.01',
+    bedLabel: 'SIM-BED-02',
+    event: 'They are placed on a bedside monitor with ECG leads and a finger pulse oximeter.',
+    objective: 'Compare the heart rate counted from the ECG with the pulse rate counted from the pulse oximeter in an irregular rhythm.',
+    caveat: 'In this simulation a beat that comes very soon after the previous one gives no detectable finger pulse, so the pulse rate can read lower than the heart rate. That is a simplified rule.',
+    phases: [
+      { id: 'monitoring', startMs: 0, rhythmCaseId: 'rhythm.atrial-fibrillation.01', ecg: 'connected', spo2: good(97, { pulseDeficitBelowRrMs: 520 }), respiratoryRatePerMin: 16, nibp: { systolic: 134, diastolic: 82 }, temperatureC: 36.6 },
+    ],
+    assessedPhaseId: 'monitoring',
+  }),
+  monitoredPatient('patient.sudden-fast-heartbeat.01', {
+    id: 'scenario.sudden-fast-heartbeat.01',
+    bedLabel: 'SIM-BED-03',
+    event: 'They are connected to a bedside monitor. In this scenario the fast rhythm stops on its own at 00:45.',
+    objective: 'Record a strip while the fast rhythm is running, and notice how the alarm clears when the rate falls.',
+    phases: [
+      { id: 'fast', startMs: 0, rhythmCaseId: 'rhythm.svt.01', ecg: 'connected', spo2: good(98), respiratoryRatePerMin: 18, nibp: { systolic: 112, diastolic: 70 }, temperatureC: 36.8 },
+      { id: 'settled', startMs: 45_000, rhythmCaseId: 'rhythm.nsr.02', ecg: 'connected', spo2: good(98), respiratoryRatePerMin: 16, nibp: { systolic: 118, diastolic: 74 }, temperatureC: 36.8 },
+    ],
+    assessedPhaseId: 'fast',
+  }),
+  monitoredPatient('patient.routine-ecg-before-sport.01', {
+    id: 'scenario.routine-ecg-before-sport.01',
+    bedLabel: 'SIM-BED-05',
+    event: 'They rest on a bedside monitor for a short time before the recording. No temperature probe is attached.',
+    objective: 'Notice that a quiet monitor with no alarm does not show the PR interval: only the strip does.',
+    phases: [
+      { id: 'resting', startMs: 0, rhythmCaseId: 'rhythm.first-degree-avb.01', ecg: 'connected', spo2: good(99), respiratoryRatePerMin: 12, nibp: { systolic: 116, diastolic: 72 }, temperatureC: null },
+    ],
+    assessedPhaseId: 'resting',
+  }),
+  monitoredPatient('patient.skipped-beats.01', {
+    id: 'scenario.skipped-beats.01',
+    bedLabel: 'SIM-BED-06',
+    event: 'They are monitored at rest, and the early beats recur every few seconds.',
+    objective: 'See how an early beat appears on the ECG and why the pulse oximeter may not count it.',
+    caveat: 'In this simulation an early beat that comes too soon gives no detectable finger pulse, so the pulse rate can read lower than the heart rate. That is a simplified rule.',
+    phases: [
+      { id: 'monitoring', startMs: 0, rhythmCaseId: 'rhythm.pvc.01', ecg: 'connected', spo2: good(98, { pulseDeficitBelowRrMs: 520 }), respiratoryRatePerMin: 15, nibp: { systolic: 126, diastolic: 80 }, temperatureC: 36.6 },
+    ],
+    assessedPhaseId: 'monitoring',
+  }),
+  monitoredPatient('patient.unwell-with-fast-pulse.01', {
+    id: 'scenario.unwell-with-fast-pulse.01',
+    bedLabel: 'SIM-BED-08',
+    event: 'They are placed on a bedside monitor with a temperature probe. In this scenario the heart rate rises further at 00:45.',
+    objective: 'Read the temperature, heart rate and rhythm as separate channels, and notice when the rate crosses the alarm limit.',
+    phases: [
+      { id: 'fast', startMs: 0, rhythmCaseId: 'rhythm.sinus-tachycardia.01', ecg: 'connected', spo2: good(97), respiratoryRatePerMin: 20, nibp: { systolic: 124, diastolic: 76 }, temperatureC: 38.6 },
+      { id: 'faster', startMs: 45_000, rhythmCaseId: 'rhythm.sinus-tachycardia.02', ecg: 'connected', spo2: good(97), respiratoryRatePerMin: 22, nibp: { systolic: 120, diastolic: 74 }, temperatureC: 38.6 },
+    ],
+    assessedPhaseId: 'faster',
+  }),
+);
 
 export const monitorScenarios: readonly MonitorScenario[] = Object.freeze(rawScenarios.map(item => monitorScenarioSchema.parse(item)));
 
