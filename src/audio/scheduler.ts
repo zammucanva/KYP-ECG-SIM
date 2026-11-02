@@ -22,6 +22,13 @@ export type SchedulerInput = {
   frequencyAt: (simTimeMs: number) => number | null;
   /** The alarm that should sound now, already filtered for acknowledgement. */
   alarm: { id: string; priority: AlarmPriority } | null;
+  /**
+   * Delay between scheduling a sound and hearing it, as reported by the browser. Tones start this
+   * much earlier so they are heard when the beat reaches the trace head. Defaults to 0.
+   */
+  outputLatencyS?: number;
+  /** End of the simulated timeline: nothing is scheduled for events after it. */
+  endMs?: number;
 };
 
 /** How far ahead tones are committed to the audio clock. Short, so pause and seek stay responsive. */
@@ -30,6 +37,13 @@ export const LOOKAHEAD_MS = 150;
 export const MAX_CONTINUOUS_STEP_MS = 400;
 /** A tone more than this late is dropped instead of being played out of time. */
 export const LATE_TOLERANCE_S = 0.02;
+/**
+ * If the gap between the audio clock and simulated time moves by more than this between updates
+ * (a discarded frame stall, a throttled tab), committed tones are cancelled and re-anchored.
+ */
+export const DRIFT_TOLERANCE_S = 0.03;
+/** Output latency above this is treated as this; very large reported values are not trusted. */
+export const MAX_LATENCY_COMPENSATION_S = 0.3;
 /** Repeat interval of each alarm burst, in simulated time. Simulation settings, not a standard. */
 export const ALARM_REPEAT_MS: Record<AlarmPriority, number> = { high: 5_000, medium: 8_000, low: 16_000 };
 
@@ -40,11 +54,24 @@ export class ToneScheduler {
   private lastElapsedMs: number | null = null;
   private nextAlarmMs: number | null = null;
   private alarmKey: string | null = null;
+  private lastOffsetS: number | null = null;
+  private reanchors = 0;
 
   /** Forget everything scheduled (scenario reset or audio re-enabled). */
   reset(): void {
     this.scheduledUntilMs = null;
     this.lastElapsedMs = null;
+    this.nextAlarmMs = null;
+    this.alarmKey = null;
+    this.lastOffsetS = null;
+  }
+
+  /** How many times drift between the two clocks forced a re-anchor; for diagnostics and tests. */
+  reanchorCount(): number { return this.reanchors; }
+
+  private dropCommitted(actions: SchedulerActions): void {
+    if (this.scheduledUntilMs !== null) actions.cancelPending = true;
+    this.scheduledUntilMs = null;
     this.nextAlarmMs = null;
     this.alarmKey = null;
   }
@@ -55,28 +82,31 @@ export class ToneScheduler {
     const actions = none();
 
     if (!snapshot.isPlaying || snapshot.isSuspended) {
-      if (this.scheduledUntilMs !== null) actions.cancelPending = true;
-      this.scheduledUntilMs = null;
-      this.nextAlarmMs = null;
-      this.alarmKey = null;
+      this.dropCommitted(actions);
       this.lastElapsedMs = now;
+      this.lastOffsetS = null;
       return actions;
     }
 
     const last = this.lastElapsedMs;
+    const offsetS = audioNowS - now / 1000;
     if (last !== null && (now < last || now - last > MAX_CONTINUOUS_STEP_MS)) {
-      // Seek, reset or a long stall: drop what was committed for the old position.
-      if (this.scheduledUntilMs !== null) actions.cancelPending = true;
-      this.scheduledUntilMs = null;
-      this.nextAlarmMs = null;
-      this.alarmKey = null;
+      // Seek, reset or a long jump: drop what was committed for the old position.
+      this.dropCommitted(actions);
+    } else if (this.lastOffsetS !== null && Math.abs(offsetS - this.lastOffsetS) > DRIFT_TOLERANCE_S) {
+      // The two clocks stopped moving together (for example a discarded frame stall): re-anchor.
+      this.dropCommitted(actions);
+      this.reanchors += 1;
     }
     this.lastElapsedMs = now;
+    this.lastOffsetS = offsetS;
 
+    const latencyS = Math.min(MAX_LATENCY_COMPENSATION_S, Math.max(0, input.outputLatencyS ?? 0));
     const from = this.scheduledUntilMs ?? now;
-    const to = now + LOOKAHEAD_MS;
+    // Look further ahead by the latency so compensated tones are still committed in time.
+    const to = Math.min(now + LOOKAHEAD_MS + latencyS * 1000, input.endMs ?? Number.POSITIVE_INFINITY);
     for (const simTimeMs of eventsBetween(input.eventTimesMs, from, to)) {
-      const atAudioS = audioNowS + (simTimeMs - now) / 1000;
+      const atAudioS = audioNowS + (simTimeMs - now) / 1000 - latencyS;
       if (atAudioS < audioNowS - LATE_TOLERANCE_S) continue;
       const frequencyHz = input.frequencyAt(simTimeMs);
       if (frequencyHz === null) continue;
@@ -92,7 +122,7 @@ export class ToneScheduler {
       if (key !== this.alarmKey || this.nextAlarmMs === null) this.nextAlarmMs = now;
       this.alarmKey = key;
       if (this.nextAlarmMs <= to) {
-        actions.alarm = { priority: input.alarm!.priority, atAudioS: audioNowS + Math.max(0, this.nextAlarmMs - now) / 1000 };
+        actions.alarm = { priority: input.alarm!.priority, atAudioS: audioNowS + Math.max(0, (this.nextAlarmMs - now) / 1000 - latencyS) };
         this.nextAlarmMs += ALARM_REPEAT_MS[input.alarm!.priority];
       }
     }

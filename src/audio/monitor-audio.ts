@@ -8,6 +8,9 @@ import { alarmBurst, type PlannedAlarm, type PlannedTone } from './scheduler';
  */
 export type AudioContextLike = {
   readonly currentTime: number;
+  /** Reported by browsers that support it; used to start tones early by the output delay. */
+  readonly outputLatency?: number;
+  readonly baseLatency?: number;
   readonly state: string;
   readonly destination: unknown;
   resume(): Promise<void>;
@@ -61,6 +64,14 @@ export class MonitorAudio {
   isDisposed(): boolean { return this.disposed; }
   isMuted(): boolean { return this.muted; }
   getVolume(): number { return this.volume; }
+  /** Output delay reported by the browser in seconds (0 when unknown). */
+  outputLatency(): number {
+    const context = this.context;
+    if (!context) return 0;
+    const value = context.outputLatency ?? context.baseLatency ?? 0;
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  }
+
   /** Audio clock in seconds, or null when audio is not running. */
   now(): number | null { return this.status === 'running' && this.context ? this.context.currentTime : null; }
 

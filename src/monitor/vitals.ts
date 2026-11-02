@@ -1,4 +1,4 @@
-import { phaseAt, upperBound, type PhaseSpan, type ScenarioTimeline } from './timeline';
+import { phaseAt, PLETH_PULSE_DELAY_MS, upperBound, type PhaseSpan, type ScenarioTimeline } from './timeline';
 
 /**
  * Monitor readings at one simulated time. Every number names the channel it comes from and has its
@@ -138,6 +138,12 @@ function pulseShape(deltaMs: number): number {
 
 export const WAVE_SAMPLE_RATE_HZ = 100;
 
+/** Relative pulse size from the perfusion setting of the phase in which the beat occurred. */
+function pulseAmplitude(timeline: ScenarioTimeline, pulseTimeMs: number): number {
+  const spo2 = phaseAt(timeline, pulseTimeMs - PLETH_PULSE_DELAY_MS).phase.spo2;
+  return spo2?.perfusion === 'low' ? 0.45 : 1;
+}
+
 /**
  * Plethysmograph samples (arbitrary units, about 0-1) on [startMs, endMs]. Null when the sensor is
  * absent or off at that time. Poor signal quality adds deterministic artefact.
@@ -151,14 +157,13 @@ export function plethWindow(timeline: ScenarioTimeline, startMs: number, endMs: 
     const timeMs = index * 1000 / WAVE_SAMPLE_RATE_HZ;
     const { phase } = phaseAt(timeline, timeMs);
     if (!phase.spo2 || phase.spo2.quality === 'off') { out.push(null); continue; }
-    const amplitude = phase.spo2.perfusion === 'low' ? 0.45 : 1;
     // The envelope of overlapping pulses, not their sum: at fast rates the trace gets smaller
-    // pulses that do not return to baseline, instead of being clipped flat.
+    // pulses that do not return to baseline, instead of being clipped flat. Each pulse keeps the
+    // perfusion of the beat that produced it, so a phase change never cuts a pulse in half.
     let value = 0;
     for (let pulse = Math.max(0, upperBound(pulses, timeMs - 1200) - 1); pulse < pulses.length && pulses[pulse] < timeMs + 400; pulse += 1) {
-      value = Math.max(value, pulseShape(timeMs - pulses[pulse]));
+      value = Math.max(value, pulseShape(timeMs - pulses[pulse]) * pulseAmplitude(timeline, pulses[pulse]));
     }
-    value *= amplitude;
     if (phase.spo2.quality === 'poor') value += hashNoise(index, 17) * 0.6;
     out.push({ timeMs, value });
   }

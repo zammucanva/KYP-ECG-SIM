@@ -3,7 +3,7 @@ import type { ClockSnapshot } from '../engine/clock';
 import { getMonitorScenario } from '../monitor/scenario';
 import { buildScenarioTimeline } from '../monitor/timeline';
 import { MonitorAudio, type AudioContextLike, type GainLike, type OscillatorLike } from './monitor-audio';
-import { ALARM_REPEAT_MS, alarmBurst, BEAT_TONE_HZ, LOOKAHEAD_MS, spo2PitchHz, ToneScheduler, type PlannedTone, type SchedulerInput } from './scheduler';
+import { ALARM_REPEAT_MS, alarmBurst, BEAT_TONE_HZ, DRIFT_TOLERANCE_S, LOOKAHEAD_MS, MAX_LATENCY_COMPENSATION_S, spo2PitchHz, ToneScheduler, type PlannedTone, type SchedulerInput } from './scheduler';
 
 const timeline = buildScenarioTimeline(getMonitorScenario('scenario.monitored-fast-heartbeat.01')!);
 const beats = timeline.qrsTimesMs;
@@ -96,6 +96,49 @@ describe('tone scheduler', () => {
     run.advance(3_000);
     const afterReset = run.played().filter(tone => tone.atAudioS > run.audioNow() - 3.2);
     expect(afterReset.map(tone => tone.simTimeMs)).toEqual(beatsIn(0, 3_000 + LOOKAHEAD_MS).filter(time => time >= 0));
+  });
+
+  it('starts tones early by the reported output latency so they are heard on the beat', () => {
+    const scheduler = new ToneScheduler();
+    const latency = 0.08;
+    const tones: PlannedTone[] = [];
+    let audioNowS = 4;
+    for (let now = 0; now <= 6_000; now += 16) {
+      tones.push(...scheduler.update({ snapshot: { elapsedMs: now, isPlaying: true, isSuspended: false }, audioNowS, eventTimesMs: beats, frequencyAt: () => 880, alarm: null, outputLatencyS: latency }).tones);
+      audioNowS += 0.016;
+    }
+    expect(tones.map(tone => tone.simTimeMs)).toEqual(beatsIn(0, 6_000 + LOOKAHEAD_MS + latency * 1000).filter(time => time >= 0));
+    // Heard time = scheduled start + latency = the beat's simulated time on the shared mapping.
+    tones.forEach(tone => expect(tone.atAudioS + latency - 4 - tone.simTimeMs / 1000).toBeCloseTo(0, 6));
+    // A wildly large reported latency is capped rather than trusted.
+    const capped = new ToneScheduler().update({ snapshot: { elapsedMs: 0, isPlaying: true, isSuspended: false }, audioNowS: 4, eventTimesMs: [400], frequencyAt: () => 880, alarm: null, outputLatencyS: 5 });
+    expect(capped.tones[0].atAudioS).toBeCloseTo(4 + 0.4 - MAX_LATENCY_COMPENSATION_S, 6);
+  });
+
+  it('re-anchors when the clocks stop moving together, so tones never drift from the beats', () => {
+    const scheduler = new ToneScheduler();
+    let audioNowS = 10;
+    let now = 0;
+    let committed: PlannedTone[] = [];
+    const step = () => {
+      const actions = scheduler.update({ snapshot: { elapsedMs: now, isPlaying: true, isSuspended: false }, audioNowS, eventTimesMs: beats, frequencyAt: () => 880, alarm: null });
+      if (actions.cancelPending) committed = committed.filter(tone => tone.atAudioS <= audioNowS);
+      committed.push(...actions.tones);
+    };
+    for (; now < 5_000; now += 16) { step(); audioNowS += 0.016; }
+    // A 250 ms frame stall: the simulation clock discards it, the audio clock does not.
+    audioNowS += 0.25;
+    step();
+    expect(scheduler.reanchorCount()).toBe(1);
+    for (let index = 0; index < 400; index += 1) { now += 16; audioNowS += 0.016; step(); }
+    const after = committed.filter(tone => tone.simTimeMs > 5_200);
+    const offsets = after.map(tone => tone.atAudioS - tone.simTimeMs / 1000);
+    expect(Math.max(...offsets) - Math.min(...offsets)).toBeLessThan(1e-6);
+    // The new mapping includes the stall: no committed tone keeps the stale mapping.
+    expect(offsets[0]).toBeCloseTo(10 + 0.25, 6);
+    expect(new Set(committed.map(tone => tone.simTimeMs)).size).toBe(committed.length);
+    // Ordinary frame jitter well inside the tolerance never re-anchors.
+    expect(DRIFT_TOLERANCE_S).toBeGreaterThan(0.016);
   });
 
   it('stays silent for beats whose pitch source has no value', () => {

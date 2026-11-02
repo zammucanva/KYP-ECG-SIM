@@ -95,6 +95,8 @@ export function useMonitorRuntime(scenario: MonitorScenario, options: MonitorRun
             ? () => BEAT_TONE_HZ
             : time => { const spo2 = displayedSpo2(timeline.phases, time); return spo2 === null ? null : spo2PitchHz(spo2); },
           alarm: audibleAlarm(alarmsRef.current, now),
+          outputLatencyS: audio.outputLatency(),
+          endMs: timeline.scenario.durationMs,
         });
         if (actions.cancelPending) audio.cancelPending();
         audio.playTones(actions.tones);

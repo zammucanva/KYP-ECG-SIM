@@ -131,6 +131,13 @@ describe('vital-sign channels', () => {
     expect(plethWindow(faulty, onset + 1_000, onset + 2_000).every(sample => sample !== null)).toBe(true);
   });
 
+  it('keeps the pleth trace continuous across a perfusion change (no pulse cut in half)', () => {
+    const samples = plethWindow(timeline, onset - 2_000, onset + 2_000).map(sample => sample!.value);
+    const steps = samples.slice(1).map((value, index) => Math.abs(value - samples[index]));
+    // At 100 Hz the steepest part of a simulated upstroke moves well under 0.2 units per sample.
+    expect(Math.max(...steps)).toBeLessThan(0.2);
+  });
+
   it('produces bounded pleth and respiration traces, with gaps where the sensor is off', () => {
     const pleth = plethWindow(timeline, 10_000, 16_000);
     expect(pleth.length).toBe(601);
