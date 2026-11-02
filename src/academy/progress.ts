@@ -30,6 +30,8 @@ export const XP_RULES = {
   monitoredScenarioCompleted: 20,
   monitoredScenarioCorrectRhythm: 10,
   monitoredScenarioCorrectAlarm: 5,
+  monitoredScenarioCorrectDecision: 10,
+  monitoredScenarioActionTaken: 5,
 } as const;
 
 const isoDate = z.iso.datetime({ offset: true });
@@ -233,8 +235,12 @@ export function applyPatientCase(progress: AcademyProgress, patient: PatientCase
 }
 
 export type ScenarioOutcome = {
-  /** First answer for the assessed phase's rhythm, scored on that phase's rhythm case. */
-  rhythm: AnswerEvaluation;
+  /** Rhythm scenarios: first answer for the assessed phase's rhythm, scored on that rhythm case. */
+  rhythm?: AnswerEvaluation;
+  /** Decision scenarios: whether the learner chose the best-supported option. */
+  decisionCorrect?: boolean;
+  /** Decision scenarios: whether the learner took the expected bedside action before answering. */
+  actionTaken?: boolean;
   /** Whether the learner named the alarm the simulation actually raised. */
   alarmCorrect: boolean;
 };
@@ -246,17 +252,28 @@ export type ScenarioOutcome = {
  */
 export function applyMonitorScenario(progress: AcademyProgress, scenario: MonitorScenario, outcome: ScenarioOutcome, now: string): ApplyResult {
   const key = `scenario:${scenario.id}@${scenario.version}`;
+  const tag = `${scenario.id}@${scenario.version}`;
   if (progress.awards[key] || progress.scenarios[scenario.id] === scenario.version) return { progress, xpGained: 0, achievements: [], alreadyApplied: true };
-  const phase = scenario.phases.find(item => item.id === scenario.assessedPhaseId);
-  const rhythm = phase ? getRhythmCase(phase.rhythmCaseId) : undefined;
-  if (!rhythm || outcome.rhythm.caseId !== rhythm.id || outcome.rhythm.caseVersion !== rhythm.version) return { progress, xpGained: 0, achievements: [], alreadyApplied: false };
-
+  const refused = { progress, xpGained: 0, achievements: [], alreadyApplied: false };
   const xpBefore = totalXp(progress);
-  let next = recordRhythmAttempt(progress, rhythm, outcome.rhythm, now);
+  let next = progress;
+
+  if (scenario.assessment.kind === 'rhythm') {
+    const phase = scenario.phases.find(item => item.id === scenario.assessedPhaseId);
+    const rhythm = phase ? getRhythmCase(phase.rhythmCaseId) : undefined;
+    const answer = outcome.rhythm;
+    if (!rhythm || !answer || answer.caseId !== rhythm.id || answer.caseVersion !== rhythm.version) return refused;
+    next = recordRhythmAttempt(next, rhythm, answer, now);
+    if (answer.rhythmCorrect) next = recordAward(next, `scenario-rhythm:${tag}`, XP_RULES.monitoredScenarioCorrectRhythm, `Rhythm change identified: ${scenario.title}`, now);
+  } else {
+    if (typeof outcome.decisionCorrect !== 'boolean') return refused;
+    if (outcome.decisionCorrect) next = recordAward(next, `scenario-decision:${tag}`, XP_RULES.monitoredScenarioCorrectDecision, `Evidence weighed correctly: ${scenario.title}`, now);
+    if (outcome.actionTaken && scenario.assessment.expectedActionId !== null) next = recordAward(next, `scenario-action:${tag}`, XP_RULES.monitoredScenarioActionTaken, `Bedside check made: ${scenario.title}`, now);
+  }
+
   next = { ...next, scenarios: { ...next.scenarios, [scenario.id]: scenario.version } };
   next = recordAward(next, key, XP_RULES.monitoredScenarioCompleted, `Completed monitored scenario: ${scenario.title}`, now);
-  if (outcome.rhythm.rhythmCorrect) next = recordAward(next, `scenario-rhythm:${scenario.id}@${scenario.version}`, XP_RULES.monitoredScenarioCorrectRhythm, `Rhythm change identified: ${scenario.title}`, now);
-  if (outcome.alarmCorrect) next = recordAward(next, `scenario-alarm:${scenario.id}@${scenario.version}`, XP_RULES.monitoredScenarioCorrectAlarm, `Alarm identified: ${scenario.title}`, now);
+  if (outcome.alarmCorrect) next = recordAward(next, `scenario-alarm:${tag}`, XP_RULES.monitoredScenarioCorrectAlarm, `Alarm identified: ${scenario.title}`, now);
   const unlocked = awardAchievements(next, now);
   return { progress: unlocked.progress, xpGained: totalXp(unlocked.progress) - xpBefore, achievements: unlocked.awarded, alreadyApplied: false };
 }

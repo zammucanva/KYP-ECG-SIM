@@ -58,15 +58,20 @@ export function rateFromEvents(sortedTimesMs: readonly number[], timeMs: number,
 }
 
 /**
- * Displayed SpO2 with a simple averaging lag: across a phase change the number moves toward the new
- * phase's value one point at a time instead of jumping. Null while no pulsatile signal is available.
+ * Displayed SpO2 with a simple averaging lag: between two segments with a good signal the number
+ * moves toward the new value one point at a time instead of jumping. A poor-signal value (artefact)
+ * and the first good value after it are shown directly. Null while no pulsatile signal is available.
  */
 export function displayedSpo2(phases: readonly PhaseSpan[], timeMs: number): number | null {
   let value: number | null = null;
+  let previousQuality: string | null = null;
   for (const span of phases) {
     if (span.startMs > timeMs) break;
     const target = span.phase.spo2 && span.phase.spo2.quality !== 'off' && span.pulsatile ? span.phase.spo2.percent : null;
-    if (target === null || value === null) { value = target; continue; }
+    const quality = span.phase.spo2?.quality ?? null;
+    const lagged = quality === 'good' && previousQuality === 'good';
+    previousQuality = target === null ? null : quality;
+    if (target === null || value === null || !lagged) { value = target; continue; }
     // `value` is what was displayed when the previous phase ended.
     const steps = Math.floor((Math.min(timeMs, span.endMs) - span.startMs) / SPO2_MS_PER_POINT);
     value = value < target ? Math.min(target, value + steps) : Math.max(target, value - steps);

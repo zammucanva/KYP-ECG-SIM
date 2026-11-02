@@ -616,3 +616,6 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
   .bedside-value, .bedside-tile.ecg .bedside-value { font-size: 30px; }
 }
 @media (prefers-reduced-motion: reduce) { .bedside * { transition: none !important; animation: none !important; } }
+.scenario-actions ul { list-style: none; padding: 0 !important; display: grid; gap: 8px; }
+.scenario-actions li { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.scenario-actions small { color: var(--muted); font-size: 12px; }

@@ -4,7 +4,7 @@ import { BEAT_TONE_HZ, spo2PitchHz, ToneScheduler } from '../audio/scheduler';
 import { SimulationClock, type AnimationFrameScheduler, type ClockSnapshot } from '../engine/clock';
 import { acknowledgeAlarms, audibleAlarm, evaluateAlarmConditions, initialAlarmState, updateAlarms, type AlarmState } from './alarms';
 import type { MonitorScenario } from './scenario';
-import { buildScenarioTimeline, type ScenarioTimeline } from './timeline';
+import { buildScenarioTimeline, type ScenarioTimeline, type TakenAction } from './timeline';
 import { displayedSpo2, readingsAt } from './vitals';
 
 export type ToneSource = 'ecg' | 'pleth';
@@ -35,7 +35,13 @@ function prefersReducedMotion(): boolean {
  * itself and sound is off until the learner turns it on.
  */
 export function useMonitorRuntime(scenario: MonitorScenario, options: MonitorRuntimeOptions = {}) {
-  const timeline: ScenarioTimeline = useMemo(() => buildScenarioTimeline(scenario), [scenario]);
+  const [taken, setTaken] = useState<TakenAction[]>([]);
+  const timeline: ScenarioTimeline = useMemo(() => buildScenarioTimeline(scenario, taken), [scenario, taken]);
+  // Frame callbacks read the current timeline from this ref, so a learner action rebuilds the
+  // timeline without restarting the clock, the alarm state or the audio scheduling.
+  const timelineRef = useRef(timeline);
+  timelineRef.current = timeline;
+  const takenRef = useRef<TakenAction[]>([]);
   const [snapshot, setSnapshot] = useState<ClockSnapshot>(initialSnapshot);
   const [alarms, setAlarms] = useState<AlarmState>(initialAlarmState);
   const [audioStatus, setAudioStatus] = useState<AudioStatus>('off');
@@ -70,6 +76,7 @@ export function useMonitorRuntime(scenario: MonitorScenario, options: MonitorRun
     let lastRendered = Number.NEGATIVE_INFINITY;
 
     const unsubscribe = clock.subscribe(state => {
+      const timeline = timelineRef.current;
       if (state.elapsedMs >= timeline.scenario.durationMs && state.isPlaying) {
         clock.pause();
         clock.seek(timeline.scenario.durationMs);
@@ -124,14 +131,14 @@ export function useMonitorRuntime(scenario: MonitorScenario, options: MonitorRun
       audioRef.current.cancelPending();
       tones.reset();
     };
-  }, [timeline, options.scheduler, reducedMotion]);
+  }, [scenario, options.scheduler, reducedMotion]);
 
   const play = useCallback(() => {
     const clock = clockRef.current;
     if (!clock) return;
-    if (clock.getSnapshot().elapsedMs >= timeline.scenario.durationMs) return;
+    if (clock.getSnapshot().elapsedMs >= timelineRef.current.scenario.durationMs) return;
     clock.play();
-  }, [timeline]);
+  }, []);
   const pause = useCallback(() => clockRef.current?.pause(), []);
   const reset = useCallback(() => {
     const clock = clockRef.current;
@@ -141,8 +148,22 @@ export function useMonitorRuntime(scenario: MonitorScenario, options: MonitorRun
     lastAlarmStepRef.current = null;
     toneSchedulerRef.current.reset();
     audioRef.current.cancelPending();
+    takenRef.current = [];
+    timelineRef.current = buildScenarioTimeline(scenario);
+    setTaken([]);
     clock.seek(0);
-  }, []);
+  }, [scenario]);
+
+  /** Records a bedside action at the current simulated time. Each action can be taken once per run. */
+  const takeAction = useCallback((actionId: string): boolean => {
+    const clock = clockRef.current;
+    if (!clock || takenRef.current.some(item => item.actionId === actionId)) return false;
+    const next = [...takenRef.current, { actionId, atMs: clock.getSnapshot().elapsedMs }];
+    timelineRef.current = buildScenarioTimeline(scenario, next);
+    takenRef.current = next;
+    setTaken(next);
+    return true;
+  }, [scenario]);
 
   const acknowledge = useCallback(() => {
     const clock = clockRef.current;
@@ -173,8 +194,8 @@ export function useMonitorRuntime(scenario: MonitorScenario, options: MonitorRun
   }, []);
 
   return {
-    timeline, snapshot, alarms, reducedMotion,
-    play, pause, reset, acknowledge,
+    timeline, snapshot, alarms, reducedMotion, taken,
+    play, pause, reset, acknowledge, takeAction,
     audio: { status: audioStatus, muted, volume, toneSource, enable: enableAudio, disable: disableAudio, setMuted, setVolume, setToneSource },
   };
 }

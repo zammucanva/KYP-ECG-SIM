@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getMonitorScenario } from '../monitor/scenario';
+import { getMonitorScenario, monitorScenarios } from '../monitor/scenario';
 import { evaluateAnswer, getRhythmCase } from '../rhythm/cases';
 import { academyProgressSchema, applyMonitorScenario, dashboardStats, emptyAcademyProgress, totalXp, XP_RULES } from './progress';
 
@@ -18,7 +18,7 @@ describe('monitored scenario awards', () => {
     expect(result.progress.scenarios[scenario.id]).toBe(scenario.version);
     expect(result.progress.cases[assessed.id]).toMatchObject({ attempts: 1, correct: 1, everCorrect: true });
     expect(result.achievements).toEqual(expect.arrayContaining(['first-monitored-scenario', 'first-correct-rhythm']));
-    expect(dashboardStats(result.progress)).toMatchObject({ monitoredScenariosCompleted: 1, monitoredScenariosAvailable: 1 });
+    expect(dashboardStats(result.progress)).toMatchObject({ monitoredScenariosCompleted: 1, monitoredScenariosAvailable: monitorScenarios.length });
   });
 
   it('is idempotent: completing the same scenario again pays nothing', () => {
@@ -39,6 +39,16 @@ describe('monitored scenario awards', () => {
     const result = applyMonitorScenario(emptyAcademyProgress(), scenario, { rhythm: evaluateAnswer(other, other.categoryId), alarmCorrect: true }, NOW);
     expect(result).toMatchObject({ xpGained: 0, alreadyApplied: false });
     expect(result.progress.scenarios).toEqual({});
+  });
+
+  it('credits a decision scenario for the decision and the bedside check, never for a rhythm', () => {
+    const decision = getMonitorScenario('scenario.pulse-oximeter-signal.01')!;
+    const full = applyMonitorScenario(emptyAcademyProgress(), decision, { decisionCorrect: true, actionTaken: true, alarmCorrect: true }, NOW);
+    expect(full.xpGained).toBe(XP_RULES.monitoredScenarioCompleted + XP_RULES.monitoredScenarioCorrectDecision + XP_RULES.monitoredScenarioActionTaken + XP_RULES.monitoredScenarioCorrectAlarm);
+    expect(full.progress.cases).toEqual({});
+    const bare = applyMonitorScenario(emptyAcademyProgress(), decision, { decisionCorrect: false, actionTaken: false, alarmCorrect: false }, NOW);
+    expect(bare.xpGained).toBe(XP_RULES.monitoredScenarioCompleted);
+    expect(applyMonitorScenario(emptyAcademyProgress(), decision, { alarmCorrect: true }, NOW)).toMatchObject({ xpGained: 0, alreadyApplied: false });
   });
 
   it('loads stored progress saved before scenarios existed', () => {

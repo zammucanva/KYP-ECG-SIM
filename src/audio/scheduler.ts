@@ -98,8 +98,16 @@ export class ToneScheduler {
       this.dropCommitted(actions);
       this.reanchors += 1;
     }
+    const establishing = this.lastOffsetS === null;
     this.lastElapsedMs = now;
     this.lastOffsetS = offsetS;
+    if (establishing) {
+      // First update after a start, resume or seek: the simulated clock does not advance on its
+      // first animation frame while the audio clock does, so the mapping between them is only
+      // trusted from the next update. Nothing is lost: scheduling resumes from this time.
+      this.scheduledUntilMs = now;
+      return actions;
+    }
 
     const latencyS = Math.min(MAX_LATENCY_COMPENSATION_S, Math.max(0, input.outputLatencyS ?? 0));
     const from = this.scheduledUntilMs ?? now;

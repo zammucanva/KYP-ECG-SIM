@@ -173,8 +173,8 @@ test.describe('Bedside monitor scenario', () => {
     await expect(debrief).toContainText('✔ Alarm: correct.');
     await expect(debrief).toContainText('✔ Rhythm: correct.');
     await expect(debrief).toContainText('✔ Heart-rate source: correct.');
-    await expect(debrief).toContainText('00:40: the rhythm changed to Supraventricular tachycardia.');
-    await expect(debrief).toContainText('not a rule for real patients');
+    await expect(debrief).toContainText('00:40: the rhythm changed from Normal sinus rhythm to Supraventricular tachycardia');
+    await expect(debrief).toContainText('not rules for real patients');
     await expect(debrief).toContainText('+45 XP for this scenario.');
     await expect(debrief.getByRole('list', { name: 'Achievements unlocked' })).toContainText('First monitored scenario');
 
@@ -226,4 +226,81 @@ test.describe('Bedside monitor scenario', () => {
       }
     });
   }
+});
+
+test.describe('Bedside decision scenario: pulse-oximeter signal', () => {
+  const DECISION = /Start scenario: A falling SpO₂ number with a steady ECG/;
+
+  async function openDecision(page: Page) {
+    await page.clock.install({ time: new Date('2026-11-02T10:00:00Z') });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Bedside Monitor', exact: true }).click();
+    await page.getByRole('button', { name: DECISION }).click();
+    await page.getByRole('button', { name: 'Go to the bedside monitor' }).click();
+    await page.getByRole('button', { name: 'Start scenario', exact: true }).click();
+  }
+
+  test('the artefact raises only a technical alarm; the bedside check restores the signal; the decision is debriefed and credited', async ({ page }) => {
+    test.setTimeout(90_000);
+    await openDecision(page);
+    await advance(page, 20_000);
+    await expect(page.getByText('Nothing needs doing yet. Bedside actions become available once the monitor shows a change.')).toBeVisible();
+    await expect(page.getByTestId('tile-spo2')).toContainText('98');
+    const heartRate = await monitor(page).getAttribute('data-heart-rate');
+
+    await advance(page, 15_000);
+    await expect(monitor(page)).toHaveAttribute('data-phase', 'hand-movement');
+    await expect(monitor(page)).toHaveAttribute('data-alarm-ids', 'spo2-poor-signal');
+    await expect(page.getByTestId('tile-spo2')).toContainText('84');
+    await expect(page.getByTestId('tile-spo2')).toContainText('Poor signal');
+    await expect(monitor(page)).toHaveAttribute('data-heart-rate', heartRate!);
+    await expect(page.getByTestId('alarm-bar')).toHaveClass(/priority-low/);
+    await expect(page.getByRole('button', { name: 'Record 6-second strip' })).toHaveCount(0);
+    expect((await new AxeBuilder({ page }).include('.scenario').analyze()).violations.map(item => item.id)).toEqual([]);
+
+    const check = page.getByRole('button', { name: 'Ask the patient to rest the hand, and reposition the finger sensor' });
+    await check.click();
+    await expect(check).toBeDisabled();
+    await expect(page.locator('.scenario-actions')).toContainText('Done at 00:35');
+    await advance(page, 6_000);
+    await expect(page.getByTestId('tile-spo2')).toContainText('98');
+    await expect(page.getByTestId('tile-spo2')).not.toContainText('Poor signal');
+    await expect(monitor(page)).toHaveAttribute('data-alarm-ids', '');
+
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await page.getByRole('radio', { name: 'SpO₂ poor signal' }).check();
+    await page.getByRole('radio', { name: /The pulse-oximeter signal is unreliable/ }).check();
+    await page.getByRole('radio', { name: /The ECG: intervals/ }).check();
+    await page.getByRole('button', { name: 'Submit answers and see the debrief' }).click();
+
+    const debrief = page.locator('.scenario-debrief');
+    await expect(debrief).toContainText('✔ Alarm: correct.');
+    await expect(debrief).toContainText('✔ Evidence: well judged.');
+    await expect(debrief).toContainText('✔ Bedside check: done.');
+    await expect(debrief).toContainText('You took the bedside step at 00:35. The simulated effect began at 00:39: SpO₂ 98% with a good signal');
+    await expect(debrief).toContainText('00:30: the SpO₂ signal quality became poor; the SpO₂ number moved from 98% to 84%.');
+    await expect(debrief).toContainText('alarm cleared: SpO₂ poor signal');
+    await expect(debrief).toContainText('+40 XP for this scenario.');
+    expect((await new AxeBuilder({ page }).include('.scenario').analyze()).violations.map(item => item.id)).toEqual([]);
+
+    await page.reload();
+    await page.getByRole('button', { name: 'Bedside Monitor', exact: true }).click();
+    await expect(page.locator('.patient-card', { hasText: 'A falling SpO₂ number' })).toContainText('Completed');
+  });
+
+  test('without the bedside check and with a face-value reading, the debrief explains why', async ({ page }) => {
+    test.setTimeout(90_000);
+    await openDecision(page);
+    await advance(page, 36_000);
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await page.getByRole('radio', { name: 'SpO₂ poor signal' }).check();
+    await page.getByRole('radio', { name: /Oxygen saturation has truly fallen/ }).check();
+    await page.getByRole('radio', { name: /The ECG: intervals/ }).check();
+    await page.getByRole('button', { name: 'Submit answers and see the debrief' }).click();
+    const debrief = page.locator('.scenario-debrief');
+    await expect(debrief).toContainText('✖ Evidence: not quite.');
+    await expect(debrief).toContainText('Best supported:');
+    await expect(debrief).toContainText('✖ Bedside check: not done.');
+    await expect(debrief).toContainText('+25 XP for this scenario.');
+  });
 });

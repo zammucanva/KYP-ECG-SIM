@@ -195,3 +195,58 @@ describe('alarms', () => {
     expect(updateAlarms(state, [], 10_100)).toBe(state);
   });
 });
+
+describe('learner actions and channel-only phases', () => {
+  const decision = getMonitorScenario('scenario.pulse-oximeter-signal.01')!;
+  const problemAt = decision.phases[1].startMs;
+  const base = buildScenarioTimeline(decision);
+
+  it('continues one beat schedule across a phase change that only alters equipment channels', () => {
+    const rr = 60_000 / getRhythmCase('rhythm.nsr.02')!.rateBpm;
+    const beats = base.qrsTimesMs.filter(time => time > 0 && time < decision.durationMs);
+    beats.slice(1).forEach((time, index) => expect(time - beats[index]).toBeCloseTo(rr, 6));
+  });
+
+  it('shows the artefact as a poor-quality SpO2 number with only a technical alarm, while ECG heart rate is unchanged', () => {
+    const before = readingsAt(base, problemAt - 1_000);
+    const during = readingsAt(base, problemAt + 5_000);
+    expect(before.spo2).toEqual({ value: 98, status: 'ok' });
+    expect(during.spo2).toEqual({ value: 84, status: 'poor' });
+    expect(during.heartRate.value).toBe(before.heartRate.value);
+    const state = runAlarms(decision, problemAt + 5_000);
+    expect(state.active.map(alarm => [alarm.id, alarm.kind, alarm.priority])).toEqual([['spo2-poor-signal', 'technical', 'low']]);
+  });
+
+  it('applies a bedside action after its delay, restores the signal, clears the alarm and leaves the ECG untouched', () => {
+    const takenAt = problemAt + 10_000;
+    const fixed = buildScenarioTimeline(decision, [{ actionId: 'reposition-sensor', atMs: takenAt }]);
+    const delay = decision.actions[0].delayMs;
+    expect(fixed.qrsTimesMs).toEqual(base.qrsTimesMs);
+    expect(fixed.schedule).toEqual(base.schedule);
+    expect(readingsAt(fixed, takenAt + delay - 1).spo2.status).toBe('poor');
+    expect(readingsAt(fixed, takenAt + delay + 1).spo2).toEqual({ value: 98, status: 'ok' });
+    expect(readingsAt(fixed, takenAt + delay + 1).phaseId).toBe('hand-movement');
+    let state: AlarmState = initialAlarmState();
+    for (let time = 0; time <= takenAt + delay + 2_000; time += 100) state = updateAlarms(state, evaluateAlarmConditions(readingsAt(fixed, time), decision.alarmLimits), time);
+    expect(state.active).toEqual([]);
+    expect(state.log.filter(entry => entry.id === 'spo2-poor-signal').map(entry => entry.event)).toEqual(['onset', 'cleared']);
+    expect(buildScenarioTimeline(decision, [{ actionId: 'reposition-sensor', atMs: takenAt }])).toEqual(fixed);
+  });
+
+  it('rejects unknown, repeated or out-of-range actions', () => {
+    expect(() => buildScenarioTimeline(decision, [{ actionId: 'made-up', atMs: 1_000 }])).toThrow(RangeError);
+    expect(() => buildScenarioTimeline(decision, [{ actionId: 'reposition-sensor', atMs: 1_000 }, { actionId: 'reposition-sensor', atMs: 2_000 }])).toThrow(RangeError);
+    expect(() => buildScenarioTimeline(decision, [{ actionId: 'reposition-sensor', atMs: decision.durationMs + 1 }])).toThrow(RangeError);
+  });
+
+  it('validates decision assessments: one best option and an existing expected action', () => {
+    const copy = structuredClone(decision) as MonitorScenario;
+    if (copy.assessment.kind !== 'decision') throw new Error('expected a decision scenario');
+    copy.assessment.options[1].correct = true;
+    expect(monitorScenarioSchema.safeParse(copy).success).toBe(false);
+    const missing = structuredClone(decision) as MonitorScenario;
+    if (missing.assessment.kind === 'decision') missing.assessment.expectedActionId = 'nowhere';
+    expect(monitorScenarioSchema.safeParse(missing).success).toBe(false);
+    expect(monitorScenarioSchema.parse({ ...scenario, assessment: undefined, actions: undefined }).assessment).toEqual({ kind: 'rhythm' });
+  });
+});

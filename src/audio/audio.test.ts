@@ -111,7 +111,10 @@ describe('tone scheduler', () => {
     // Heard time = scheduled start + latency = the beat's simulated time on the shared mapping.
     tones.forEach(tone => expect(tone.atAudioS + latency - 4 - tone.simTimeMs / 1000).toBeCloseTo(0, 6));
     // A wildly large reported latency is capped rather than trusted.
-    const capped = new ToneScheduler().update({ snapshot: { elapsedMs: 0, isPlaying: true, isSuspended: false }, audioNowS: 4, eventTimesMs: [400], frequencyAt: () => 880, alarm: null, outputLatencyS: 5 });
+    const cappedScheduler = new ToneScheduler();
+    const input = (elapsedMs: number, audioNowS: number) => ({ snapshot: { elapsedMs, isPlaying: true, isSuspended: false }, audioNowS, eventTimesMs: [400], frequencyAt: () => 880, alarm: null, outputLatencyS: 5 });
+    expect(cappedScheduler.update(input(0, 4)).tones).toEqual([]); // first update only establishes the clock mapping
+    const capped = cappedScheduler.update(input(16, 4.016));
     expect(capped.tones[0].atAudioS).toBeCloseTo(4 + 0.4 - MAX_LATENCY_COMPENSATION_S, 6);
   });
 
@@ -139,6 +142,15 @@ describe('tone scheduler', () => {
     expect(new Set(committed.map(tone => tone.simTimeMs)).size).toBe(committed.length);
     // Ordinary frame jitter well inside the tolerance never re-anchors.
     expect(DRIFT_TOLERANCE_S).toBeGreaterThan(0.016);
+  });
+
+  it('commits nothing on the first update after starting, so a frozen first frame cannot shift the mapping', () => {
+    const scheduler = new ToneScheduler();
+    const beat = (elapsedMs: number, audioNowS: number) => scheduler.update({ snapshot: { elapsedMs, isPlaying: true, isSuspended: false }, audioNowS, eventTimesMs: [100], frequencyAt: () => 880, alarm: null });
+    expect(beat(0, 20).tones).toEqual([]); // play(): emitted before any animation frame
+    const firstFrame = beat(0, 20.016); // the clock's first frame does not advance simulated time
+    expect(firstFrame.tones).toEqual([{ kind: 'beat', simTimeMs: 100, atAudioS: 20.116, frequencyHz: 880 }]);
+    expect(beat(16, 20.032).tones).toEqual([]);
   });
 
   it('stays silent for beats whose pitch source has no value', () => {
