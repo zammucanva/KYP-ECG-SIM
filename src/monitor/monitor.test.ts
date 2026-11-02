@@ -250,3 +250,14 @@ describe('learner actions and channel-only phases', () => {
     expect(monitorScenarioSchema.parse({ ...scenario, assessment: undefined, actions: undefined }).assessment).toEqual({ kind: 'rhythm' });
   });
 });
+
+describe('restoring a saved run', () => {
+  it('recomputes alarm state up to the saved time exactly as live stepping would', async () => {
+    const { alarmStateAt } = await import('./alarms');
+    const restored = alarmStateAt(timeline, onset + 5_000);
+    const live = runAlarms(scenario, onset + 5_000, 16);
+    expect(restored.active.map(alarm => alarm.id)).toEqual(live.active.map(alarm => alarm.id));
+    expect(restored.log.map(entry => [entry.id, entry.event])).toEqual(live.log.map(entry => [entry.id, entry.event]));
+    expect(Math.abs(restored.log[0].atMs - live.log[0].atMs)).toBeLessThanOrEqual(16);
+  });
+});

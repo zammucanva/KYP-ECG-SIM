@@ -150,3 +150,20 @@ describe('monitor runtime on one shared clock', () => {
     expect(run.view.result.current.taken).toEqual([]);
   });
 });
+
+describe('runtime restore', () => {
+  it('restores time, actions and alarm state paused, then continues on the same clock', () => {
+    const decision = getMonitorScenario('scenario.pulse-oximeter-signal.01')!;
+    const run = harness(decision);
+    let ok = false;
+    act(() => { ok = run.view.result.current.restore({ elapsedMs: 36_000, taken: [{ actionId: 'reposition-sensor', atMs: 35_000 }] }); });
+    expect(ok).toBe(true);
+    expect(run.view.result.current.snapshot).toMatchObject({ elapsedMs: 36_000, isPlaying: false });
+    expect(run.view.result.current.taken).toEqual([{ actionId: 'reposition-sensor', atMs: 35_000 }]);
+    expect(run.view.result.current.alarms.active.map(alarm => alarm.id)).toEqual(['spo2-poor-signal']);
+    act(() => run.view.result.current.play());
+    run.run(5_000);
+    expect(run.view.result.current.snapshot.elapsedMs).toBeGreaterThan(40_000);
+    expect(run.view.result.current.alarms.active).toEqual([]);
+  });
+});

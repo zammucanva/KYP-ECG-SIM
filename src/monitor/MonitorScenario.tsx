@@ -9,6 +9,8 @@ import { monitorScenarios, type MonitorScenario as Scenario, type ScenarioPhase 
 import type { ScenarioTimeline, TakenAction } from './timeline';
 import { useMonitorRuntime, type MonitorRuntimeOptions } from './useMonitorRuntime';
 import { NIBP_FIRST_MS, readingsAt } from './vitals';
+import type { ProgressStorage } from '../learn/progress';
+import { browserStorageOrNull, clearScenarioRun, readScenarioRuns, resumableRun, saveScenarioRun } from './run-storage';
 
 type MonitorScenarioProps = {
   /** Completed scenario ids with the version completed, from the Academy. */
@@ -18,7 +20,15 @@ type MonitorScenarioProps = {
   onOpenChallenge: () => void;
   registry?: readonly Scenario[];
   runtimeOptions?: MonitorRuntimeOptions;
+  /** Opens a scenario directly (from Home): resume a paused run, or start from the brief. */
+  request?: { scenarioId: string; mode: 'resume' | 'start'; token: number };
+  /** Where paused runs are saved; defaults to browser storage. */
+  storage?: ProgressStorage | null;
+  /** Called after a saved run is written or cleared, so other screens can refresh. */
+  onRunsChanged?: () => void;
 };
+
+type RunProps = Omit<MonitorScenarioProps, 'registry' | 'request' | 'storage'> & { scenario: Scenario; onBack: () => void; mode: 'resume' | 'start' | 'list'; storage: ProgressStorage | null };
 
 /** Alarms offered as alternatives; the real one is always included. */
 const alarmPool: AlarmId[] = ['hr-high', 'hr-low', 'spo2-low', 'rr-high', 'spo2-poor-signal', 'ecg-lead-off'];
@@ -89,11 +99,15 @@ function ActionOutcome({ timeline, taken, actionId }: { timeline: ScenarioTimeli
   return <>You took the bedside step at {formatSimTime(done.atMs)}. The simulated effect began at {formatSimTime(effectMs)}: SpO₂ {after.spo2.value ?? '---'}% with {after.spo2.status === 'ok' ? 'a good signal' : `signal status “${after.spo2.status}”`}, heart rate {after.heartRate.value ?? '---'} per minute.</>;
 }
 
-function ScenarioRun({ scenario, completed, onCompleted, onOpenAcademy, onOpenChallenge, onBack, runtimeOptions }: Omit<MonitorScenarioProps, 'registry'> & { scenario: Scenario; onBack: () => void }) {
+function ScenarioRun({ scenario, completed, onCompleted, onOpenAcademy, onOpenChallenge, onBack, runtimeOptions, mode, storage, onRunsChanged }: RunProps) {
   const runtime = useMonitorRuntime(scenario, runtimeOptions);
   const { timeline, snapshot, alarms, taken } = runtime;
   const [step, setStep] = useState<'brief' | 'monitor' | 'debrief'>('brief');
-  const [recordedEndMs, setRecordedEndMs] = useState<number | null>(null);
+  const [recordedEndMs, setRecordedEndState] = useState<number | null>(null);
+  // Mirrors recordedEndMs synchronously so a save during unmount never sees a stale value.
+  const recordedRef = useRef<number | null>(null);
+  const setRecordedEndMs = (value: number | null) => { recordedRef.current = value; setRecordedEndState(value); };
+  const [resumedAtMs, setResumedAtMs] = useState<number | null>(null);
   const [answers, setAnswers] = useState<Answers>(emptyAnswers);
   const [result, setResult] = useState<Result | null>(null);
   const [rewards, setRewards] = useState<ApplyResult | null>(null);
@@ -114,7 +128,40 @@ function ScenarioRun({ scenario, completed, onCompleted, onOpenAcademy, onOpenCh
 
   useEffect(() => { headingRef.current?.focus(); }, [step]);
 
+  // ── Saved runs ─────────────────────────────────────────────
+  const finishedRef = useRef(false);
+  // Reads only synchronously updated values: React may run this during a (StrictMode) unmount
+  // before the latest state has rendered.
+  const persist = () => {
+    if (finishedRef.current) return;
+    const elapsedMs = runtime.currentTimeMs();
+    if (elapsedMs <= 0 || elapsedMs >= scenario.durationMs) clearScenarioRun(storage, scenario.id);
+    else saveScenarioRun(storage, scenario, { elapsedMs, taken: runtime.currentTaken(), recordedEndMs: recordedRef.current, savedAt: new Date().toISOString() });
+    onRunsChanged?.();
+  };
+  const persistRef = useRef(persist);
+  persistRef.current = persist;
+  const forget = () => { clearScenarioRun(storage, scenario.id); onRunsChanged?.(); };
+
+  useEffect(() => {
+    if (mode === 'resume') {
+      const run = resumableRun(readScenarioRuns(storage), scenario);
+      if (run && runtime.restore(run)) {
+        setRecordedEndMs(run.recordedEndMs);
+        setResumedAtMs(run.elapsedMs);
+        setStep('monitor');
+      }
+    } else if (mode === 'start') forget();
+    // Mount-only: a request opens the run once; later changes come from the learner.
+  }, []);
+  // Save when playback stops, when the learner acts or records, every 10 simulated seconds, and on leaving.
+  const tenSecondMark = Math.floor(snapshot.elapsedMs / 10_000);
+  useEffect(() => { if (step === 'monitor' && snapshot.elapsedMs > 0) persistRef.current(); }, [snapshot.isPlaying, taken, recordedEndMs, tenSecondMark, step, snapshot.elapsedMs > 0]);
+  useEffect(() => () => persistRef.current(), []);
+
   const replay = () => {
+    finishedRef.current = false;
+    forget();
     runtime.reset();
     setRecordedEndMs(null);
     setAnswers(emptyAnswers);
@@ -137,6 +184,8 @@ function ScenarioRun({ scenario, completed, onCompleted, onOpenAcademy, onOpenCh
       answers, answeredAtMs: snapshot.elapsedMs, recordedEndMs, log: alarms.log, taken,
     };
     setResult(next);
+    finishedRef.current = true;
+    forget();
     if (!credited.current) {
       credited.current = true;
       const outcome: ScenarioOutcome = rhythmResult ? { rhythm: rhythmResult, alarmCorrect } : { decisionCorrect: decisionCorrect === true, actionTaken, alarmCorrect };
@@ -179,9 +228,10 @@ function ScenarioRun({ scenario, completed, onCompleted, onOpenAcademy, onOpenCh
       {step === 'monitor' && (
         <>
           <h3 ref={headingRef} tabIndex={-1} className="visually-hidden">Bedside monitor</h3>
+          {resumedAtMs !== null && <p className="challenge-banner" role="status">Resumed at {formatSimTime(resumedAtMs)}. Your bedside actions and recorded strip were restored. Alarm silences are not saved, so an active alarm will sound again if sound is on.</p>}
           <BedsideMonitor
             timeline={timeline} snapshot={snapshot} alarms={alarms} reducedMotion={runtime.reducedMotion}
-            onPlay={runtime.play} onPause={runtime.pause} onReset={() => { runtime.reset(); setRecordedEndMs(null); }} onAcknowledge={runtime.acknowledge}
+            onPlay={runtime.play} onPause={runtime.pause} onReset={() => { forget(); runtime.reset(); setRecordedEndMs(null); setResumedAtMs(null); }} onAcknowledge={runtime.acknowledge}
             onRecordStrip={needsStrip ? endMs => setRecordedEndMs(endMs) : undefined} audio={runtime.audio}
           />
           {scenario.actions.length > 0 && (
@@ -363,13 +413,24 @@ function ScenarioRun({ scenario, completed, onCompleted, onOpenAcademy, onOpenCh
 }
 
 /** Scenario list plus the selected scenario run. */
-export function MonitorScenarios({ completed, onCompleted, onOpenAcademy, onOpenChallenge, registry = monitorScenarios, runtimeOptions }: MonitorScenarioProps) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = registry.find(item => item.id === selectedId) ?? null;
+export function MonitorScenarios({ completed, onCompleted, onOpenAcademy, onOpenChallenge, registry = monitorScenarios, runtimeOptions, request, storage = browserStorageOrNull(), onRunsChanged }: MonitorScenarioProps) {
+  const [selected, setSelected] = useState<{ id: string; mode: 'resume' | 'start' | 'list'; token: number } | null>(request ? { id: request.scenarioId, mode: request.mode, token: request.token } : null);
+  const [runsVersion, setRunsVersion] = useState(0);
+  const runs = useMemo(() => readScenarioRuns(storage), [storage, runsVersion, selected]);
+  const handledToken = useRef(request?.token ?? null);
+  const nextLocalToken = useRef(-1);
+  useEffect(() => {
+    if (!request || request.token === handledToken.current) return;
+    handledToken.current = request.token;
+    setSelected({ id: request.scenarioId, mode: request.mode, token: request.token });
+  }, [request]);
+  const scenario = selected ? registry.find(item => item.id === selected.id) ?? null : null;
+  const changed = () => { setRunsVersion(value => value + 1); onRunsChanged?.(); };
 
-  if (selected) {
-    return <ScenarioRun key={selected.id} scenario={selected} completed={completed} onCompleted={onCompleted} onOpenAcademy={onOpenAcademy} onOpenChallenge={onOpenChallenge} onBack={() => setSelectedId(null)} runtimeOptions={runtimeOptions} />;
+  if (scenario && selected) {
+    return <ScenarioRun key={`${scenario.id}:${selected.token}`} scenario={scenario} mode={selected.mode} storage={storage} onRunsChanged={changed} completed={completed} onCompleted={onCompleted} onOpenAcademy={onOpenAcademy} onOpenChallenge={onOpenChallenge} onBack={() => setSelected(null)} runtimeOptions={runtimeOptions} />;
   }
+  const open = (id: string, mode: 'resume' | 'start' | 'list') => setSelected({ id, mode, token: nextLocalToken.current-- });
   return (
     <section className="patients" aria-labelledby="scenarios-heading">
       <p className="eyebrow">BEDSIDE MONITOR</p>
@@ -378,14 +439,22 @@ export function MonitorScenarios({ completed, onCompleted, onOpenAcademy, onOpen
       <ul className="patient-list" aria-label="Monitored scenarios">
         {registry.map(item => {
           const isDone = completed[item.id] === item.version;
+          const paused = isDone ? null : resumableRun(runs, item);
           return (
             <li key={item.id} className="patient-card">
               <div>
                 <strong>{item.title}</strong>
-                <span>{item.ageRange} · {formatSimTime(item.durationMs)} simulated · {item.assessment.kind === 'rhythm' ? 'rhythm change' : 'bedside decision'}</span>
-                <small>{isDone ? 'Completed' : 'Not started'}</small>
+                <span>{item.ageRange} · {formatSimTime(item.durationMs)} simulated · {item.assessment.kind === 'rhythm' ? 'rhythm question' : 'bedside decision'}</span>
+                <small>{isDone ? 'Completed' : paused ? `Paused at ${formatSimTime(paused.elapsedMs)}` : 'Not started'}</small>
               </div>
-              <button type="button" className="cta secondary" onClick={() => setSelectedId(item.id)} aria-label={`${isDone ? 'Replay' : 'Start'} scenario: ${item.title}`}>{isDone ? 'Replay scenario' : 'Start scenario'}</button>
+              {paused ? (
+                <div className="challenge-actions">
+                  <button type="button" className="cta" onClick={() => open(item.id, 'resume')} aria-label={`Resume scenario: ${item.title}`}>Resume</button>
+                  <button type="button" className="cta secondary" onClick={() => open(item.id, 'start')} aria-label={`Restart scenario: ${item.title}`}>Restart</button>
+                </div>
+              ) : (
+                <button type="button" className="cta secondary" onClick={() => open(item.id, 'list')} aria-label={`${isDone ? 'Replay' : 'Start'} scenario: ${item.title}`}>{isDone ? 'Replay scenario' : 'Start scenario'}</button>
+              )}
             </li>
           );
         })}

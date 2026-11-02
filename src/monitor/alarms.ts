@@ -1,5 +1,6 @@
 import type { AlarmLimits } from './scenario';
-import type { MonitorReadings } from './vitals';
+import type { ScenarioTimeline } from './timeline';
+import { readingsAt, type MonitorReadings } from './vitals';
 
 /**
  * Educational alarm model. Conditions come from the current readings and the scenario's configured
@@ -116,4 +117,15 @@ export function audibleAlarm(state: AlarmState, nowMs: number): ActiveAlarm | nu
   if (state.active.length === 0) return null;
   if (state.silencedUntilMs !== null && nowMs < state.silencedUntilMs) return null;
   return state.active[0];
+}
+
+/**
+ * Alarm state reached by playing the timeline from 0 to `untilMs` in fixed steps, with no
+ * acknowledgements. Used to restore a saved run: onsets and clears land within one step of where
+ * live playback (one evaluation per animation frame) puts them.
+ */
+export function alarmStateAt(timeline: ScenarioTimeline, untilMs: number, stepMs = 16): AlarmState {
+  let state = initialAlarmState();
+  for (let time = 0; time <= untilMs; time += stepMs) state = updateAlarms(state, evaluateAlarmConditions(readingsAt(timeline, time), timeline.scenario.alarmLimits), time);
+  return updateAlarms(state, evaluateAlarmConditions(readingsAt(timeline, untilMs), timeline.scenario.alarmLimits), untilMs);
 }

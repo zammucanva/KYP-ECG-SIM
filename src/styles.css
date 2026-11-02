@@ -619,3 +619,6 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .scenario-actions ul { list-style: none; padding: 0 !important; display: grid; gap: 8px; }
 .scenario-actions li { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
 .scenario-actions small { color: var(--muted); font-size: 12px; }
+.home-recommended { border-left: 3px solid var(--primary); padding-left: 10px; margin: 6px 0 10px; }
+.home-recommended p { margin: 4px 0; }
+.home-tag { display: inline-block; border-radius: 999px; background: var(--primary-soft); color: var(--primary-ink); font-size: 10px; font-weight: 700; letter-spacing: .08em; padding: 2px 8px; text-transform: uppercase; }

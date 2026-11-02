@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MonitorAudio, type AudioStatus } from '../audio/monitor-audio';
 import { BEAT_TONE_HZ, spo2PitchHz, ToneScheduler } from '../audio/scheduler';
 import { SimulationClock, type AnimationFrameScheduler, type ClockSnapshot } from '../engine/clock';
-import { acknowledgeAlarms, audibleAlarm, evaluateAlarmConditions, initialAlarmState, updateAlarms, type AlarmState } from './alarms';
+import { acknowledgeAlarms, alarmStateAt, audibleAlarm, evaluateAlarmConditions, initialAlarmState, updateAlarms, type AlarmState } from './alarms';
 import type { MonitorScenario } from './scenario';
 import { buildScenarioTimeline, type ScenarioTimeline, type TakenAction } from './timeline';
 import { displayedSpo2, readingsAt } from './vitals';
@@ -56,6 +56,8 @@ export function useMonitorRuntime(scenario: MonitorScenario, options: MonitorRun
   const toneSchedulerRef = useRef(new ToneScheduler());
   const toneSourceRef = useRef<ToneSource>('ecg');
   const lastAlarmStepRef = useRef<number | null>(null);
+  /** Last simulated time the clock reported; still readable after the clock is disposed on unmount. */
+  const lastElapsedRef = useRef(0);
 
   // The audio output lives as long as the component, not as long as one clock. StrictMode's
   // development remount disposes it once, so a disposed instance is replaced on mount.
@@ -76,6 +78,7 @@ export function useMonitorRuntime(scenario: MonitorScenario, options: MonitorRun
     let lastRendered = Number.NEGATIVE_INFINITY;
 
     const unsubscribe = clock.subscribe(state => {
+      lastElapsedRef.current = state.elapsedMs;
       const timeline = timelineRef.current;
       if (state.elapsedMs >= timeline.scenario.durationMs && state.isPlaying) {
         clock.pause();
@@ -154,6 +157,27 @@ export function useMonitorRuntime(scenario: MonitorScenario, options: MonitorRun
     clock.seek(0);
   }, [scenario]);
 
+  /**
+   * Restores a saved run, paused: the actions are re-applied, alarm state is recomputed from the
+   * timeline up to the saved time (acknowledgements are not stored), and the clock seeks there.
+   */
+  const restore = useCallback((run: { elapsedMs: number; taken: TakenAction[] }) => {
+    const clock = clockRef.current;
+    if (!clock) return false;
+    const restored = buildScenarioTimeline(scenario, run.taken);
+    clock.pause();
+    toneSchedulerRef.current.reset();
+    audioRef.current.cancelPending();
+    takenRef.current = [...run.taken];
+    timelineRef.current = restored;
+    setTaken([...run.taken]);
+    alarmsRef.current = alarmStateAt(restored, run.elapsedMs);
+    lastAlarmStepRef.current = run.elapsedMs;
+    clock.seek(run.elapsedMs);
+    setAlarms(alarmsRef.current);
+    return true;
+  }, [scenario]);
+
   /** Records a bedside action at the current simulated time. Each action can be taken once per run. */
   const takeAction = useCallback((actionId: string): boolean => {
     const clock = clockRef.current;
@@ -195,7 +219,14 @@ export function useMonitorRuntime(scenario: MonitorScenario, options: MonitorRun
 
   return {
     timeline, snapshot, alarms, reducedMotion, taken,
-    play, pause, reset, acknowledge, takeAction,
+    play, pause, reset, acknowledge, takeAction, restore,
+    /**
+     * Current simulated time from the clock (not the throttled render state). During unmount the
+     * clock may already be disposed, so the last reported time is returned instead.
+     */
+    currentTimeMs: () => clockRef.current?.getSnapshot().elapsedMs ?? lastElapsedRef.current,
+    /** Actions taken so far, updated synchronously (render state can lag behind during a remount). */
+    currentTaken: () => takenRef.current,
     audio: { status: audioStatus, muted, volume, toneSource, enable: enableAudio, disable: disableAudio, setMuted, setVolume, setToneSource },
   };
 }

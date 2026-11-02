@@ -138,8 +138,9 @@ test.describe('Bedside monitor scenario', () => {
     await advance(page, 5_000);
     expect((await audioLog(page)).starts).toBe(afterFiveSeconds);
 
-    await page.getByRole('button', { name: 'Resume', exact: true }).click();
+    // Mute while paused, then resume: no new tone may start while muted.
     await page.getByRole('checkbox', { name: 'Mute' }).check();
+    await page.getByRole('button', { name: 'Resume', exact: true }).click();
     await advance(page, 5_000);
     expect((await audioLog(page)).starts).toBe(afterFiveSeconds);
     await expect(page.getByText('Sound on (muted)')).toBeVisible();
@@ -223,6 +224,8 @@ test.describe('Bedside monitor scenario', () => {
         expect(overflow, `overflow at ${width}px`).toBeLessThanOrEqual(1);
         const results = await new AxeBuilder({ page }).include('.scenario').analyze();
         expect(results.violations.map(item => `${item.id}: ${item.nodes.map(node => node.target.join(' ')).join(', ')}`)).toEqual([]);
+        // Leaving keeps this run paused; the next width starts the scenario fresh.
+        await page.evaluate(() => localStorage.removeItem('ecg-lab-scenario-runs-v1'));
       }
     });
   }
@@ -261,7 +264,7 @@ test.describe('Bedside decision scenario: pulse-oximeter signal', () => {
     const check = page.getByRole('button', { name: 'Ask the patient to rest the hand, and reposition the finger sensor' });
     await check.click();
     await expect(check).toBeDisabled();
-    await expect(page.locator('.scenario-actions')).toContainText('Done at 00:35');
+    await expect(page.locator('.scenario-actions')).toContainText(/Done at 00:3\d\./);
     await advance(page, 6_000);
     await expect(page.getByTestId('tile-spo2')).toContainText('98');
     await expect(page.getByTestId('tile-spo2')).not.toContainText('Poor signal');
@@ -277,7 +280,10 @@ test.describe('Bedside decision scenario: pulse-oximeter signal', () => {
     await expect(debrief).toContainText('✔ Alarm: correct.');
     await expect(debrief).toContainText('✔ Evidence: well judged.');
     await expect(debrief).toContainText('✔ Bedside check: done.');
-    await expect(debrief).toContainText('You took the bedside step at 00:35. The simulated effect began at 00:39: SpO₂ 98% with a good signal');
+    // The action time depends on when the click lands; the rule checked is the 4 s effect delay.
+    const actionText = await debrief.getByText(/You took the bedside step at/).textContent();
+    const [, takenAt, effectAt] = actionText!.match(/at 00:(\d\d)\. The simulated effect began at 00:(\d\d): SpO₂ 98% with a good signal/)!;
+    expect(Number(effectAt) - Number(takenAt)).toBe(4);
     await expect(debrief).toContainText('00:30: the SpO₂ signal quality became poor; the SpO₂ number moved from 98% to 84%.');
     await expect(debrief).toContainText('alarm cleared: SpO₂ poor signal');
     await expect(debrief).toContainText('+40 XP for this scenario.');

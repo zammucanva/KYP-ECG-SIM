@@ -38,6 +38,7 @@ import { useAcademy } from './academy/useAcademy';
 import { RhythmChallenge } from './rhythm/RhythmChallenge';
 import { VirtualPatient } from './patients/VirtualPatient';
 import { MonitorScenarios } from './monitor/MonitorScenario';
+import { browserStorageOrNull, readScenarioRuns } from './monitor/run-storage';
 import { MedicationCenter } from './medication/MedicationCenter';
 import { HomeDashboard } from './home/HomeDashboard';
 import { buildHomeSummary } from './home/summary';
@@ -149,9 +150,12 @@ function App() {
   const [pendingRestore, setPendingRestore] = useState<ExperimentState | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ExperimentState | null>(null);
   const [restoreRequest, setRestoreRequest] = useState<{ id: number; elapsedMs: number } | undefined>();
+  const [scenarioRunsVersion, setScenarioRunsVersion] = useState(0);
+  const [scenarioRequest, setScenarioRequest] = useState<{ scenarioId: string; mode: 'resume' | 'start'; token: number } | undefined>();
+  const scenarioRuns = useMemo(() => readScenarioRuns(browserStorageOrNull()), [scenarioRunsVersion, activeSection]);
   const homeSummary = useMemo(
-    () => buildHomeSummary({ academy: academy.progress, exerciseProgress, savedExperiments }),
-    [academy.progress, exerciseProgress, savedExperiments],
+    () => buildHomeSummary({ academy: academy.progress, exerciseProgress, savedExperiments, scenarioRuns }),
+    [academy.progress, exerciseProgress, savedExperiments, scenarioRuns],
   );
   const patch = (next: Partial<MachineConfig>) => setConfig(current => ({ ...current, ...next }));
   const signals = useMemo(() => generateLeadSignals(config.preset), [config.preset]);
@@ -328,7 +332,7 @@ function App() {
         <button type="button" aria-current={activeSection === 'simulator' ? 'page' : undefined} onClick={() => setActiveSection('simulator')}>ECG simulator</button>
         <button type="button" aria-current={activeSection === 'challenge' ? 'page' : undefined} onClick={() => setActiveSection('challenge')}>Rhythm Challenge</button>
         <button type="button" aria-current={activeSection === 'patients' ? 'page' : undefined} onClick={() => setActiveSection('patients')}>Virtual Patients</button>
-        <button type="button" aria-current={activeSection === 'monitor' ? 'page' : undefined} onClick={() => setActiveSection('monitor')}>Bedside Monitor</button>
+        <button type="button" aria-current={activeSection === 'monitor' ? 'page' : undefined} onClick={() => { setScenarioRequest(undefined); setActiveSection('monitor'); }}>Bedside Monitor</button>
         <button type="button" aria-current={activeSection === 'medication' ? 'page' : undefined} onClick={() => setActiveSection('medication')}>Medication Center</button>
         <button type="button" aria-current={activeSection === 'academy' ? 'page' : undefined} onClick={() => setActiveSection('academy')}>Academy</button>
         <button type="button" aria-current={activeSection === 'learn' ? 'page' : undefined} onClick={() => setActiveSection('learn')}>Learn</button>
@@ -349,6 +353,8 @@ function App() {
         onOpenPatients={() => setActiveSection('patients')}
         onOpenAcademy={() => setActiveSection('academy')}
         onOpenSimulator={() => setActiveSection('simulator')}
+        onOpenScenario={(scenarioId, mode) => { setScenarioRequest(current => ({ scenarioId, mode, token: (current?.token ?? 0) + 1 })); setActiveSection('monitor'); }}
+        onOpenMonitor={() => { setScenarioRequest(undefined); setActiveSection('monitor'); }}
       /> : activeSection === 'simulator' ? <>
       <section className="intro">
         <div>
@@ -574,6 +580,8 @@ function App() {
           onCompleted={academy.recordScenario}
           onOpenAcademy={() => setActiveSection('academy')}
           onOpenChallenge={() => setActiveSection('challenge')}
+          request={scenarioRequest}
+          onRunsChanged={() => setScenarioRunsVersion(value => value + 1)}
         />
       )}
       <div hidden={activeSection !== 'medication'}>

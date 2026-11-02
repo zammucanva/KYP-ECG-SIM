@@ -100,6 +100,8 @@ export const monitorScenarioSchema = z.strictObject({
   id: z.string().regex(/^scenario\.[a-z0-9-]+\.\d{2}$/),
   version: z.string().regex(/^\d+\.\d+\.\d+$/),
   title: shortText(3, 120),
+  /** The Virtual Patient case this scenario puts on a monitor, if any. */
+  patientCaseId: z.string().regex(/^patient\.[a-z0-9-]+\.\d{2}$/).optional(),
   /** Fictional bed label shown on the monitor; never a real identifier. */
   bedLabel: z.string().regex(/^SIM-[A-Z0-9-]{1,12}$/),
   ageRange: z.enum(patientAgeRanges),
