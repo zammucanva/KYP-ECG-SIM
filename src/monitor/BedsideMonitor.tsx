@@ -8,10 +8,14 @@ import { plethWindow, readingsAt, respirationWindow, type ChannelStatus, type Mo
 import type { AudioStatus } from '../audio/monitor-audio';
 import type { ClockSnapshot } from '../engine/clock';
 
+/** Recorded strips are always this long, whatever the visible window. */
 export const MONITOR_WINDOW_MS = 6_000;
+/** Visible trace windows. Narrow screens default to the shorter one; the scale never changes. */
+export const TRACE_WINDOWS_MS = [3_000, 6_000] as const;
+export type TraceWindowMs = (typeof TRACE_WINDOWS_MS)[number];
+export const NARROW_SCREEN_QUERY = '(max-width: 560px)';
 const ECG_SPEED = 25;
 const ECG_GAIN = 10;
-const WIDTH_UNITS = timeMsToSvgUnits(MONITOR_WINDOW_MS, ECG_SPEED);
 const ECG_HEIGHT_UNITS = 2 * voltageMvToSvgUnits(1.3, ECG_GAIN);
 const AUX_HEIGHT_UNITS = 70;
 
@@ -31,6 +35,9 @@ const statusText: Record<ChannelStatus, string> = {
 };
 
 type TraceProps = {
+  windowMs: TraceWindowMs;
+  /** Draws one-second ticks along the bottom, counting back from the sweep head. */
+  ticks?: boolean;
   title: string;
   source: string;
   className: string;
@@ -39,17 +46,42 @@ type TraceProps = {
   unavailableText?: string;
 };
 
-function Trace({ title, source, className, path, heightUnits, unavailableText }: TraceProps) {
+function Trace({ windowMs, ticks = false, title, source, className, path, heightUnits, unavailableText }: TraceProps) {
+  const widthUnits = timeMsToSvgUnits(windowMs, ECG_SPEED);
+  const seconds = windowMs / 1000;
+  const label = `last ${seconds} s`;
   return (
-    <figure className={`bedside-trace ${className}`}>
-      <figcaption><strong>{title}</strong> <span>{source}</span></figcaption>
-      <svg viewBox={`0 0 ${WIDTH_UNITS} ${heightUnits}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${title} trace, ${source}${path ? '' : `, ${unavailableText ?? 'no signal'}`}`}>
+    <figure className={`bedside-trace ${className}`} data-window-ms={windowMs}>
+      <figcaption><strong>{title}</strong> <span>{label} · {source}</span></figcaption>
+      <svg viewBox={`0 0 ${widthUnits} ${heightUnits}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${title} trace, ${label}, ${source}${path ? '' : `, ${unavailableText ?? 'no signal'}`}`}>
+        {ticks && (
+          <g className="bedside-ticks" aria-hidden="true">
+            {Array.from({ length: seconds + 1 }, (_, index) => {
+              const x = widthUnits - timeMsToSvgUnits(index * 1000, ECG_SPEED);
+              return <line key={index} x1={Math.max(0.5, x)} x2={Math.max(0.5, x)} y1={heightUnits - 6} y2={heightUnits} />;
+            })}
+          </g>
+        )}
         {path ? <path d={path} fill="none" strokeWidth="1.6" vectorEffect="non-scaling-stroke" strokeLinejoin="round" /> : (
-          <text x={WIDTH_UNITS / 2} y={heightUnits / 2} textAnchor="middle" dominantBaseline="middle" className="bedside-trace-empty">{unavailableText ?? 'No signal'}</text>
+          <text x={widthUnits / 2} y={heightUnits / 2} textAnchor="middle" dominantBaseline="middle" className="bedside-trace-empty">{unavailableText ?? 'No signal'}</text>
         )}
       </svg>
     </figure>
   );
+}
+
+/** True while the viewport matches the narrow-screen query; follows resizes and rotation. */
+function useNarrowScreen(): boolean {
+  const query = typeof window !== 'undefined' && typeof window.matchMedia === 'function' ? window.matchMedia(NARROW_SCREEN_QUERY) : null;
+  const [narrow, setNarrow] = useState(query?.matches ?? false);
+  useEffect(() => {
+    if (!query) return;
+    const update = () => setNarrow(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, [query?.media]);
+  return narrow;
 }
 
 function auxPath(samples: (WaveSample | null)[], windowStartMs: number, heightUnits: number, scale: number, offset: number): string | null {
@@ -133,8 +165,11 @@ export function BedsideMonitor({ timeline, snapshot, alarms, reducedMotion, onPl
   const [showPleth, setShowPleth] = useState(true);
   const [showResp, setShowResp] = useState(true);
   const [announcement, setAnnouncement] = useState('');
+  const narrow = useNarrowScreen();
+  const [chosenWindow, setChosenWindow] = useState<TraceWindowMs | null>(null);
+  const windowMs: TraceWindowMs = chosenWindow ?? (narrow ? 3_000 : 6_000);
   const readings: MonitorReadings = readingsAt(timeline, now);
-  const windowStart = now - MONITOR_WINDOW_MS;
+  const windowStart = now - windowMs;
   const ended = now >= timeline.scenario.durationMs;
   const limits = timeline.scenario.alarmLimits;
 
@@ -194,9 +229,9 @@ export function BedsideMonitor({ timeline, snapshot, alarms, reducedMotion, onPl
 
         <div className="bedside-body">
           <div className="bedside-waves">
-            <Trace title="ECG II" source="25 mm/s · 10 mm/mV · synthetic" className="ecg" path={ecgPath} heightUnits={ECG_HEIGHT_UNITS} unavailableText="Lead off: no ECG signal" />
-            {showPleth && <Trace title="Pleth" source="pulse oximeter · arbitrary units" className="pleth" path={plethPath} heightUnits={AUX_HEIGHT_UNITS} unavailableText={readings.spo2.status === 'absent' ? 'No pulse oximeter' : 'SpO₂ sensor off'} />}
-            {showResp && <Trace title="Resp" source="simulated respiration · arbitrary units" className="resp" path={respPath} heightUnits={AUX_HEIGHT_UNITS} unavailableText="Respiration not monitored" />}
+            <Trace windowMs={windowMs} ticks title="ECG II" source="25 mm/s · 10 mm/mV · synthetic · ticks 1 s" className="ecg" path={ecgPath} heightUnits={ECG_HEIGHT_UNITS} unavailableText="Lead off: no ECG signal" />
+            {showPleth && <Trace windowMs={windowMs} title="Pleth" source="pulse oximeter · arbitrary units" className="pleth" path={plethPath} heightUnits={AUX_HEIGHT_UNITS} unavailableText={readings.spo2.status === 'absent' ? 'No pulse oximeter' : 'SpO₂ sensor off'} />}
+            {showResp && <Trace windowMs={windowMs} title="Resp" source="simulated respiration · arbitrary units" className="resp" path={respPath} heightUnits={AUX_HEIGHT_UNITS} unavailableText="Respiration not monitored" />}
           </div>
           <div className="bedside-numerics">
             <Tile label="HR" unit="/min" source="ECG channel: average of the last R–R intervals" value={fmt(readings.heartRate)} status={readings.heartRate.status} className="ecg" alarmed={alarmedIds.has('hr-high') || alarmedIds.has('hr-low')} testId="tile-hr"
@@ -225,6 +260,13 @@ export function BedsideMonitor({ timeline, snapshot, alarms, reducedMotion, onPl
             : <button type="button" className="cta" onClick={onPlay} disabled={ended}>{now === 0 ? 'Start scenario' : 'Resume'}</button>}
           <button type="button" className="cta secondary" onClick={onReset}>Reset scenario</button>
           {onRecordStrip && <button type="button" className="cta secondary" onClick={() => onRecordStrip(now)} disabled={now < MONITOR_WINDOW_MS}>Record 6-second strip</button>}
+        </div>
+        <div className="bedside-group bedside-window" role="group" aria-label="Visible trace window">
+          <span>Show the last</span>
+          {TRACE_WINDOWS_MS.map(option => (
+            <button key={option} type="button" className="cta secondary" aria-pressed={windowMs === option} onClick={() => setChosenWindow(option)}>{option / 1000} s</button>
+          ))}
+          <small>Same 25 mm/s scale; only how much time is visible changes.</small>
         </div>
         <div className="bedside-group" role="group" aria-label="Waveforms shown">
           <label><input type="checkbox" checked={showPleth} onChange={event => setShowPleth(event.target.checked)} /> Pleth</label>

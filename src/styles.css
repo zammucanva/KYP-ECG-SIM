@@ -622,3 +622,13 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .home-recommended { border-left: 3px solid var(--primary); padding-left: 10px; margin: 6px 0 10px; }
 .home-recommended p { margin: 4px 0; }
 .home-tag { display: inline-block; border-radius: 999px; background: var(--primary-soft); color: var(--primary-ink); font-size: 10px; font-weight: 700; letter-spacing: .08em; padding: 2px 8px; text-transform: uppercase; }
+.bedside-ticks line { stroke: var(--mon-muted); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.bedside-window button { min-width: 44px; min-height: 36px; padding: 6px 10px; }
+/* Selected state keeps its colours under hover; the generic secondary hover would otherwise put light text on a pale fill. */
+.bedside-window .cta.secondary[aria-pressed="true"],
+.bedside-window .cta.secondary[aria-pressed="true"]:hover:not(:disabled) { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+.bedside-window small { color: var(--muted); font-size: 11px; }
+@media (max-width: 560px) {
+  .bedside-controls .cta, .bedside-window button { min-height: 44px; }
+  .bedside-group label { min-height: 36px; }
+}
