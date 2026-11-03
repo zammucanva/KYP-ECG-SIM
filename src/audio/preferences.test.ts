@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_VOLUME } from './monitor-audio';
-import { AUDIO_PREFERENCES_KEY, readAudioPreferences, writeAudioPreferences } from './preferences';
+import { AUDIO_PREFERENCES_KEY, readAudioPreferences, writeAudioPreferences, type AudioPreferences } from './preferences';
 
 const memory = (initial: Record<string, string> = {}) => {
   const data = new Map(Object.entries(initial));
@@ -16,13 +16,13 @@ describe('monitor sound preferences', () => {
   });
 
   it('falls back to defaults for missing, invalid or unavailable storage', () => {
-    const defaults = { volume: DEFAULT_VOLUME, muted: false, toneSource: 'ecg' };
+    const defaults: AudioPreferences = { volume: DEFAULT_VOLUME, muted: false, toneSource: 'ecg' };
     expect(readAudioPreferences(null)).toEqual(defaults);
     expect(readAudioPreferences(memory({ [AUDIO_PREFERENCES_KEY]: '{"version":1,"volume":7,"muted":false,"toneSource":"ecg"}' }))).toEqual(defaults);
     expect(readAudioPreferences(memory({ [AUDIO_PREFERENCES_KEY]: 'not json' }))).toEqual(defaults);
     const throwing = { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); }, removeItem: () => undefined };
     expect(readAudioPreferences(throwing)).toEqual(defaults);
-    expect(writeAudioPreferences(throwing, defaults as never)).toBe(false);
+    expect(writeAudioPreferences(throwing, defaults)).toBe(false);
     expect(writeAudioPreferences(memory(), { volume: 2, muted: false, toneSource: 'ecg' })).toBe(false);
   });
 });
