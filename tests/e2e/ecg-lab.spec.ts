@@ -788,17 +788,27 @@ test('paper speed changes sweep rate while gain and lead changes preserve the sh
   await page.goto('/');
   const viewport = page.getByRole('region', { name: /ECG waveform viewport for V3/ });
   await page.waitForTimeout(120);
+  const wallBefore = Date.now();
   const beforeSpeedChange = Number(await viewport.getAttribute('data-simulation-time-ms'));
   await page.getByLabel('Paper speed').selectOption('50');
   const afterSpeedChange = Number(await viewport.getAttribute('data-simulation-time-ms'));
+  const wallElapsed = Date.now() - wallBefore;
+  // Changing speed neither resets nor jumps the clock: it runs in real time, at most one frame
+  // (MAX_FRAME_DELTA_MS, 100 ms) ahead of the wall time that passed. This holds however slow the machine is.
   expect(afterSpeedChange).toBeGreaterThanOrEqual(beforeSpeedChange);
-  expect(afterSpeedChange - beforeSpeedChange).toBeLessThan(1500);
-  const timeStart = Number(await viewport.getAttribute('data-simulation-time-ms'));
-  const paperStart = Number(await viewport.getAttribute('data-paper-position-units'));
-  await page.waitForTimeout(160);
-  const timeEnd = Number(await viewport.getAttribute('data-simulation-time-ms'));
-  const paperEnd = Number(await viewport.getAttribute('data-paper-position-units'));
-  expect((paperEnd - paperStart) / (timeEnd - timeStart)).toBeGreaterThan(0.17);
+  expect(afterSpeedChange - beforeSpeedChange).toBeLessThanOrEqual(wallElapsed + 100);
+  await expect(viewport).toHaveAttribute('data-speed-mm-s', '50');
+  // Time and paper position are read together: both come from the same render, and reading them
+  // with two separate calls could pair one frame's time with the next frame's position under load.
+  const snapshot = () => viewport.evaluate(element => ({
+    timeMs: Number(element.getAttribute('data-simulation-time-ms')),
+    paperUnits: Number(element.getAttribute('data-paper-position-units')),
+  }));
+  const sweepStart = await snapshot();
+  await expect.poll(async () => (await snapshot()).timeMs - sweepStart.timeMs).toBeGreaterThanOrEqual(160);
+  const sweepEnd = await snapshot();
+  // 50 mm/s × 4 SVG units per mm = 0.2 units per millisecond of simulated time.
+  expect((sweepEnd.paperUnits - sweepStart.paperUnits) / (sweepEnd.timeMs - sweepStart.timeMs)).toBeCloseTo(0.2, 3);
 
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   const pausedTime = await viewport.getAttribute('data-simulation-time-ms');
