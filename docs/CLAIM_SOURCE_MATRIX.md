@@ -1,0 +1,214 @@
+# Claim-to-source matrix — Learn review packet
+
+This matrix is a reviewer worklist, not a statement that a source supports every mapped claim. Record-level source references currently remain `unverified`. The bibliographic records were checked; semantic support, currentness, and rights are not thereby verified. A mapping means “candidate source to inspect,” not “evidence established.”
+
+## Candidate sources checked in this checkpoint
+
+### `ref.becker-fundamentals-ecg`
+
+- **Citation checked:** Daniel E. Becker. “Fundamentals of electrocardiography interpretation.” *Anesthesia Progress*. 2006 Summer;53(2):53–63; quiz 64. DOI `10.2344/0003-3006(2006)53[53:FOEI]2.0.CO;2`. PMID 16863387; PMCID PMC1614214.
+- **Verified bibliographic details:** title, author, journal/date season, volume/issue/page range, DOI, PMID/PMCID match the indexed record. The earlier record’s page range incorrectly included quiz page 64; metadata has been corrected.
+- **Source inspection in this pass (2026-10-20):** PubMed bibliographic metadata was checked. The available browser tool did not provide reviewable PMC full text (the prior direct attempt was blocked by its access challenge). Search snippets and indexed excerpts are not accepted as direct claim evidence here. Exact page/paragraph for all clinical claims remains unresolved.
+- **Limitations:** a 2006 continuing-education article situated in dental/anesthesia monitoring, not an Indian MBBS curriculum source. Applicability and currentness require reviewer judgment. The source itself or its figures must not be reproduced based solely on PubMed/PMC access.
+- **Rights:** reuse, redistribution, modification, and figure permissions unresolved. Reference metadata has no licence grant. Runtime `verificationStatus` remains `unverified`.
+
+### `ref.kligfield-ecg-technology`
+
+- **Citation checked:** Paul Kligfield et al. “Recommendations for the standardization and interpretation of the electrocardiogram. Part I: The electrocardiogram and its technology: a scientific statement from the American Heart Association Electrocardiography and Arrhythmias Committee, Council on Clinical Cardiology; the American College of Cardiology Foundation; and the Heart Rhythm Society: endorsed by the International Society for Computerized Electrocardiology.” *Circulation*. 2007 Mar 13;115(10):1306–1324; published online Feb 23. DOI `10.1161/CIRCULATIONAHA.106.180200`. PMID 17322457.
+- **Verified bibliographic details:** title, author group, issuing bodies, date, journal, volume/issue/pages, DOI, and PMID match PubMed. It is a professional-society scientific statement, not classified as an ordinary peer-reviewed research study.
+- **Source inspection in this pass (2026-10-20):** PubMed metadata and the AHA-hosted PDF front matter/abstract were accessible. The source states that multiple copying, modification, alteration, enhancement, and distribution require express permission. No exact paper-speed or gain passage was located in the inspected excerpt. An indexed excerpt elsewhere had identified a page-1315 section, but it was not directly checked in this pass and is not treated as exact claim evidence.
+- **Limitations/currentness:** this is a 2007 international/US professional-society statement, not Indian guidance. Currentness against later standards was not established. Reviewer must check for current standards before any sourced clinical claim is approved.
+- **Rights:** source access is not reuse permission; reuse conditions for any proposed source material remain unresolved. Runtime `verificationStatus` remains `unverified`.
+
+No source reference currently establishes Indian NMC/CBME alignment. An official NMC CBME 2024 listing appeared in the source search, but the discovered PDF endpoint returned an error during retrieval; no competency code or India-specific claim has been mapped. If such alignment is later added, record the accessible official source and precise competency/page after direct verification.
+
+## Lesson 1 — `learn.what-an-ecg-measures` — version `0.3.0`
+
+| Claim ID | Exact record location | Candidate source and source location to inspect | Status / reviewer action |
+|---|---|---|---|
+| `potential-difference-is-voltage-difference` | Key term “Potential difference” | Becker, “Electrophysiological Considerations” / “ECG Paper”; Kligfield abstract and technology section. Exact page not recorded. | Candidate only. Confirm that the cited material supports the definition, or replace with an appropriate basic-electrophysiology source. |
+| `ecg-surface-potential-over-time` | `signal-over-time` body; objective; takeaway 1 | Becker, “Technical Considerations” / “The ECG Tracing”; Kligfield abstract on how ECG is derived/displayed. Exact Kligfield page unresolved. | Candidate only. Verify exact wording and ensure “body surface” and “over time” are adequately supported. |
+| `ecg-not-mechanical-measurement` | `signal-over-time` body; takeaway 2 | Becker, “The ECG Tracing” discussion of P/QRS events and contraction. Exact paragraph/page unresolved. | Candidate only. Confirm wording and avoid conflating electrical recording with mechanical activity. |
+| `ecg-not-blood-flow-measurement` | `signal-over-time` body | No source currently linked to this claim. | **Unmapped/unsupported in current packet.** Supply a suitable source and exact location, or remove/narrow this sentence. |
+| `ecg-not-palpable-pulse` | `signal-over-time` body | Becker, “The ECG Tracing” discussion of clinical pulse and electrical activity; exact location to be checked. | Candidate only. Verify the distinction directly; do not assume the contraction discussion proves this full wording. |
+| `lead-is-derived-view` | `read-the-representation` body; key term “Lead”; takeaway 2 | Becker, “Technical Considerations,” lead/electrode arrangements; Kligfield abstract and “Simultaneous Lead Presentation” (indexed excerpt p. 1315). | Candidate only. Verify the precise definition and terminology. |
+| `lead-view-changes-trace-appearance` | `read-the-representation` body | Becker, “Technical Considerations,” passage on tracings varying with electrode locations/polarity; Kligfield discussion of lead placement/presentation. Exact page unresolved. | Candidate only. Check whether “same underlying cardiac activity” is accurately and sufficiently qualified. |
+| `template-is-synthetic` | `read-the-representation` body; demonstration description; takeaway 3 | Project behavior: `src/engine/signal.ts`, `src/content/learn/records.ts`, existing signal tests. No external clinical source. | Code/provenance check. Confirm generator output remains explicitly synthetic and unvalidated. |
+| `annotations-are-authored-regions` | `template-waveform` description and annotations | Project behavior: lesson record annotations and `src/learn/Demonstrations.tsx`; no automated detector exists. | Code check. Confirm phrasing does not imply validated ECG wave boundaries. |
+
+## Linked question — `learn.check.what-an-ecg-measures` — version `0.3.0`
+
+Parent: `learn.what-an-ecg-measures`.
+
+| Claim ID | Exact record location | Candidate source and source location to inspect | Status / reviewer action |
+|---|---|---|---|
+| `ecg-surface-potential-over-time` | Prompt; “Electrical potential differences displayed over time” choice; answer key; explanation | Becker, “Technical Considerations” / “The ECG Tracing”; Kligfield abstract. Exact claim location unresolved. | Candidate only. Check key and explanation against source wording. |
+| `ecg-not-mechanical-measurement` | “Direct measurement of mechanical contraction” distractor; explanation | Becker, “The ECG Tracing”; exact paragraph/page unresolved. | Candidate only. Confirm the distractor is unequivocally false as phrased. |
+| `ecg-not-blood-flow-measurement` | “Direct measurement of blood flow through the chambers” distractor; explanation | No source currently linked. | **Unmapped/unsupported.** Source the claim, remove the distractor, or revise the explanation before publishing this question. |
+
+## Lesson 2 — `learn.electrodes-versus-leads` — version `0.3.0`
+
+| Claim ID | Exact record location | Candidate source and source location to inspect | Status / reviewer action |
+|---|---|---|---|
+| `electrode-is-physical-contact` | `physical-electrodes` body; key term “Electrode” | Becker, “Technical Considerations”; Kligfield abstract/lead-placement discussion. Exact page unresolved. | Candidate only. Verify distinction and exact terms. |
+| `lead-is-derived-view` | `physical-electrodes` body; key term “Lead view”; takeaway 1 | Becker, “Technical Considerations”; Kligfield, “Simultaneous Lead Presentation” (indexed excerpt p. 1315). | Candidate only. Confirm the claim does not oversimplify lead derivation. |
+| `views-can-exceed-electrodes` | `physical-electrodes` body | Becker, “Technical Considerations,” 12-lead discussion; Kligfield, “Simultaneous Lead Presentation” (p. 1315 excerpt about derived/redundant leads). Exact full source context must be inspected. | Candidate only. If adding a specific electrode count, supply an exact source location; current text deliberately avoids a numeric count. |
+| `limb-leads-share-timeline` | `derived-lead-views` body; “Time alignment” term; demonstration description | Project behavior: `src/engine/signal.ts`, `src/learn/Demonstrations.tsx`, `src/engine/calibration.test.ts` / signal tests. | Code/test check only. Confirm every lead is from one shared timestamp array and no separate recording is generated per row. |
+| `limb-lead-demo-is-not-patient-placement` | `derived-lead-views` body; takeaway 3 | Project provenance and lesson UI; `src/content/learn/records.ts`. | Educational limitation check. Confirm the demo is not framed as placement instruction or clinically validated morphology. |
+
+## Linked question — `learn.check.electrodes-versus-leads` — version `0.3.0`
+
+Parent: `learn.electrodes-versus-leads`.
+
+| Claim ID | Exact record location | Candidate source and source location to inspect | Status / reviewer action |
+|---|---|---|---|
+| `electrode-is-physical-contact` | Prompt; correct “contact-and-view” choice; explanation | Becker, “Technical Considerations”; Kligfield lead-placement/derived-lead discussion. Exact page unresolved. | Candidate only. Review wording and key. |
+| `views-can-exceed-electrodes` | “one-trace-per-electrode” distractor; explanation | Becker, “Technical Considerations”; Kligfield, “Simultaneous Lead Presentation” (p. 1315 indexed excerpt). | Candidate only. Check that the distractor is unambiguous and not confused by acquisition/display format. |
+
+## Lesson 3 — `learn.paper-speed-and-gain` — version `0.4.0` (title: “Simulator scale: time and voltage”)
+
+| Claim ID | Exact record location | Candidate source and source location to inspect | Status / reviewer action |
+|---|---|---|---|
+| `simulator-paper-speed-time-scale` | `horizontal-time-scale` body; “Paper speed” term; takeaway 1; linked question prompt/explanation | Project behavior: `timeMsToSvgUnits` and `svgUnitsToTimeMs` in `src/engine/calibration.ts`; tests in `src/engine/calibration.test.ts`. No external source attached. | Verify current implementation/tests; wording is limited to simulator logical coordinates and does not establish physical ECG-paper size. |
+| `simulator-gain-voltage-scale` | `vertical-voltage-scale` body; “Gain” term; takeaway 2 | Project behavior: `voltageMvToSvgUnits` / `svgUnitsToVoltageMv` in `src/engine/calibration.ts`; calibration tests. No external source attached. | Verify current implementation/tests; not a claim about universal medical-device gain. |
+| `simulator-time-voltage-transform` | Time and voltage sections; takeaways 1–2 | `src/engine/calibration.ts` and `src/engine/calibration.test.ts`. | Verify settings change display transforms but not source samples/timestamps. |
+| `calibration-pulse-shares-transform` | Voltage section; calibration explorer description | `calibrationPulseHeightUnits` in `src/engine/calibration.ts`; `CalibrationPulse` in `src/main.tsx`; calibration tests. | Verify one-millivolt height uses the same transformation as the trace. |
+| `logical-grid-is-not-screen-mm` | Voltage/grid sections; takeaway 3 | `SVG_UNITS_PER_MM`, `PREVIEW_CSS_PIXELS_PER_SVG_UNIT` in `src/engine/calibration.ts`; SVG viewBox/rendering. | Verify that the text distinguishes logical units, preview CSS pixels, and physical output; no physical-size export exists. |
+| `simulator-grid-coordinate-units` | `read-the-grid` body | `src/components/EcgGrid.tsx` and `src/engine/calibration.test.ts`. | Verify logical 1-unit minor and 5-unit major spacing only; do not describe them as verified physical paper divisions. |
+| `synthetic-example-is-not-patient-data` | Provenance; known limitation; demonstration description | `signalProvenance` in `src/content/learn/records.ts`; generator in `src/engine/signal.ts`; synthetic label in the simulator UI. | Verify provenance and learner-facing disclosure; no patient recording or clinical validation is implied. |
+
+## Linked question — `learn.check.paper-speed-and-gain` — version `0.4.0`
+
+Parent: `learn.paper-speed-and-gain`.
+
+| Claim ID | Exact record location | Candidate source and source location to inspect | Status / reviewer action |
+|---|---|---|---|
+| `simulator-paper-speed-time-scale` | Prompt; “200 ms” choice/key; explanation | Project behavior: shared calibration conversion functions and `src/engine/calibration.test.ts`. No external reference attached. | Confirm against code/tests and preserve the phrase “in this simulator”; lesson/question remain draft pending genuine educational and required content review. |
+
+## Required reviewer disposition for each row
+
+For every external-source row, record the source edition/version actually inspected and exact page/section/recommendation or mark it unavailable. Decide whether the passage supports the wording, whether a newer authoritative source supersedes it, and whether the claim should be narrowed or removed. For project-behavior rows, link an implementation/test result. An unresolved row remains a publication blocker. Do not change a reference to `source-verified` solely because its citation metadata was found.
+
+## Guided exercises — release 1 (added 2026-10-21)
+
+The five exercises are **draft/unreviewed and are not content-schema records** (see [CONTENT_REVIEW_WORKFLOW.md](CONTENT_REVIEW_WORKFLOW.md), "Exercises and the content schema"). The IDs below are documentation IDs. Full exact text, questions for reviewers and recommended revisions are in packets 4–8 of [LESSON_REVIEW_PACKETS.md](LESSON_REVIEW_PACKETS.md). A candidate is a source to inspect, not evidence. Class A rows cite software tests, which evidence behavior only, never medical correctness.
+
+### `rr-interval-measurement` — version `0.1.0`
+
+| Claim ID | Class | Candidate source or evidence | Status / reviewer action |
+|---|---|---|---|
+| `ex-rr.interval-is-time-difference` | A | `src/exercises/evaluate.ts`; `src/exercises/exercises.test.ts` (R–R exercise) | Verified by tests; wording check only. |
+| `ex-rr.rr-is-peak-to-peak` | B | Becker "ECG Paper"/"The ECG Tracing" (unchecked); basic-ECG textbook candidates in the packets register | **No source verified.** Task VT1. |
+| `ex-rr.rate-from-rr` | B | Same as above | **No source verified; needs a regular-rhythm qualifier.** Task VT1, question M1. |
+| `ex-rr.target-is-signal-model-event` | A | `qrsEventTimesMs` in `src/engine/signal.ts`; per-preset and tolerance-boundary tests | Verified by tests. The 40 ms tolerance is a pedagogical choice, not a standard. |
+| `ex-rr.synthetic-and-not-clinical` | A | Panel disclaimer; `src/exercises/GuidedExercises.test.tsx` | Verified by tests; provenance rights unknown. |
+
+### `gain-measurement-invariance` — version `0.1.0`
+
+| Claim ID | Class | Candidate source or evidence | Status / reviewer action |
+|---|---|---|---|
+| `ex-gain.gain-definition` | B | Kligfield (no gain passage located); textbook candidates | **No source verified. Lesson 3 v0.4.0 narrowed the equivalent claim to the simulator; align this text.** VT2, D4. |
+| `ex-gain.timing-unchanged` | A (+B) | `src/exercises/exercises.test.ts` gain section; `src/engine/calibration.test.ts` | Software part verified; general statement needs a source. |
+| `ex-gain.amplitude-scales-with-gain` | A | `voltageMvToSvgUnits`; exercise gain tests | Verified by tests; logical mm only. |
+| `ex-gain.largest-deflection-statement` | A/D | `evaluate.ts` (`peakDeflection`) | Verified by tests; reviewer to confirm wording is not mistaken for a patient amplitude. |
+
+### `cross-lead-beat-matching` — version `0.1.0`
+
+| Claim ID | Class | Candidate source or evidence | Status / reviewer action |
+|---|---|---|---|
+| `ex-lead.shared-timeline` | A | `src/engine/signal-window.test.ts` | Verified by tests. |
+| `ex-lead.single-beat-one-time` | B | Kligfield "Simultaneous Lead Presentation" (indexed excerpt p. 1315, **not inspected**) | **No source verified.** VT3, M4. |
+| `ex-lead.shapes-differ` | A (+B) | Exercise test compares lead II and V1 samples; morphology table in `signal.ts` is invented and unvalidated | Software part verified; real-ECG statement needs a source and medical review. |
+| `ex-lead.qrs-event-target` | A | `qrsEventTimesMs`; V1 S-wave offset is 15–30 ms by preset, inside the 40 ms tolerance | Verified by tests; not a clinical definition of QRS timing. |
+
+### `paper-speed-and-grid` — version `0.1.0`
+
+| Claim ID | Class | Candidate source or evidence | Status / reviewer action |
+|---|---|---|---|
+| `ex-speed.mm-equals-seconds-times-speed` | B | `timeToMm` in `src/engine/calibration.ts` (software); textbook/Kligfield candidates for the general statement | Software part verified; **general statement unsourced and conflicts with lesson 3 scoping.** VT2, D4. |
+| `ex-speed.doubling-doubles-width` | A (+B) | Exercise tests (25 vs 50 mm/s) | Software part verified. |
+| `ex-speed.expected-width-feedback` | A | `evaluate.ts` width check; logical-mm note in `calibration.ts` | Verified by tests; logical mm only. |
+| `ex-speed.grid-unit-label` | D | UI label "Interval width on paper (mm)" | Reviewer to confirm or rename to avoid implying physical paper. |
+
+### `grid-and-calibration` — version `0.1.0`
+
+| Claim ID | Class | Candidate source or evidence | Status / reviewer action |
+|---|---|---|---|
+| `ex-grid.pulse-is-1mv-200ms` | A | `CALIBRATION_PULSE_AMPLITUDE_MV`, `CALIBRATION_PULSE_DURATION_MS` in `src/engine/calibration.ts`; grid exercise tests | Verified by tests. |
+| `ex-grid.height-equals-gain` | A (+B) | `calibrationPulseHeightUnits`; exercise tests at all supported settings | Software part verified; no statement about real paper is made. |
+| `ex-grid.width-equals-0.2-times-speed` | A (+B) | `calibrationPulseWidthUnits`; exercise tests at all supported settings | Software part verified; same scoping. |
+| `ex-grid.logical-mm-label` | D | UI labels "Calibration pulse height (mm)" / "width (mm)" | Reviewer to confirm or rename to the logical grid. |
+
+## Rhythm Challenge categories — release 1 (added 2026-10-21)
+
+Each category explanation is a class C medical statement shown to learners. **No source is attached to any of them, no reviewer exists, and none may be treated as reviewed.** Exact text, expected features, rate bands, reviewer questions R1–R6 and recommended revisions are in packet 9 of [LESSON_REVIEW_PACKETS.md](LESSON_REVIEW_PACKETS.md). Software evidence (that the drawn strip, rate, options and scoring agree with the category description) is `src/rhythm/cases.test.ts`; it is not medical evidence.
+
+| Category ID | Class | Source status | Reviewer action |
+|---|---|---|---|
+| `nsr` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `sinus-bradycardia` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `sinus-tachycardia` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `sinus-arrhythmia` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `pac` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `atrial-fibrillation` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `atrial-flutter` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `svt` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `first-degree-avb` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `mobitz-1` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `mobitz-2` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `avb-2to1` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `third-degree-avb` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `pvc` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `idioventricular` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `vt` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `vf` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+| `paced` | C | none attached | Source and qualified review of the explanation text (R1, R3). |
+
+Additional rows needing specific attention: `avb-2to1` (the "cannot be determined" handling, R4), `vt` and `vf` (high-risk framing, R5), `idioventricular` and `third-degree-avb` (distinguishability, R6).
+
+
+## Virtual Patient cases — release 1 (added 2026-10-21)
+
+Six fictional cases, all `draft` / `unreviewed`, none with sources, and none able to carry escalation text (the schema holds only `null`). Exact text, observations, reviewer questions P1–P4, decision D6 and recommended revisions are in packet 10 of [LESSON_REVIEW_PACKETS.md](LESSON_REVIEW_PACKETS.md). Software evidence that each case points at a real rhythm case and shares its waveform, that no heart rate is stored, and that the answer is not leaked before answering is `src/patients/cases.test.ts`; it is not medical evidence.
+
+| Case ID | ECG (rhythm case) | Story and observations | Source status | Reviewer action |
+|---|---|---|---|---|
+| `patient.awareness-after-exercise.01` | `rhythm.nsr.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
+| `patient.irregular-heartbeat.01` | `rhythm.atrial-fibrillation.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
+| `patient.sudden-fast-heartbeat.01` | `rhythm.svt.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
+| `patient.routine-ecg-before-sport.01` | `rhythm.first-degree-avb.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
+| `patient.skipped-beats.01` | `rhythm.pvc.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
+| `patient.unwell-with-fast-pulse.01` | `rhythm.sinus-tachycardia.01` | class C | none attached | Qualified review of the story and simulated observations (P1, P2). |
+
+
+## Medication Center profiles — release 1 (added 2026-10-21)
+
+Five draft profiles in the content schema (`type: medication`). Every claim below has `basis: external-source`, **no source reference, no review record**, and is class C. Gate state per record: draft, not eligible (claim-source mapping, source and licensing, educational review, medical review and publication approval all unmet). Exact text, reviewer questions MD1–MD5, tasks VT9–VT10 and decisions D7–D8 are in packet 11 of [LESSON_REVIEW_PACKETS.md](LESSON_REVIEW_PACKETS.md). Software evidence (nothing is published, each gate blocks publication, dosing wording is refused) is `src/medication/medication.test.ts`; it is not medical evidence.
+
+| Profile | Claim ID | Candidate source | Status / reviewer action |
+|---|---|---|---|
+| `med.metoprolol` | `metoprolol-mechanism` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.metoprolol` | `metoprolol-use` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.metoprolol` | `beta-blocker-sinus-rate` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.metoprolol` | `beta-blocker-av-conduction` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.diltiazem` | `diltiazem-mechanism` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.diltiazem` | `diltiazem-use` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.diltiazem` | `diltiazem-sinus-rate` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.diltiazem` | `diltiazem-av-conduction` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.digoxin` | `digoxin-mechanism` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.digoxin` | `digoxin-vagal` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.digoxin` | `digoxin-use` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.digoxin` | `digoxin-av-conduction` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.digoxin` | `digoxin-st-changes` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.amiodarone` | `amiodarone-mechanism` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.amiodarone` | `amiodarone-use` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.amiodarone` | `amiodarone-qt` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.amiodarone` | `amiodarone-rate` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.adenosine` | `adenosine-mechanism` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.adenosine` | `adenosine-duration` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.adenosine` | `adenosine-use` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+| `med.adenosine` | `adenosine-pause` | none attached (types only in packet 11) | **No source verified.** Source it, narrow it, or remove it (VT9, MD1). |
+
+Safety considerations and interactions are not written for any profile, so no claim exists for them; writing them is gated on sourced evidence (MD3, D8).
+
+Rights for all five exercises and the Rhythm Challenge: they reproduce no third-party text or figure that was identified; the synthetic signal's declared rights are unknown (no repository licence).

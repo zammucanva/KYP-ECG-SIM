@@ -1,5 +1,217 @@
 # QA report
 
-Status: checkpoint verified on 2026-10-19.
+Date: 2026-10-20. This report records checks actually run against the local source. It is not a clinical-validation report.
 
-Baseline results: `pnpm test` passed with 1 test file and 3 tests; typecheck and build passed. Current results: `pnpm test` passed with 1 test file and 5 tests; typecheck and build passed. Browser smoke verification confirmed the 12-lead view renders twelve labelled traces, the default V3/25/20/grid settings remain intact, and editable 100–900 ms points produce an 800 ms / 75 bpm RR result. The KYP-matched light and dark themes were visually checked in the browser; theme selection survived a reload and the interface was returned to light mode. After the theme implementation, `pnpm typecheck` and `pnpm build` both passed. No test suite was rerun for this theme-only change. A formal browser test suite, full accessibility audit, automated boundary detection, and clinical review remain incomplete.
+## ECG-CP11 result - CI verified (2026-10-21)
+
+- GitHub Actions run [39507495800](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39507495800), workflow "Verify ECG Lab", commit `6e3bce2` on `codex/guided-exercises-local`: completed / success. Every step passed: install (frozen lockfile), Playwright browser install, `pnpm test` (13 files / 118 tests), `pnpm typecheck`, `pnpm build`, `pnpm test:e2e` (32 passed). This is Linux CI evidence for the branch only; `main` is unchanged and no PR, merge or deployment exists.
+## ECG-CP16 - Home dashboard (2026-10-21)
+
+- Local, on `69c500a`: Vitest 25 files / 298/298 tests; `tsc --noEmit` and the E2E `tsc` exit 0; `tsc -b` + Vite build OK (151 modules); Playwright 99/99 Chromium at the default two workers, no failures or flakes in that run.
+- New unit and component coverage: summary logic from real stores (empty, in progress, completed, stale versions, latest experiment, missed strips, case studies, what counts as activity), the dashboard component with and without saved state, the exercise-request hook (once per token, unknown ids ignored, focus) and the review-request hook (once per request, nothing missed, never replaces a session in progress).
+- New browser coverage (`home-dashboard.spec.ts`, 20): simulator stays the landing page; empty state invents no figures; corrupt stored state shows the empty state; Start opens the chosen exercise with focus on it; progress through an exercise is reflected; Resume goes through the restore confirmation (nothing applied until confirmed, cancel leaves settings alone); missed-strip review starts from Home and does not replace a session in progress; navigation to challenge, cases and progress; case-study completion; axe (WCAG 2 A/AA, 2.1 A/AA) on empty and populated Home at 1280, 768 and 375 px and in the dark theme; no overflow with three stress fonts at 375 px; keyboard and reduced motion.
+- Not covered: screen readers, real devices, any review of drafted content. CI verified: [run 39537574037](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39537574037) on `be53e3a`: completed / success; 25 unit-test files (298 tests) and 99 Chromium scenarios passed on Linux at the default two workers, with no failures.
+
+## ECG-CP15 - Medication Center (2026-10-21)
+
+- CI verified: [run 39526224903](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39526224903) on `c0610a6`: completed / success; 23 unit-test files (276 tests) and 79 Chromium scenarios passed on Linux at the default two workers, with no failures. Local runs before the push: Vitest 23 files / 276/276 tests; `tsc --noEmit` and the E2E `tsc` exit 0; `tsc -b` + Vite build OK (149 modules); Playwright 79/79 Chromium with `--workers=1`.
+- Default-worker runs on this machine were not clean: two consecutive full runs each reported 77/79 with different failures (rhythm 375 px tests that pass alone; the existing live-sweep test, whose assertion bounds simulated time between two polls to 250 ms and reported 399.9 ms; and one `worker process exited unexpectedly (code=3221226505)`). All passed in isolation and in the single-worker run. No test was edited or weakened. The live-sweep assertion is wall-clock sensitive and may flake on a loaded CI runner.
+- New unit and component coverage (38): content-schema medication type and every gate (nothing published; a status flip cannot publish; eight separate ways of breaking a gate each leave the record unpublished; a fully reviewed TEST FIXTURE publishes), dosing and prescribing wording refused (ten sentences), mechanism-only safety claims refused, claim inventory equals displayed text, search ranking and filters, hostile and oversized input, evidence reporting, related-content resolution, status labels, preview flag strictness, empty and unavailable states, labelling in preview, fixture never imported by application code.
+- New browser coverage (16): learner view shows no medicine content; look-alike flags do not unlock drafts; labelled preview with honest evidence and "not yet written" sections; no dose or prescribing language in any rendered profile; search, group filter and no-match recovery; keyboard use; state kept across navigation; rest of the app unaffected; axe (WCAG 2 A/AA, 2.1 A/AA) on the empty state, list, no-match and profile at 1280, 768 and 375 px and in the dark theme; no horizontal overflow with three stress fonts at 375 px; reduced motion.
+- Not covered: screen readers, real devices, and any source verification or medical review of the profile text.
+
+## ECG-CP14 - Virtual Patients (2026-10-21)
+
+- CI verified: [run 39519523726](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39519523726) on `59cd5e4`: completed / success; 21 unit-test files (237 tests) and 63 Chromium scenarios passed on Linux. Local runs before the push: Vitest 21 files / 237/237 tests; `tsc --noEmit` and the E2E `tsc` exit 0; `tsc -b` + Vite build OK (145 modules); Playwright 63/63 Chromium on a full run.
+- New unit coverage: patient library, schema refusals (escalation text, publication, stored heart rate, unknown fields), shared waveform with the challenge, no answer leak before answering, safe resolution of unavailable content (`src/patients/cases.test.ts`, 8); Academy credit, idempotency, wrong-rhythm and rate-only cases, mismatched evaluations, "every case study", compatibility of earlier version-1 records (`src/academy/patients.test.ts`, 6); component flow, withheld heart rate, focus, unavailable and empty states (`src/patients/VirtualPatient.test.tsx`, 7); drift guard extended to the patient packet (`review-packet.test.ts`).
+- New browser coverage (`virtual-patient.spec.ts`, 13): full case to debrief to Academy and persistence after reload; heart rate withheld until answered; replay pays nothing more and a wrong answer still completes once; the case ECG equals a Rhythm Challenge strip; keyboard stepping with focus on each heading; lead switching and keeping the step across navigation; axe (WCAG 2 A/AA, 2.1 A/AA) on every step at 1280, 768 and 375 px and in the dark theme; no horizontal overflow on any step with Verdana, Courier New and Georgia at 375 px.
+- Not covered: screen readers, real devices, any medical or educational review of the case text.
+
+## ECG-CP13 - Guided Lab, Rhythm Challenge and Academy (2026-10-21)
+
+- CI verified: [run 39516977813](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39516977813) on `c526ffd`: completed / success; 18 unit-test files (215 tests) and 50 Chromium scenarios passed on Linux. Local runs before the push: Vitest 18 files / 215/215 tests; `tsc --noEmit` and the E2E `tsc` exit 0; `tsc -b` + Vite build OK (143 modules); Playwright 50/50 Chromium on two consecutive full runs.
+- One earlier full run reported 49/50: `live sweep moves, pauses, resumes continuously, resets, and keeps one bounded trace path` failed. It passed 3/3 when run alone and in both later full runs. Cause not isolated; treated as load sensitivity of a timing test. Not hidden, not weakened.
+- Another earlier full run failed 10 existing tests because the hidden Rhythm Challenge mode description contained "again", which Playwright's substring `getByLabel('Gain')` matched. Fixed by changing the copy; the existing tests were not edited.
+- New unit coverage (this task): case library vs category descriptions for all 36 cases, rate expectations from the displayed signal, scoring, options, hints and uncertainty handling (`cases.test.ts`, 48); session engine incl. timer, pause, retry, duplicate prevention (`session.test.ts`, 13); Academy XP, idempotency, repeat cap, achievements, bests, persistence, corrupt data (`progress.test.ts`, 15); challenge and Academy components (`RhythmChallenge.test.tsx`, 9); grid exercise, hints, completion callback (`exercises.test.ts`, `GuidedExercises.test.tsx`); document drift guard extended to hints, categories and counts (`review-packet.test.ts`).
+- New browser coverage (`rhythm-challenge.spec.ts`, 18): Learn session through to Academy XP and persistence after reload; unscored retry and missed-strip review; Practice has no retry; timed session driven by a controllable clock (countdown, pause freezes time and hides the strip, expiry gives a partial summary with no bonus); navigation keeps the session and pauses a timed one; keyboard operation; exercise completion reaching the Academy; grid exercise; empty state and confirm-before-reset; corrupt Academy storage; axe (WCAG 2 A/AA, 2.1 A/AA) on setup, question, feedback, results and Academy at 1280, 768 and 375 px and in the dark theme; no horizontal overflow with Verdana, Courier New and Georgia at 375 px; reduced motion.
+- Accessibility finding fixed: axe reported low contrast on locked achievements (`color-contrast`); the reduced opacity was replaced by a dashed border and the "Locked" label.
+- Not covered: CI, real-device or screen-reader testing, forced-colours mode, medical or educational review of any rhythm text, timers under real (unfaked) browser throttling.
+
+## ECG-CP12 - content review-input packet (2026-10-21)
+
+- CI verified: [run 39510886866](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39510886866) on `685fba5`: completed / success; 14 unit-test files / 122 tests and 32 Chromium scenarios passed. Local run before the push: Vitest 14 files / 122/122 tests; app and E2E `tsc` exit 0; `tsc -b` + Vite build OK (134 modules); Playwright 32/32 Chromium scenarios. Last CI-verified commit remains `2ca2b28` (run 39507721638).
+- New test `src/exercises/review-packet.test.ts` (4): exercise text/ids/versions/tolerances match the packet; every lesson/question id, version and recorded claim ID appears in the packet/matrix; all items remain draft, unreviewed, unverified and unpublished; checklist unticked. Negative check performed: an edited packet sentence made it fail.
+- Not done and not claimed: any source verification, licence check, educational or medical review, or publication approval.
+## ECG-CP11 - first CI run and layout fix (2026-10-21)
+
+- GitHub Actions run 39506872717 (workflow "Verify ECG Lab", commit `dd66714`): failed at `pnpm test:e2e`, 24 of 26 scenarios passed. Failing: the saved-experiment panel overflow assertion and the guided-exercise overflow assertion (both received 2 px horizontal overflow on Linux).
+- Root cause reproduced locally with wide fonts (24 px overflow at 375 px in the measurement controls grid); fixed in CSS; regression test `layout-stress.spec.ts` added (6 scenarios) and shown to fail without the fix.
+- Local after fix: Vitest 118/118; type checks exit 0; build OK; Chromium 32/32. CI for the fix: see the next entry once the run completes.
+## ECG-CP10 - guided ECG exercises, release 1 (2026-10-21)
+
+- Ran locally via `node_modules/.bin` (pnpm unavailable): Vitest 13 files / 118/118 tests; app and E2E `tsc` exit 0; `tsc -b` and Vite build OK (134 modules); Playwright 26/26 Chromium scenarios.
+- New unit coverage: tolerance boundaries (40 ms pass, 41 ms fail) and overrides; event times per preset vs generated lead II peaks; coordinate/time conversion; gain scaling of drawn height with unchanged timing; cross-lead same-beat matching with different shapes; paper-speed width arithmetic; malformed/NaN/negative readings; retry, reset, progression; progress persistence including corrupt, wrong-version, oversized, blocked and failing storage, and definition-version invalidation.
+- New browser coverage: all four exercise workflows (miss, retry, pass), preset-driven targets, completion surviving refresh, corrupt stored progress discarded with a notice, keyboard activation (Enter/Space), axe WCAG 2 A/AA + 2.1 A/AA with results visible at 1280 px and 375 px with no horizontal overflow, and no exercise text in the Learn section.
+- A first full run failed 4 existing saved-experiment scenarios (strict-mode selector collision with the new panel); the new panel was renamed to its own class and the full suite re-run green. No existing test was weakened.
+- Not covered: manual screen-reader testing, forced-colours mode, CI, any Git/remote verification, clinical or educational review of exercise wording.
+## ECG-CP9 - clock seek/restore and local experiment save/restore (2026-10-21)
+
+- Ran locally via `node_modules/.bin` (pnpm unavailable): Vitest 11 files / 81/81 tests; app and E2E `tsc` exit 0; `tsc -b` and Vite build OK (129 modules); Playwright 19/19 Chromium scenarios.
+- New browser checks: save, reload, list, cancel restore, restore (settings, paused clock time unchanged after 400 ms, annotation count), cancel/confirm delete; corrupt stored record ignored; `setItem` quota error shows "not saved" and the list stays empty; axe (WCAG 2 A/AA, 2.1 A/AA) with restore and delete confirmations open at 1280 px and 375 px with no horizontal overflow.
+- Tampered-record check: after Restore is armed, storage is edited to an unknown schema version; Restore now reports "missing or invalid", leaves paper speed unchanged and drops the record from the list. Unit test added for seeking across a rolling-window boundary (overlapping samples identical, disjoint windows ordered).`n- Not covered: manual screen-reader testing, real full-storage quota, CI, any Git/remote verification (no `.git`).
+## ECG-CP8 — measurement workspace foundations
+
+### Local verification (2026-10-20)
+
+- Final `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all`: exit 0.
+- Vitest: 10 files, 68/68 tests passed. New domain tests verify immutable named manual-set operations, the provenance boundary for timeline annotations, and version-1 experiment snapshots: incomplete authored regions, duplicate IDs, stale versions, dangling selection IDs and invalid ranges are rejected.
+- Application and Playwright TypeScript checks passed.
+- Vite 8.3.4 production build passed: 127 modules transformed; generated CSS was 24.24 kB and JavaScript 406.76 kB before gzip.
+- Playwright Chromium: 15/15 scenarios passed. The new scenario creates a private learner note, verifies its timestamp anchoring after paper-speed/gain changes, verifies exactly one rendered band in twelve-lead view, checks keyboard selection, and deletion.
+- Existing unsuppressed axe coverage ran as part of the Chromium suite; it passed its selected light/dark, single/multi-lead and responsive states. That is supporting evidence only, not a complete accessibility conformance audit.
+- A first targeted annotation run found a test locator that still addressed the removed single-lead region after the test switched to twelve leads. The application behavior was correct; the test now addresses the active 12-lead region. The targeted rerun passed, followed by the full suite above.
+
+### Visual-review limitation
+
+- No manual browser visual inspection is claimed for CP8. Browser automation tests layout and observable DOM behavior, but the available UI-automation runtime could not initialize in this environment. Desktop/tablet/mobile visual judgement, browser zoom, and long-session memory profiling remain unverified for this checkpoint.
+
+### Scope and safety
+
+- Annotations are learner-owned session notes, not medical labels, automated wave-boundary detection, diagnostic findings, or approved teaching content. The domain model reserves authored regions for an exact content ID/version and semantic role; none are currently registered.
+- A storage-neutral version-1 snapshot exists, but it is not written to browser storage and cannot restore the simulator yet. Playback restore awaits a tested clock seek operation. The local source export has no `.git`; CP8 has not been committed or pushed from this workspace. It does not change `main`, deploy the app, or establish clinical validation/patient-monitor suitability.
+
+## ECG-CP7 — moving-strip measurements and review readiness
+
+### Local verification (2026-10-20)
+
+- Final `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all`: exit 0.
+- Vitest: 7 files, 59/59 tests passed. This includes absolute-time marker mapping/boundary tests and a regression that the v0.4.0 lesson and linked question remain drafts, have no fabricated review dates/records, and are absent from the published catalog.
+- Application and Playwright TypeScript checks passed.
+- Production build passed using Vite 8.3.4: 125 modules transformed.
+- Playwright Chromium: 13/13 scenarios passed. New cases place and edit markers, verify timestamp/duration invariance across speed, gain, lead, layout and sweep motion, check window boundaries/exit states, pause/resume/reset, and check keyboard focus and marker-label visibility at the left edge of 12-lead rows.
+- The integrated axe scenario passed across its tested light/dark, single/multi-lead and mobile states without suppressed rules. This is supporting evidence, not a full WCAG evaluation.
+- Focused marker Playwright scenarios also passed 2/2 before the final full run.
+- Remote Actions for implementation commit `bb0ff3b61679293db28da1eca97236c4d30b7054` (run [39344393711](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39344393711)) failed only the marker viewport-entry/exit E2E: the narrow viewport assertion raced with the default End timestamp leaving the window. The E2E explicitly places both timestamps inside the visible window before asserting both labels. The correction commit `e266dfbe276172888ff04ca39e9c45e5425983d9` passed follow-up [Actions 39344966547](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39344966547).
+
+### Remote baseline before this checkpoint
+
+- GitHub API at the CP7 resume reported `codex/accessibility-content-governance` at `bb0ff3b61679293db28da1eca97236c4d30b7054`; run `39344393711` failed the single browser assertion described above. The later correction commit `e266dfbe276172888ff04ca39e9c45e5425983d9` passed Actions `39344966547`. Remote `main` remained `9544b96d87a44fce4334691145f5c53870871fa5`. The local source export has no `.git` directory.
+- The local source export has no `.git` directory. The local working-tree branch/status cannot be asserted; these remote facts are separate from local tests.
+- Changes in this checkpoint do not establish clinical validation, patient-monitor performance, hospital deployment readiness, source/licence approval, lesson review, or publication approval.
+
+## ECG-CP4 pre-change baseline
+
+The actual starting feature branch was `codex/accessibility-content-governance` at `6b0d7ef01cd218c62d9376bb816cb5d95299d7a8`. GitHub Actions baseline run `39252642744` completed successfully. `main` remained at `9544b96d87a44fce4334691145f5c53870871fa5`. The local exported project directory has no `.git`; no local branch or dirty-tree assertion is possible.
+
+Before Learn changes, `pnpm test:all` passed unit tests (19/19), application and Playwright type checks, and production build. Its first browser attempt did not launch because Chromium was missing. After installing Chromium in a task-local cache, `pnpm test:e2e` passed 8/8. That cache is generated local state and excluded from source changes.
+
+## Historical ECG-CP3 baseline (2026-10-19)
+
+The inspected local source matched the reported remote branch content, with text files differing only in Windows line endings/final-newline normalization. The local directory had no `.git` directory, so no local branch or dirty-tree status could be asserted. GitHub confirmed `codex/playwright-browser-regression` at `6e04906d11c5ee6b304c291cec643db3ec430f5e`; `main` remained at `9544b96d87a44fce4334691145f5c53870871fa5`.
+
+Before edits, actual checks passed: `pnpm test` (9/9), `pnpm typecheck` (app and E2E TypeScript), `pnpm build`, and `pnpm test:e2e` (5/5 Chromium scenarios).
+
+## Historical ECG-CP3 final local verification
+
+- `pnpm test:all`: exit 0.
+- `pnpm install --frozen-lockfile`: passed after adding the Zod and axe dependencies.
+- Vitest: 2 files, 19/19 tests passed (9 existing engine tests + 10 content governance tests).
+- `pnpm typecheck`: passed for the app and Playwright configuration/specs.
+- `pnpm build`: passed with Vite 8.3.4; 18 modules, 8.77 kB CSS and 231.90 kB JavaScript before gzip.
+- `pnpm test:e2e` as part of `test:all`: 8/8 Chromium scenarios passed (23.4 seconds reported by Playwright).
+- Playwright version: 1.64.1. Axe integration: `@axe-core/playwright` 4.14.0. Runtime schema library: Zod 4.6.7.
+
+Browser scenarios cover defaults and calibration pulse; all-lead selection and aligned 12-lead rows; machine controls; manual interval values and reset; theme keyboard operation, SVG colors and persistence; desktop/tablet/mobile scrolling and no page-level horizontal overflow; mobile controls-before-monitor reading order; keyboard control of native inputs and focus visibility; reduced-motion static behavior; and axe scans for six light/dark, single/multi-lead, desktop/mobile states. Axe uses WCAG 2.0 A/AA and WCAG 2.1 A/AA rules with no suppressed rules. The initial scan found low-contrast small light-theme labels and a visible-label/accessibility-name mismatch on the theme toggle; both were corrected and the final six-state scan passed.
+
+The first full run after changing waveform accessible names timed out in one pre-existing browser assertion because it kept a V3-specific accessible-name locator after switching to V4. The app had rendered the correct dynamic name; the assertion was updated to locate the unique waveform image independently of its current lead. The final full `pnpm test:all` rerun passed.
+
+## Historical ECG-CP3 scope and limitations
+
+No screen reader was run; accessibility findings combine code review, browser-visible inspection, keyboard Playwright scenarios, and axe automation. Axe is not proof of WCAG conformance. True browser zoom, text-only enlargement, operating-system high contrast, translated long labels, physical print calibration, and a full WCAG audit remain unverified. The light/dark trace and grid were also inspected visually in desktop and mobile browser captures; the grid is deliberately lower emphasis than the trace.
+
+No medical-content review or clinical validation was performed. No patient recordings, clinical citations, reviewer identities/qualifications, review dates, or publication approvals were fabricated. All starter content remains draft; the learner-facing published registry is empty. No Learn, Practice, or Exam UI, KYP production integration, merge, or deployment was performed.
+
+## Historical ECG-CP3 remote verification
+
+The previous source checkpoint was published on a non-main branch. Its historical remote branch/head and CI result were verified through GitHub. Workflow status was not inferred from configuration.
+
+## ECG-CP4 final local verification
+
+- `pnpm install --frozen-lockfile`: passed (`Already up to date`).
+- `pnpm test:all`: exit code 0.
+- Vitest: 3 test files; 32/32 tests passed. Coverage includes content dependency/publication rules; progress schema, persistence, corrupt/outdated storage recovery; draft exclusion; lesson reader structure and focus; answer submission/explanation/retry; completion gating; aligned twelve-lead examples; shared calibration transforms; source-signal nonmutation; and RR/rate calculation.
+- `pnpm typecheck`: passed for application and Playwright TypeScript.
+- `pnpm build`: passed with Vite 8.3.4; 122 modules transformed; CSS 17.84 kB (4.00 kB gzip), JavaScript 374.10 kB (111.54 kB gzip).
+- `pnpm test:e2e` within `test:all`: 9/9 Chromium scenarios passed. The added Learn scenario verifies keyboard opening, review-gated draft exclusion, dark/light preference retention, returning to the simulator with lead/speed/gain/measurement state unchanged, and no mobile page overflow.
+- Axe scans: no violations with no rule exclusions across six simulator states (light/dark, single/12-lead, desktop/mobile coverage) and four Learn empty-catalog states (light/dark desktop and mobile). The learner catalog is empty by design, so no published lesson page is available for browser-level accessibility scanning; isolated component tests exercise reader/check controls.
+- The desktop visual-inspection helper could not initialize because its kernel asset path was missing. No manual screenshot review of the newly added Learn layout is claimed. Headless browser tests and axe passed, but this is not equivalent to visual/manual assistive-technology testing.
+
+## ECG-CP4 scope and limitations
+
+No actual screen-reader session, true browser zoom, text-only enlargement, OS high-contrast mode, translated-label stress test, physical-size print/export test, or full WCAG audit was performed. Axe is supporting evidence only. Candidate references on the three authored lessons remain marked `unverified`; no reviewer identity, qualifications, approval dates, medical review, or publication approval were fabricated. Therefore no Learn lesson or linked question is published, and the learner catalog correctly remains empty. The 16-topic curriculum is a plan; India-specific MBBS/CBME alignment is not established. Synthetic traces remain unvalidated educational templates. No Practice/Exam interface, KYP production change, merge, or deployment was performed.
+
+## ECG-CP4 remote verification
+
+The local export has no Git metadata. The implementation was committed only to the existing feature branch `codex/accessibility-content-governance` using a non-forced compare-and-swap from the verified starting SHA `6b0d7ef01cd218c62d9376bb816cb5d95299d7a8` to `eb09784cca1fe2b122bbb9e21f8ec1792c30a5f9`. GitHub Actions run [39316691334](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39316691334) completed successfully on that implementation commit. The checkpoint documentation follow-up commit `4d7771e25c2f4f0e4cb7b86666c690d5e48af909` also passed [Actions run 39316996682](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39316996682). These commits were pushed with non-forced expected-head checks. `main` remained at `9544b96d87a44fce4334691145f5c53870871fa5`. The latest update to this report is documentation-only; refresh the live branch head and Actions status on resume. No merge or deployment was performed.
+
+## ECG-CP5 content review readiness — local verification
+
+### Starting repository state
+
+- Remote feature branch: `codex/accessibility-content-governance` at `1ffcfd553fd1caa18bd156417c9c6f1e67370db3`.
+- Remote `main`: `9544b96d87a44fce4334691145f5c53870871fa5`.
+- Baseline GitHub Actions run [39317284992](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39317284992) completed successfully for the starting feature-branch head.
+- Local path has no `.git` directory. The local export therefore cannot independently show branch/status or be used for a normal local commit. Remote facts were obtained through the GitHub connector; local command results below are from the local source tree.
+
+### Source audit outcomes
+
+- Becker PubMed metadata was checked. Corrected the article pages to 53–63 and separated quiz page 64; kept the seasonal date as such rather than inventing an exact date. The entry is now categorized as a review article.
+- Kligfield PubMed metadata was checked and the entry categorized as a professional-society statement. Exact claim locations, whether the older statement remains current for each lesson claim, and publisher reuse rights remain unresolved.
+- Both references remain `verificationStatus: unverified`. Candidate mappings do not imply semantic claim support; rights remain unknown. `CLAIM_SOURCE_MATRIX.md` records specific source sections/pages where found and every unresolved location.
+- No Indian NMC/CBME competency is asserted. The official CBME 2024 lead could not be retrieved during this audit; no source mapping was added.
+- Lesson/check content version advanced to `0.3.0` to bind future review intake to the new claim inventory and source links. No approval metadata or publication status was added.
+
+### Actual commands and results
+
+- First `pnpm test:all`: unit tests (42/42), application and E2E type checks, and production build passed; browser runner did not launch because the default Playwright Chromium cache lacked its executable. This was an environment setup issue; no browser scenario ran in that attempt.
+- `PLAYWRIGHT_BROWSERS_PATH=<project>/.playwright-browsers pnpm test:e2e`: passed 9/9 Chromium scenarios using the existing task-local browser cache.
+- Final `PLAYWRIGHT_BROWSERS_PATH=<project>/.playwright-browsers pnpm test:all`: exit 0. Vitest: 4 files, 42/42 tests; application and Playwright TypeScript checks passed; Vite 8.3.4 production build passed (122 modules; CSS 17.84 kB, JS 388.67 kB); Playwright: 9/9 Chromium scenarios passed.
+- Browser scenario `Learn navigation keeps draft content private...` verified the learner catalog still says no lessons are published, hides the three draft titles and answers, and preserves simulator/theme state. Axe scans in existing theme/responsive states had no violations and no suppressed rules.
+
+### Limits
+
+Unit tests include clearly labelled test-only synthetic reviewer strings and a fixed fixture date solely to validate schema behavior. They are not real review records and are never placed in the registry or fixtures. They do not establish the truth of any medical claim. No real reviewer details, clinical approval, source-and-licensing approval, rights clearance, or publication approval were added. No manual screen-reader session or standalone manual visual review was performed in this checkpoint; Playwright and Axe are supporting evidence only.
+
+All six Learn records remain drafts, all candidate sources remain `unverified`, and the published Learn catalog remains empty. No merge, deployment, or KYP production change was made.
+
+### ECG-CP5 remote verification
+
+The local source export has no `.git` metadata. The 19-file checkpoint was committed to the existing `codex/accessibility-content-governance` branch as [`d3f49a33e352d0ab24599cebafdeb6c79c3cee65`](https://github.com/zammucanva/KYP-ECG-SIM/commit/d3f49a33e352d0ab24599cebafdeb6c79c3cee65), with parent `1ffcfd553fd1caa18bd156417c9c6f1e67370db3`, using a non-forced expected-head update. GitHub Actions run [39323889336](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39323889336) completed successfully for that exact commit. At verification, the feature branch pointed to that commit and `main` remained at `9544b96d87a44fce4334691145f5c53870871fa5`. No merge, deployment, or KYP production change was made.
+
+The subsequent three-file documentation-only follow-up commit [`18d53d0d8e214d0a3af02286fc6528f0e501a60a`](https://github.com/zammucanva/KYP-ECG-SIM/commit/18d53d0d8e214d0a3af02286fc6528f0e501a60a) also passed GitHub Actions run [39324210042](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39324210042). `main` remained unchanged.
+
+# ECG-CP6 — live moving paper sweep verification
+
+## Actual local results
+
+- Local source tree: `C:\Users\TSHAM\Documents\Codex\2026-10-19\hel\work\ecg-lab`; it has no `.git` directory. Branch and CI statements below are remote GitHub observations, not local Git status.
+- `PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers pnpm test:all`: exit 0.
+- Vitest: 6 files, 53/53 tests passed. New coverage includes deterministic animation-clock lifecycle and time-addressable rolling signal generation across the lead array, plus calibration invariance.
+- `pnpm typecheck` within `test:all`: passed for application and Playwright TypeScript.
+- `pnpm build` within `test:all`: passed; Vite production build completed.
+- `pnpm test:e2e` within `test:all`: 11/11 Chromium scenarios passed. Added checks observed the live sweep move, pause without drift, resume, reset, calibrated speed/gain behavior, lead/layout clock continuity, aligned 12-lead traces, responsive rendering, and reduced-motion startup.
+- Axe scans ran against primary light/dark, single/multi-lead and mobile browser states. No violations were reported; no rules were suppressed. This is automated supporting evidence, not a full WCAG audit.
+- The local Chromium page at `http://localhost:5173/` was visually inspected: the rolling trace and ECG grid move together, controls remain visible, and the existing theme/layout is preserved. Playwright, rather than screenshot appearance alone, verifies the motion and coordinate invariants.
+
+## Scope and limitations
+
+The view generates only the bounded past-to-current sample window; it does not pre-render future beats. The single-lead view computes only the selected lead (or its limb derivation inputs); the 12-lead view derives all leads from one shared clock/window. Screen rendering uses the existing calibrated SVG transforms and a separate explicit CSS preview scale; CSS pixels are not physical millimetres. Render-path decimation is display-only and leaves source samples unchanged.
+
+The clock drops long animation-frame gaps over 100 ms rather than catching up with a visually abrupt paper jump. Thus simulated time deliberately does not account for a long blocked/hidden interval as uninterrupted elapsed wall time. Manual measurement points remain absolute time values from reset and can move outside the visible rolling window. Reduced-motion preference starts playback paused; the learner can start it explicitly.
+
+The synthetic traces are simplified educational illustrations. They are not patient recordings, clinically validated physiology, or a real-time clinical monitor; no clinical validation, diagnostic performance, or equivalence to hospital equipment is claimed. No KYP production change, merge, or deployment was made.
+
+## Remote state
+
+Before implementation, GitHub showed feature branch `codex/accessibility-content-governance` at `2cd31e1a864f7ead8286f07aa6587f9cd4f46e6d` with successful Actions run `39324432585`; `main` was `9544b96d87a44fce4334691145f5c53870871fa5`. The implementation was committed as [`0dce61202093d5f0c08d9186fe027f31ec13494e`](https://github.com/zammucanva/KYP-ECG-SIM/commit/0dce61202093d5f0c08d9186fe027f31ec13494e) on the existing feature branch using a non-forced expected-head update. GitHub Actions run [39340233374](https://github.com/zammucanva/KYP-ECG-SIM/actions/runs/39340233374) completed successfully for that commit. `main` remains unchanged at `9544b96d87a44fce4334691145f5c53870871fa5`. The local source export has no Git metadata.
+
