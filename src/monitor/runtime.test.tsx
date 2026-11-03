@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MonitorAudio, type AudioContextLike, type GainLike, type OscillatorLike } from '../audio/monitor-audio';
 import type { AnimationFrame, AnimationFrameScheduler } from '../engine/clock';
 import { evaluateAlarmConditions } from './alarms';
@@ -13,6 +13,9 @@ import { readingsAt } from './vitals';
  * played and every tone compared with the simulation's own event times.
  */
 const scenario = getMonitorScenario('scenario.monitored-fast-heartbeat.01')!;
+
+// Sound settings are remembered in the browser; each test starts from the defaults.
+beforeEach(() => { localStorage.clear(); });
 
 function harness(target: MonitorScenario = scenario) {
   let pending: AnimationFrame | null = null;
@@ -190,5 +193,33 @@ describe('audio follows the channel that produces it', () => {
     const pulsesAfterOff = pleth.view.result.current.timeline.plethPulseTimesMs.filter(time => time > off && time <= 40_000);
     expect(pulsesAfterOff.length).toBeGreaterThan(10);
     expect(pleth.tones.filter(tone => tone.frequency !== 880 && tone.frequency > 600).length).toBeGreaterThanOrEqual(pulsesAfterOff.length);
+  });
+});
+
+describe('runtime audio reliability', () => {
+  it('remembers volume, mute and tone source, but always starts with sound off', async () => {
+    const first = harness();
+    act(() => first.view.result.current.audio.setVolume(0.4));
+    act(() => first.view.result.current.audio.setToneSource('pleth'));
+    act(() => first.view.result.current.audio.setMuted(true));
+    first.view.unmount();
+    const second = harness();
+    expect(second.view.result.current.audio).toMatchObject({ status: 'off', volume: 0.4, toneSource: 'pleth', muted: true });
+  });
+
+  it('silencing an alarm stops alarm tones only; the heartbeat keeps sounding', async () => {
+    const run = harness();
+    await act(async () => { await run.view.result.current.audio.enable(); });
+    act(() => run.view.result.current.play());
+    run.run(42_500);
+    expect(run.view.result.current.alarms.active.map(alarm => alarm.id)).toEqual(['hr-high']);
+    const beatsBefore = run.tones.filter(tone => tone.frequency === 880).length;
+    act(() => run.view.result.current.acknowledge());
+    const alarmPulsesAfterAck = run.tones.length;
+    run.run(5_000);
+    const later = run.tones.slice(alarmPulsesAfterAck);
+    expect(later.length).toBeGreaterThan(10);
+    expect(later.every(tone => tone.frequency === 880)).toBe(true);
+    expect(run.tones.filter(tone => tone.frequency === 880).length).toBeGreaterThan(beatsBefore);
   });
 });
