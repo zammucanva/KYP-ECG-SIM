@@ -638,3 +638,6 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .bedside-beat { opacity: .15; margin-left: 2px; }
 .bedside-beat.on { opacity: 1; }
 @media (max-width: 560px) { .bedside-sound-toggle { min-height: 44px; width: 100%; } }
+.bedside-sound-toggle.warn { border-color: var(--alarm-medium); color: var(--alarm-medium); }
+.bedside { --alarm-info: oklch(30% .03 250); }
+.bedside-alarm-bar.active.priority-info { background: var(--alarm-info); color: var(--mon-text); }
